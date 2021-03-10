@@ -309,7 +309,7 @@ module AlgoliaSearch
       @raise_on_failure = raise_on_failure.nil? || raise_on_failure
     end
 
-    ::Algolia::Index.instance_methods(false).each do |m|
+    ::MeiliSearch::Index.instance_methods(false).each do |m|
       define_method(m) do |*args, &block|
         SafeIndex.log_or_throw(m, @raise_on_failure) do
           @index.send(m, *args, &block)
