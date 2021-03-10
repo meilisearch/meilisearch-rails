@@ -598,7 +598,7 @@ module AlgoliaSearch
         end
 
         index = SafeIndex.new(algolia_index_name(options), true)
-        task = index.set_settings(final_settings)
+        task = index.update_settings(final_settings)
         index.wait_task(task["taskID"]) if synchronous
       end
     end
@@ -822,7 +822,7 @@ module AlgoliaSearch
                    index_settings.delete(:slaves) ||
                    index_settings.delete('slaves')
         index_settings[used_slaves ? :slaves : :replicas] = replicas unless replicas.nil? || options[:inherit]
-        @algolia_indexes[settings].set_settings(index_settings)
+        @algolia_indexes[settings].update_settings(index_settings)
       end
 
       @algolia_indexes[settings]
