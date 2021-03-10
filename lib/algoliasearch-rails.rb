@@ -325,11 +325,11 @@ module AlgoliaSearch
       end
     end
 
-    # special handling of get_settings to avoid raising errors on 404
-    def get_settings(*args)
-      SafeIndex.log_or_throw(:get_settings, @raise_on_failure) do
+    # special handling of settings to avoid raising errors on 404
+    def settings(*args)
+      SafeIndex.log_or_throw(:settings, @raise_on_failure) do
         begin
-          @index.get_settings(*args)
+          @index.settings(*args)
         rescue ::MeiliSearch::ApiError => e
           return {} if e.code == 404 # not fatal
           raise e
@@ -546,7 +546,7 @@ module AlgoliaSearch
 
         # fetch the master settings
         master_index = algolia_ensure_init(options, settings)
-        master_settings = master_index.get_settings rescue {} # if master doesn't exist yet
+        master_settings = master_index.settings rescue {} # if master doesn't exist yet
         master_settings.merge!(JSON.parse(settings.to_settings.to_json)) # convert symbols to strings
 
         # remove the replicas of the temporary index
@@ -808,7 +808,7 @@ module AlgoliaSearch
 
       @algolia_indexes[settings] = SafeIndex.new(algolia_index_name(options), algoliasearch_options[:raise_on_failure])
 
-      current_settings = @algolia_indexes[settings].get_settings(:getVersion => 1) rescue nil # if the index doesn't exist
+      current_settings = @algolia_indexes[settings].settings(:getVersion => 1) rescue nil # if the index doesn't exist
 
       index_settings ||= settings.to_settings
       index_settings = options[:primary_settings].to_settings.merge(index_settings) if options[:inherit]
