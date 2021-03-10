@@ -5,10 +5,11 @@ module AlgoliaSearch
     end
 
     def configuration=(configuration)
-      @@configuration = configuration.merge(
-          :user_agent => "Algolia for Rails (#{AlgoliaSearch::VERSION}); Rails (#{Rails::VERSION::STRING})"
-      )
-      Algolia.init @@configuration
+      @@configuration = configuration
+    end
+
+    def client
+      ::MeiliSearch::Client.new(@@configuration[:application_id], @@configuration[:api_key])
     end
   end
 end
