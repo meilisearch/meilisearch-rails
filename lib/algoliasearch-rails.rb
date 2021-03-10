@@ -338,11 +338,11 @@ module AlgoliaSearch
     end
 
     # expose move as well
-    def self.move_index(old_name, new_name)
-      SafeIndex.log_or_throw(:move_index, true) do
-        ::Algolia.move_index(old_name, new_name)
-      end
-    end
+    # def self.move_index(old_name, new_name)
+    #   SafeIndex.log_or_throw(:move_index, true) do
+    #     ::Algolia.move_index(old_name, new_name)
+    #   end
+    # end
 
     private
     def self.log_or_throw(method, raise_on_failure, &block)
