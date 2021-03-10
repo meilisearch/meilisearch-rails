@@ -1,4 +1,4 @@
-require 'algoliasearch'
+require 'meilisearch'
 
 require 'algoliasearch/version'
 require 'algoliasearch/utilities'
