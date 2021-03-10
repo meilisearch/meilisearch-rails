@@ -348,7 +348,7 @@ module AlgoliaSearch
     def self.log_or_throw(method, raise_on_failure, &block)
       begin
         yield
-      rescue Algolia::AlgoliaError => e
+      rescue ::MeiliSearch::ApiError => e
         raise e if raise_on_failure
         # log the error
         (Rails.logger || Logger.new(STDOUT)).error("[algoliasearch-rails] #{e.message}")
