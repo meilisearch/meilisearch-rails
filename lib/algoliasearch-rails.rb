@@ -317,11 +317,11 @@ module AlgoliaSearch
       end
     end
 
-    # special handling of wait_task to handle null task_id
-    def wait_task(task_id)
+    # special handling of wait_for_pending_update to handle null task_id
+    def wait_for_pending_update(task_id)
       return if task_id.nil? && !@raise_on_failure # ok
-      SafeIndex.log_or_throw(:wait_task, @raise_on_failure) do
-        @index.wait_task(task_id)
+      SafeIndex.log_or_throw(:wait_for_pending_update, @raise_on_failure) do
+        @index.wait_for_pending_update(task_id)
       end
     end
 
@@ -532,7 +532,7 @@ module AlgoliaSearch
           end
           last_task = index.save_objects(objects)
         end
-        index.wait_task(last_task["taskID"]) if last_task and (synchronous || options[:synchronous])
+        index.wait_for_pending_update(last_task["taskID"]) if last_task and (synchronous || options[:synchronous])
       end
       nil
     end
@@ -579,7 +579,7 @@ module AlgoliaSearch
         end
 
         move_task = SafeIndex.move_index(tmp_index.name, src_index_name)
-        master_index.wait_task(move_task["taskID"]) if synchronous || options[:synchronous]
+        master_index.wait_for_pending_update(move_task["taskID"]) if synchronous || options[:synchronous]
       end
       nil
     end
@@ -599,7 +599,7 @@ module AlgoliaSearch
 
         index = SafeIndex.new(algolia_index_name(options), true)
         task = index.update_settings(final_settings)
-        index.wait_task(task["taskID"]) if synchronous
+        index.wait_for_pending_update(task["taskID"]) if synchronous
       end
     end
 
@@ -609,7 +609,7 @@ module AlgoliaSearch
         index = algolia_ensure_init(options, settings)
         next if options[:slave] || options[:replica]
         task = index.save_objects(objects.map { |o| settings.get_attributes(o).merge 'objectID' => algolia_object_id_of(o, options) })
-        index.wait_task(task["taskID"]) if synchronous || options[:synchronous]
+        index.wait_for_pending_update(task["taskID"]) if synchronous || options[:synchronous]
       end
     end
 
