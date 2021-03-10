@@ -530,7 +530,7 @@ module AlgoliaSearch
             end
             attributes.merge 'objectID' => algolia_object_id_of(o, options)
           end
-          last_task = index.save_objects(objects)
+          last_task = index.add_documents(objects)
         end
         index.wait_for_pending_update(last_task["taskID"]) if last_task and (synchronous || options[:synchronous])
       end
@@ -575,7 +575,7 @@ module AlgoliaSearch
             group = group.select { |o| algolia_indexable?(o, tmp_options) }
           end
           objects = group.map { |o| tmp_settings.get_attributes(o).merge 'objectID' => algolia_object_id_of(o, tmp_options) }
-          tmp_index.save_objects(objects)
+          tmp_index.add_documents(objects)
         end
 
         move_task = SafeIndex.move_index(tmp_index.name, src_index_name)
@@ -608,7 +608,7 @@ module AlgoliaSearch
         next if algolia_indexing_disabled?(options)
         index = algolia_ensure_init(options, settings)
         next if options[:slave] || options[:replica]
-        task = index.save_objects(objects.map { |o| settings.get_attributes(o).merge 'objectID' => algolia_object_id_of(o, options) })
+        task = index.add_documents(objects.map { |o| settings.get_attributes(o).merge 'objectID' => algolia_object_id_of(o, options) })
         index.wait_for_pending_update(task["taskID"]) if synchronous || options[:synchronous]
       end
     end
