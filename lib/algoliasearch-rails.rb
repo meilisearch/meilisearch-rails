@@ -303,8 +303,9 @@ module AlgoliaSearch
   # this class wraps an Algolia::Index object ensuring all raised exceptions
   # are correctly logged or thrown depending on the `raise_on_failure` option
   class SafeIndex
-    def initialize(name, raise_on_failure)
-      @index = ::Algolia::Index.new(name)
+    def initialize(index_uid, raise_on_failure)
+      client = AlgoliaSearch.client
+      @index = client.get_or_create_index(index_uid)
       @raise_on_failure = raise_on_failure.nil? || raise_on_failure
     end
 
