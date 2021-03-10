@@ -330,7 +330,7 @@ module AlgoliaSearch
       SafeIndex.log_or_throw(:get_settings, @raise_on_failure) do
         begin
           @index.get_settings(*args)
-        rescue Algolia::AlgoliaError => e
+        rescue ::MeiliSearch::ApiError => e
           return {} if e.code == 404 # not fatal
           raise e
         end
