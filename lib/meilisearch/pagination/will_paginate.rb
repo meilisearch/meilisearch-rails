@@ -1,10 +1,10 @@
 begin
   require 'will_paginate/collection'
 rescue LoadError
-  raise(AlgoliaSearch::BadConfiguration, "AlgoliaSearch: Please add 'will_paginate' to your Gemfile to use will_paginate pagination backend")
+  raise(MeiliSearch::BadConfiguration, "MeiliSearch: Please add 'will_paginate' to your Gemfile to use will_paginate pagination backend")
 end
 
-module AlgoliaSearch
+module MeiliSearch
   module Pagination
     class WillPaginate
       def self.create(results, total_hits, options = {})

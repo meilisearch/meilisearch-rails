@@ -1,12 +1,12 @@
 # -*- encoding: utf-8 -*-
 
-require File.join(File.dirname(__FILE__), 'lib', 'algoliasearch', 'version')
+require File.join(File.dirname(__FILE__), 'lib', 'meilisearch', 'version')
 
 require 'date'
 
 Gem::Specification.new do |s|
-  s.name = "algoliasearch-rails"
-  s.version = AlgoliaSearch::VERSION
+  s.name = "meilisearch-rails"
+  s.version = MeiliSearch::VERSION
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Algolia"]
@@ -28,17 +28,17 @@ Gem::Specification.new do |s|
     "LICENSE",
     "README.md",
     "Rakefile",
-    "algoliasearch-rails.gemspec",
-    "lib/algoliasearch-rails.rb",
-    "lib/algoliasearch/algolia_job.rb",
-    "lib/algoliasearch/configuration.rb",
-    "lib/algoliasearch/pagination.rb",
-    "lib/algoliasearch/pagination/kaminari.rb",
-    "lib/algoliasearch/pagination/will_paginate.rb",
-    "lib/algoliasearch/railtie.rb",
-    "lib/algoliasearch/tasks/algoliasearch.rake",
-    "lib/algoliasearch/utilities.rb",
-    "lib/algoliasearch/version.rb",
+    "meilisearch-rails.gemspec",
+    "lib/meilisearch-rails.rb",
+    "lib/meilisearch/meili_job.rb",
+    "lib/meilisearch/configuration.rb",
+    "lib/meilisearch/pagination.rb",
+    "lib/meilisearch/pagination/kaminari.rb",
+    "lib/meilisearch/pagination/will_paginate.rb",
+    "lib/meilisearch/railtie.rb",
+    "lib/meilisearch/tasks/meilisearch.rake",
+    "lib/meilisearch/utilities.rb",
+    "lib/meilisearch/version.rb",
     "spec/spec_helper.rb",
     "spec/utilities_spec.rb",
     "vendor/assets/javascripts/algolia/algoliasearch.angular.js",

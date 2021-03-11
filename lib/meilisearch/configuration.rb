@@ -1,7 +1,7 @@
-module AlgoliaSearch
+module MeiliSearch
   module Configuration
     def configuration
-      @@configuration || raise(NotConfigured, "Please configure AlgoliaSearch. Set AlgoliaSearch.configuration = {application_id: 'YOUR_APPLICATION_ID', api_key: 'YOUR_API_KEY'}")
+      @@configuration || raise(NotConfigured, "Please configure MeiliSearch. Set MeiliSearch.configuration = {application_id: 'YOUR_APPLICATION_ID', api_key: 'YOUR_API_KEY'}")
     end
 
     def configuration=(configuration)

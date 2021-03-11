@@ -1,11 +1,11 @@
 require 'meilisearch'
 
-require 'algoliasearch/version'
-require 'algoliasearch/utilities'
+require 'meilisearch/version'
+require 'meilisearch/utilities'
 
 if defined? Rails
   begin
-    require 'algoliasearch/railtie'
+    require 'meilisearch/railtie'
   rescue LoadError
   end
 end
@@ -38,17 +38,17 @@ require 'logger'
   end
 end
 
-module AlgoliaSearch
+module MeiliSearch
 
   class NotConfigured < StandardError; end
   class BadConfiguration < StandardError; end
   class NoBlockGiven < StandardError; end
   class MixedSlavesAndReplicas < StandardError; end
 
-  autoload :Configuration, 'algoliasearch/configuration'
+  autoload :Configuration, 'meilisearch/configuration'
   extend Configuration
 
-  autoload :Pagination, 'algoliasearch/pagination'
+  autoload :Pagination, 'meilisearch/pagination'
 
   class << self
     attr_reader :included_in
@@ -69,7 +69,7 @@ module AlgoliaSearch
   class IndexSettings
     DEFAULT_BATCH_SIZE = 1000
 
-    # AlgoliaSearch settings
+    # MeiliSearch settings
     OPTIONS = [
       # Attributes
       :searchableAttributes, :attributesForFaceting, :unretrievableAttributes, :attributesToRetrieve,
@@ -317,14 +317,14 @@ module AlgoliaSearch
     # lazy load the ActiveJob class to ensure the
     # queue is initialized before using it
     # see https://github.com/algolia/algoliasearch-rails/issues/69
-    autoload :AlgoliaJob, 'algoliasearch/algolia_job'
+    autoload :MSJob, 'meilisearch/ms_job'
   end
 
   # this class wraps an Algolia::Index object ensuring all raised exceptions
   # are correctly logged or thrown depending on the `raise_on_failure` option
   class SafeIndex
     def initialize(index_uid, raise_on_failure)
-      client = AlgoliaSearch.client
+      client = MeiliSearch.client
       @index = client.get_or_create_index(index_uid)
       @raise_on_failure = raise_on_failure.nil? || raise_on_failure
     end
@@ -385,7 +385,7 @@ module AlgoliaSearch
     end
   end
 
-  # these are the class methods added when AlgoliaSearch is included
+  # these are the class methods added when MeiliSearch is included
   module ClassMethods
 
     def self.extended(base)
@@ -433,7 +433,7 @@ module AlgoliaSearch
         raise ArgumentError.new("Cannot use a enqueue if the `synchronous` option if set") if options[:synchronous]
         proc = if options[:enqueue] == true
           Proc.new do |record, remove|
-            AlgoliaJob.perform_later(record, remove ? 'algolia_remove_from_index!' : 'algolia_index!')
+          MSJob.perform_later(record, remove ? 'algolia_remove_from_index!' : 'algolia_index!')
           end
         elsif options[:enqueue].respond_to?(:call)
           options[:enqueue]
@@ -527,7 +527,7 @@ module AlgoliaSearch
       Thread.current["algolia_without_auto_index_scope_for_#{self.model_name}"]
     end
 
-    def algolia_reindex!(batch_size = AlgoliaSearch::IndexSettings::DEFAULT_BATCH_SIZE, synchronous = false)
+    def algolia_reindex!(batch_size = MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, synchronous = false)
       return if algolia_without_auto_index_scope
       algolia_configurations.each do |options, settings|
         next if algolia_indexing_disabled?(options)
@@ -558,7 +558,7 @@ module AlgoliaSearch
     end
 
     # reindex whole database using a extra temporary index + move operation
-    def algolia_reindex(batch_size = AlgoliaSearch::IndexSettings::DEFAULT_BATCH_SIZE, synchronous = false)
+    def algolia_reindex(batch_size = MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, synchronous = false)
       return if algolia_without_auto_index_scope
       algolia_configurations.each do |options, settings|
         next if algolia_indexing_disabled?(options)
@@ -721,7 +721,7 @@ module AlgoliaSearch
     end
 
     def algolia_search(q, params = {})
-      if AlgoliaSearch.configuration[:pagination_backend]
+      if MeiliSearch.configuration[:pagination_backend]
         # kaminari and will_paginate start pagination at 1, Algolia starts at 0
         params[:page] = (params.delete('page') || params.delete(:page)).to_i
         params[:page] -= 1 if params[:page].to_i > 0
@@ -747,7 +747,7 @@ module AlgoliaSearch
       # Algolia has a default limit of 1000 retrievable hits
       total_hits = json['nbHits'].to_i < json['nbPages'].to_i * json['hitsPerPage'].to_i ?
         json['nbHits'].to_i: json['nbPages'].to_i * json['hitsPerPage'].to_i
-      res = AlgoliaSearch::Pagination.create(results, total_hits, algoliasearch_options.merge({ :page => json['page'].to_i + 1, :per_page => json['hitsPerPage'] }))
+      res = MeiliSearch::Pagination.create(results, total_hits, algoliasearch_options.merge({ :page => json['page'].to_i + 1, :per_page => json['hitsPerPage'] }))
       res.extend(AdditionalMethods)
       res.send(:algolia_init_raw_answer, json)
       res

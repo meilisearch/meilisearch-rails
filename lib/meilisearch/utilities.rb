@@ -1,4 +1,4 @@
-module AlgoliaSearch
+module MeiliSearch
   module Utilities
     class << self
       def get_model_classes
@@ -7,7 +7,7 @@ module AlgoliaSearch
         elsif Rails.application
           Rails.application.eager_load!
         end
-        AlgoliaSearch.instance_variable_get :@included_in
+        MeiliSearch.instance_variable_get :@included_in
       end
 
       def clear_all_indexes

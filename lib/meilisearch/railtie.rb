@@ -1,9 +1,9 @@
 require 'rails'
 
-module AlgoliaSearch
+module MeiliSearch
   class Railtie < Rails::Railtie
     rake_tasks do
-      load "algoliasearch/tasks/algoliasearch.rake"
+      load "meilisearch/tasks/meilisearch.rake"
     end
   end
   class Engine < Rails::Engine
