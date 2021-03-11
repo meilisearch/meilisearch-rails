@@ -18,6 +18,26 @@ end
 
 require 'logger'
 
+::MeiliSearch::Index.class_eval do
+  def add_documents_sync(documents, primary_key = nil)
+    update = add_documents(documents, primary_key = nil)
+    updateId = update["updateId"]
+    wait_for_pending_update(updateId)      
+  end
+
+  def delete_all_documents_sync 
+    update = delete_all_documents
+    updateId = update["updateId"]
+    wait_for_pending_update(updateId) 
+  end
+
+  def delete_document_sync(documentId)
+    update = delete_document(documentId)
+    updateId = update["updateId"]
+    wait_for_pending_update(updateId)
+  end
+end
+
 module AlgoliaSearch
 
   class NotConfigured < StandardError; end
@@ -623,16 +643,16 @@ module AlgoliaSearch
         if algolia_indexable?(object, options)
           raise ArgumentError.new("Cannot index a record with a blank objectID") if object_id.blank?
           if synchronous || options[:synchronous]
-            index.add_object!(settings.get_attributes(object), object_id)
+            index.add_documents_sync(settings.get_attributes(object))
           else
-            index.add_object(settings.get_attributes(object), object_id)
+            index.add_documents(settings.get_attributes(object))
           end
         elsif algolia_conditional_index?(options) && !object_id.blank?
           # remove non-indexable objects
           if synchronous || options[:synchronous]
-            index.delete_object!(object_id)
+            index.delete_document_sync(object_id)
           else
-            index.delete_object(object_id)
+            index.delete_document(object_id)
           end
         end
       end
@@ -648,9 +668,9 @@ module AlgoliaSearch
         index = algolia_ensure_init(options, settings)
         next if options[:slave] || options[:replica]
         if synchronous || options[:synchronous]
-          index.delete_object!(object_id)
+          index.delete_document_sync(object_id)
         else
-          index.delete_object(object_id)
+          index.delete_document(object_id)
         end
       end
       nil
@@ -661,7 +681,7 @@ module AlgoliaSearch
         next if algolia_indexing_disabled?(options)
         index = algolia_ensure_init(options, settings)
         next if options[:slave] || options[:replica]
-        synchronous || options[:synchronous] ? index.clear! : index.clear
+        synchronous || options[:synchronous] ? index.delete_all_documents_sync : index.delete_all_documents
         @algolia_indexes[settings] = nil
       end
       nil
