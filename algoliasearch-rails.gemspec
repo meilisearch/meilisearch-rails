@@ -68,7 +68,7 @@ Gem::Specification.new do |s|
     "vendor/assets/javascripts/algolia/v3/algoliasearch.js",
     "vendor/assets/javascripts/algolia/v3/algoliasearch.min.js"
   ]
-  s.homepage = "http://github.com/algolia/algoliasearch-rails"
+  s.homepage = "http://github.com/meilisearch/meilisearch-rails"
   s.licenses = ["MIT"]
   s.require_paths = ["lib"]
   s.rubygems_version = "2.1.11"
