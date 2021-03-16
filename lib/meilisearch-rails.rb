@@ -20,21 +20,18 @@ require 'logger'
 
 ::MeiliSearch::Index.class_eval do
   def add_documents_sync(documents, primary_key = nil)
-    update = add_documents(documents, primary_key = nil)
-    updateId = update["updateId"]
-    wait_for_pending_update(updateId)      
+    update = add_documents(documents, primary_key)
+    wait_for_pending_update(update['updateId'])      
   end
 
   def delete_all_documents_sync 
     update = delete_all_documents
-    updateId = update["updateId"]
-    wait_for_pending_update(updateId) 
+    wait_for_pending_update(update['updateId']) 
   end
 
   def delete_document_sync(documentId)
     update = delete_document(documentId)
-    updateId = update["updateId"]
-    wait_for_pending_update(updateId)
+    wait_for_pending_update(update['updateId'])
   end
 end
 
@@ -371,7 +368,7 @@ module MeiliSearch
       rescue ::MeiliSearch::ApiError => e
         raise e if raise_on_failure
         # log the error
-        (Rails.logger || Logger.new(STDOUT)).error("[algoliasearch-rails] #{e.message}")
+        (Rails.logger || Logger.new(STDOUT)).error("[meilisearch-rails] #{e.message}")
         # return something
         case method.to_s
         when 'search'
@@ -390,28 +387,28 @@ module MeiliSearch
 
     def self.extended(base)
       class <<base
-        alias_method :without_auto_index, :algolia_without_auto_index unless method_defined? :without_auto_index
-        alias_method :reindex!, :algolia_reindex! unless method_defined? :reindex!
-        alias_method :reindex, :algolia_reindex unless method_defined? :reindex
-        alias_method :index_objects, :algolia_index_objects unless method_defined? :index_objects
-        alias_method :index!, :algolia_index! unless method_defined? :index!
-        alias_method :remove_from_index!, :algolia_remove_from_index! unless method_defined? :remove_from_index!
-        alias_method :clear_index!, :algolia_clear_index! unless method_defined? :clear_index!
-        alias_method :search, :algolia_search unless method_defined? :search
-        alias_method :raw_search, :algolia_raw_search unless method_defined? :raw_search
-        alias_method :search_facet, :algolia_search_facet unless method_defined? :search_facet
-        alias_method :search_for_facet_values, :algolia_search_for_facet_values unless method_defined? :search_for_facet_values
-        alias_method :index, :algolia_index unless method_defined? :index
-        alias_method :index_name, :algolia_index_name unless method_defined? :index_name
-        alias_method :must_reindex?, :algolia_must_reindex? unless method_defined? :must_reindex?
+        alias_method :without_auto_index, :ms_without_auto_index unless method_defined? :without_auto_index
+        alias_method :reindex!, :ms_reindex! unless method_defined? :reindex!
+        alias_method :reindex, :ms_reindex unless method_defined? :reindex
+        alias_method :index_objects, :ms_index_objects unless method_defined? :index_objects
+        alias_method :index!, :ms_index! unless method_defined? :index!
+        alias_method :remove_from_index!, :ms_remove_from_index! unless method_defined? :remove_from_index!
+        alias_method :clear_index!, :ms_clear_index! unless method_defined? :clear_index!
+        alias_method :search, :ms_search unless method_defined? :search
+        alias_method :raw_search, :ms_raw_search unless method_defined? :raw_search
+        alias_method :search_facet, :ms_search_facet unless method_defined? :search_facet
+        alias_method :search_for_facet_values, :ms_search_for_facet_values unless method_defined? :search_for_facet_values
+        alias_method :index, :ms_index unless method_defined? :index
+        alias_method :index_name, :ms_index_name unless method_defined? :index_name
+        alias_method :must_reindex?, :ms_must_reindex? unless method_defined? :must_reindex?
       end
 
-      base.cattr_accessor :algoliasearch_options, :algoliasearch_settings
+      base.cattr_accessor :meilisearch_options, :meilisearch_settings
     end
 
-    def algoliasearch(options = {}, &block)
-      self.algoliasearch_settings = IndexSettings.new(options, &block)
-      self.algoliasearch_options = { :type => algolia_full_const_get(model_name.to_s), :per_page => algoliasearch_settings.get_setting(:hitsPerPage) || 10, :page => 1 }.merge(options)
+    def meilisearch(options = {}, &block)
+      self.meilisearch_settings = IndexSettings.new(options, &block)
+      self.meilisearch_options = { :type => ms_full_const_get(model_name.to_s), :per_page => meilisearch_settings.get_setting(:hitsPerPage) || 10, :page => 1 }.merge(options)
 
       attr_accessor :highlight_result, :snippet_result
 
@@ -422,18 +419,18 @@ module MeiliSearch
             define_method(:after_validation) do |*args|
               super(*args)
               copy_after_validation.bind(self).call
-              algolia_mark_synchronous
+              ms_mark_synchronous
             end
           end
         else
-          after_validation :algolia_mark_synchronous if respond_to?(:after_validation)
+          after_validation :ms_mark_synchronous if respond_to?(:after_validation)
         end
       end
       if options[:enqueue]
         raise ArgumentError.new("Cannot use a enqueue if the `synchronous` option if set") if options[:synchronous]
         proc = if options[:enqueue] == true
           Proc.new do |record, remove|
-          MSJob.perform_later(record, remove ? 'algolia_remove_from_index!' : 'algolia_index!')
+          MSJob.perform_later(record, remove ? 'ms_remove_from_index!' : 'ms_index!')
           end
         elsif options[:enqueue].respond_to?(:call)
           options[:enqueue]
@@ -442,8 +439,8 @@ module MeiliSearch
         else
           raise ArgumentError.new("Invalid `enqueue` option: #{options[:enqueue]}")
         end
-        algoliasearch_options[:enqueue] = Proc.new do |record, remove|
-          proc.call(record, remove) unless algolia_without_auto_index_scope
+        meilisearch_options[:enqueue] = Proc.new do |record, remove|
+          proc.call(record, remove) unless ms_without_auto_index_scope
         end
       end
       unless options[:auto_index] == false
@@ -455,12 +452,12 @@ module MeiliSearch
             define_method(:after_validation) do |*args|
               super(*args)
               copy_after_validation.bind(self).call
-              algolia_mark_must_reindex
+              ms_mark_must_reindex
             end
 
             define_method(:before_save) do |*args|
               copy_before_save.bind(self).call
-              algolia_mark_for_auto_indexing
+              ms_mark_for_auto_indexing
               super(*args)
             end
 
@@ -470,7 +467,7 @@ module MeiliSearch
               define_method(:after_commit) do |*args|
                 super(*args)
                 copy_after_commit.bind(self).call
-                algolia_perform_index_tasks
+                ms_perform_index_tasks
               end
             else
               copy_after_save = instance_method(:after_save)
@@ -478,18 +475,18 @@ module MeiliSearch
                 super(*args)
                 copy_after_save.bind(self).call
                 self.db.after_commit do
-                  algolia_perform_index_tasks
+                  ms_perform_index_tasks
                 end
               end
             end
           end
         else
-          after_validation :algolia_mark_must_reindex if respond_to?(:after_validation)
-          before_save :algolia_mark_for_auto_indexing if respond_to?(:before_save)
+          after_validation :ms_mark_must_reindex if respond_to?(:after_validation)
+          before_save :ms_mark_for_auto_indexing if respond_to?(:before_save)
           if respond_to?(:after_commit)
-            after_commit :algolia_perform_index_tasks
+            after_commit :ms_perform_index_tasks
           elsif respond_to?(:after_save)
-            after_save :algolia_perform_index_tasks
+            after_save :ms_perform_index_tasks
           end
         end
       end
@@ -500,55 +497,55 @@ module MeiliSearch
 
             define_method(:after_destroy) do |*args|
               copy_after_destroy.bind(self).call
-              algolia_enqueue_remove_from_index!(algolia_synchronous?)
+              ms_enqueue_remove_from_index!(ms_synchronous?)
               super(*args)
             end
           end
         else
-          after_destroy { |searchable| searchable.algolia_enqueue_remove_from_index!(algolia_synchronous?) } if respond_to?(:after_destroy)
+          after_destroy { |searchable| searchable.ms_enqueue_remove_from_index!(ms_synchronous?) } if respond_to?(:after_destroy)
         end
       end
     end
 
-    def algolia_without_auto_index(&block)
-      self.algolia_without_auto_index_scope = true
+    def ms_without_auto_index(&block)
+      self.ms_without_auto_index_scope = true
       begin
         yield
       ensure
-        self.algolia_without_auto_index_scope = false
+        self.ms_without_auto_index_scope = false
       end
     end
 
-    def algolia_without_auto_index_scope=(value)
-      Thread.current["algolia_without_auto_index_scope_for_#{self.model_name}"] = value
+    def ms_without_auto_index_scope=(value)
+      Thread.current["ms_without_auto_index_scope_for_#{self.model_name}"] = value
     end
 
-    def algolia_without_auto_index_scope
-      Thread.current["algolia_without_auto_index_scope_for_#{self.model_name}"]
+    def ms_without_auto_index_scope
+      Thread.current["ms_without_auto_index_scope_for_#{self.model_name}"]
     end
 
-    def algolia_reindex!(batch_size = MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, synchronous = false)
-      return if algolia_without_auto_index_scope
-      algolia_configurations.each do |options, settings|
-        next if algolia_indexing_disabled?(options)
-        index = algolia_ensure_init(options, settings)
+    def ms_reindex!(batch_size = MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, synchronous = false)
+      return if ms_without_auto_index_scope
+      ms_configurations.each do |options, settings|
+        next if ms_indexing_disabled?(options)
+        index = ms_ensure_init(options, settings)
         next if options[:slave] || options[:replica]
         last_task = nil
 
-        algolia_find_in_batches(batch_size) do |group|
-          if algolia_conditional_index?(options)
+        ms_find_in_batches(batch_size) do |group|
+          if ms_conditional_index?(options)
             # delete non-indexable objects
-            ids = group.select { |o| !algolia_indexable?(o, options) }.map { |o| algolia_object_id_of(o, options) }
+            ids = group.select { |o| !ms_indexable?(o, options) }.map { |o| ms_object_id_of(o, options) }
             index.delete_objects(ids.select { |id| !id.blank? })
             # select only indexable objects
-            group = group.select { |o| algolia_indexable?(o, options) }
+            group = group.select { |o| ms_indexable?(o, options) }
           end
           objects = group.map do |o|
             attributes = settings.get_attributes(o)
             unless attributes.class == Hash
               attributes = attributes.to_hash
             end
-            attributes.merge 'objectID' => algolia_object_id_of(o, options)
+            attributes.merge 'objectID' => ms_object_id_of(o, options)
           end
           last_task = index.add_documents(objects)
         end
@@ -558,14 +555,14 @@ module MeiliSearch
     end
 
     # reindex whole database using a extra temporary index + move operation
-    def algolia_reindex(batch_size = MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, synchronous = false)
-      return if algolia_without_auto_index_scope
-      algolia_configurations.each do |options, settings|
-        next if algolia_indexing_disabled?(options)
+    def ms_reindex(batch_size = MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, synchronous = false)
+      return if ms_without_auto_index_scope
+      ms_configurations.each do |options, settings|
+        next if ms_indexing_disabled?(options)
         next if options[:slave] || options[:replica]
 
         # fetch the master settings
-        master_index = algolia_ensure_init(options, settings)
+        master_index = ms_ensure_init(options, settings)
         master_settings = master_index.settings rescue {} # if master doesn't exist yet
         master_settings.merge!(JSON.parse(settings.to_settings.to_json)) # convert symbols to strings
 
@@ -576,7 +573,7 @@ module MeiliSearch
         master_settings.delete 'replicas'
 
         # init temporary index
-        src_index_name = algolia_index_name(options)
+        src_index_name = ms_index_name(options)
         tmp_index_name = "#{src_index_name}.tmp"
         tmp_options = options.merge({ :index_name => tmp_index_name })
         tmp_options.delete(:per_environment) # already included in the temporary index_name
@@ -586,15 +583,15 @@ module MeiliSearch
           ::Algolia::copy_index!(src_index_name, tmp_index_name, %w(settings synonyms rules))
           tmp_index = SafeIndex.new(tmp_index_name, !!options[:raise_on_failure])
         else
-          tmp_index = algolia_ensure_init(tmp_options, tmp_settings, master_settings)
+          tmp_index = ms_ensure_init(tmp_options, tmp_settings, master_settings)
         end
 
-          algolia_find_in_batches(batch_size) do |group|
-          if algolia_conditional_index?(options)
+          ms_find_in_batches(batch_size) do |group|
+          if ms_conditional_index?(options)
             # select only indexable objects
-            group = group.select { |o| algolia_indexable?(o, tmp_options) }
+            group = group.select { |o| ms_indexable?(o, tmp_options) }
           end
-          objects = group.map { |o| tmp_settings.get_attributes(o).merge 'objectID' => algolia_object_id_of(o, tmp_options) }
+          objects = group.map { |o| tmp_settings.get_attributes(o).merge 'objectID' => ms_object_id_of(o, tmp_options) }
           tmp_index.add_documents(objects)
         end
 
@@ -604,8 +601,8 @@ module MeiliSearch
       nil
     end
 
-    def algolia_set_settings(synchronous = false)
-      algolia_configurations.each do |options, settings|
+    def ms_set_settings(synchronous = false)
+      ms_configurations.each do |options, settings|
         if options[:primary_settings] && options[:inherit]
           primary = options[:primary_settings].to_settings
           primary.delete :slaves
@@ -617,37 +614,37 @@ module MeiliSearch
           final_settings = settings.to_settings
         end
 
-        index = SafeIndex.new(algolia_index_name(options), true)
+        index = SafeIndex.new(ms_index_name(options), true)
         task = index.update_settings(final_settings)
         index.wait_for_pending_update(task["taskID"]) if synchronous
       end
     end
 
-    def algolia_index_objects(objects, synchronous = false)
-      algolia_configurations.each do |options, settings|
-        next if algolia_indexing_disabled?(options)
-        index = algolia_ensure_init(options, settings)
+    def ms_index_objects(objects, synchronous = false)
+      ms_configurations.each do |options, settings|
+        next if ms_indexing_disabled?(options)
+        index = ms_ensure_init(options, settings)
         next if options[:slave] || options[:replica]
-        task = index.add_documents(objects.map { |o| settings.get_attributes(o).merge 'objectID' => algolia_object_id_of(o, options) })
+        task = index.add_documents(objects.map { |o| settings.get_attributes(o).merge 'objectID' => ms_object_id_of(o, options) })
         index.wait_for_pending_update(task["taskID"]) if synchronous || options[:synchronous]
       end
     end
 
-    def algolia_index!(object, synchronous = false)
-      return if algolia_without_auto_index_scope
-      algolia_configurations.each do |options, settings|
-        next if algolia_indexing_disabled?(options)
-        object_id = algolia_object_id_of(object, options)
-        index = algolia_ensure_init(options, settings)
+    def ms_index!(object, synchronous = false)
+      return if ms_without_auto_index_scope
+      ms_configurations.each do |options, settings|
+        next if ms_indexing_disabled?(options)
+        object_id = ms_object_id_of(object, options)
+        index = ms_ensure_init(options, settings)
         next if options[:slave] || options[:replica]
-        if algolia_indexable?(object, options)
+        if ms_indexable?(object, options)
           raise ArgumentError.new("Cannot index a record with a blank objectID") if object_id.blank?
           if synchronous || options[:synchronous]
             index.add_documents_sync(settings.get_attributes(object))
           else
             index.add_documents(settings.get_attributes(object))
           end
-        elsif algolia_conditional_index?(options) && !object_id.blank?
+        elsif ms_conditional_index?(options) && !object_id.blank?
           # remove non-indexable objects
           if synchronous || options[:synchronous]
             index.delete_document_sync(object_id)
@@ -659,13 +656,13 @@ module MeiliSearch
       nil
     end
 
-    def algolia_remove_from_index!(object, synchronous = false)
-      return if algolia_without_auto_index_scope
-      object_id = algolia_object_id_of(object)
+    def ms_remove_from_index!(object, synchronous = false)
+      return if ms_without_auto_index_scope
+      object_id = ms_object_id_of(object)
       raise ArgumentError.new("Cannot index a record with a blank objectID") if object_id.blank?
-      algolia_configurations.each do |options, settings|
-        next if algolia_indexing_disabled?(options)
-        index = algolia_ensure_init(options, settings)
+      ms_configurations.each do |options, settings|
+        next if ms_indexing_disabled?(options)
+        index = ms_ensure_init(options, settings)
         next if options[:slave] || options[:replica]
         if synchronous || options[:synchronous]
           index.delete_document_sync(object_id)
@@ -676,65 +673,65 @@ module MeiliSearch
       nil
     end
 
-    def algolia_clear_index!(synchronous = false)
-      algolia_configurations.each do |options, settings|
-        next if algolia_indexing_disabled?(options)
-        index = algolia_ensure_init(options, settings)
+    def ms_clear_index!(synchronous = false)
+      ms_configurations.each do |options, settings|
+        next if ms_indexing_disabled?(options)
+        index = ms_ensure_init(options, settings)
         next if options[:slave] || options[:replica]
         synchronous || options[:synchronous] ? index.delete_all_documents_sync : index.delete_all_documents
-        @algolia_indexes[settings] = nil
+        @ms_indexes[settings] = nil
       end
       nil
     end
 
-    def algolia_raw_search(q, params = {})
+    def ms_raw_search(q, params = {})
       index_name = params.delete(:index) ||
                    params.delete('index') ||
                    params.delete(:slave) ||
                    params.delete('slave') ||
                    params.delete(:replica) ||
                    params.delete('replica')
-      index = algolia_index(index_name)
+      index = ms_index(index_name)
       index.search(q, Hash[params.map { |k,v| [k.to_s, v.to_s] }])
     end
 
     module AdditionalMethods
       def self.extended(base)
         class <<base
-          alias_method :raw_answer, :algolia_raw_answer unless method_defined? :raw_answer
-          alias_method :facets, :algolia_facets unless method_defined? :facets
+          alias_method :raw_answer, :ms_raw_answer unless method_defined? :raw_answer
+          alias_method :facets, :ms_facets unless method_defined? :facets
         end
       end
 
-      def algolia_raw_answer
-        @algolia_json
+      def ms_raw_answer
+        @ms_json
       end
 
-      def algolia_facets
-        @algolia_json['facets']
+      def ms_facets
+        @ms_json['facets']
       end
 
       private
-      def algolia_init_raw_answer(json)
-        @algolia_json = json
+      def ms_init_raw_answer(json)
+        @ms_json = json
       end
     end
 
-    def algolia_search(q, params = {})
+    def ms_search(q, params = {})
       if MeiliSearch.configuration[:pagination_backend]
         # kaminari and will_paginate start pagination at 1, Algolia starts at 0
         params[:page] = (params.delete('page') || params.delete(:page)).to_i
         params[:page] -= 1 if params[:page].to_i > 0
       end
-      json = algolia_raw_search(q, params)
+      json = ms_raw_search(q, params)
       hit_ids = json['hits'].map { |hit| hit['objectID'] }
       if defined?(::Mongoid::Document) && self.include?(::Mongoid::Document)
-        condition_key = algolia_object_id_method.in
+        condition_key = ms_object_id_method.in
       else
-        condition_key = algolia_object_id_method
+        condition_key = ms_object_id_method
       end
-      results_by_id = algoliasearch_options[:type].where(condition_key => hit_ids).index_by do |hit|
-        algolia_object_id_of(hit)
+      results_by_id = meilisearch_options[:type].where(condition_key => hit_ids).index_by do |hit|
+        ms_object_id_of(hit)
       end
       results = json['hits'].map do |hit|
         o = results_by_id[hit['objectID'].to_s]
@@ -747,61 +744,61 @@ module MeiliSearch
       # Algolia has a default limit of 1000 retrievable hits
       total_hits = json['nbHits'].to_i < json['nbPages'].to_i * json['hitsPerPage'].to_i ?
         json['nbHits'].to_i: json['nbPages'].to_i * json['hitsPerPage'].to_i
-      res = MeiliSearch::Pagination.create(results, total_hits, algoliasearch_options.merge({ :page => json['page'].to_i + 1, :per_page => json['hitsPerPage'] }))
+      res = MeiliSearch::Pagination.create(results, total_hits, meilisearch_options.merge({ :page => json['page'].to_i + 1, :per_page => json['hitsPerPage'] }))
       res.extend(AdditionalMethods)
-      res.send(:algolia_init_raw_answer, json)
+      res.send(:ms_init_raw_answer, json)
       res
     end
 
-    def algolia_search_for_facet_values(facet, text, params = {})
+    def ms_search_for_facet_values(facet, text, params = {})
       index_name = params.delete(:index) ||
                    params.delete('index') ||
                    params.delete(:slave) ||
                    params.delete('slave') ||
                    params.delete(:replica) ||
                    params.delete('replicas')
-      index = algolia_index(index_name)
+      index = ms_index(index_name)
       query = Hash[params.map { |k, v| [k.to_s, v.to_s] }]
       index.search_facet(facet, text, query)['facetHits']
     end
 
     # deprecated (renaming)
-    alias :algolia_search_facet :algolia_search_for_facet_values
+    alias :ms_search_facet :ms_search_for_facet_values
 
-    def algolia_index(name = nil)
+    def ms_index(name = nil)
       if name
-        algolia_configurations.each do |o, s|
-          return algolia_ensure_init(o, s) if o[:index_name].to_s == name.to_s
+        ms_configurations.each do |o, s|
+          return ms_ensure_init(o, s) if o[:index_name].to_s == name.to_s
         end
         raise ArgumentError.new("Invalid index/replica name: #{name}")
       end
-      algolia_ensure_init
+      ms_ensure_init
     end
 
-    def algolia_index_name(options = nil)
-      options ||= algoliasearch_options
+    def ms_index_name(options = nil)
+      options ||= meilisearch_options
       name = options[:index_name] || model_name.to_s.gsub('::', '_')
       name = "#{name}_#{Rails.env.to_s}" if options[:per_environment]
       name
     end
 
-    def algolia_must_reindex?(object)
-      # use +algolia_dirty?+ method if implemented
-      return object.send(:algolia_dirty?) if (object.respond_to?(:algolia_dirty?))
+    def ms_must_reindex?(object)
+      # use +ms_dirty?+ method if implemented
+      return object.send(:ms_dirty?) if (object.respond_to?(:ms_dirty?))
       # Loop over each index to see if a attribute used in records has changed
-      algolia_configurations.each do |options, settings|
-        next if algolia_indexing_disabled?(options)
+      ms_configurations.each do |options, settings|
+        next if ms_indexing_disabled?(options)
         next if options[:slave] || options[:replica]
-        return true if algolia_object_id_changed?(object, options)
+        return true if ms_object_id_changed?(object, options)
         settings.get_attribute_names(object).each do |k|
-          return true if algolia_attribute_changed?(object, k)
+          return true if ms_attribute_changed?(object, k)
           # return true if !object.respond_to?(changed_method) || object.send(changed_method)
         end
         [options[:if], options[:unless]].each do |condition|
           case condition
           when nil
           when String, Symbol
-            return true if algolia_attribute_changed?(object, condition)
+            return true if ms_attribute_changed?(object, condition)
           else
             # if the :if, :unless condition is a anything else,
             # we have no idea whether we should reindex or not
@@ -816,46 +813,46 @@ module MeiliSearch
 
     protected
 
-    def algolia_ensure_init(options = nil, settings = nil, index_settings = nil)
-      raise ArgumentError.new('No `algoliasearch` block found in your model.') if algoliasearch_settings.nil?
+    def ms_ensure_init(options = nil, settings = nil, index_settings = nil)
+      raise ArgumentError.new('No `meilisearch` block found in your model.') if meilisearch_settings.nil?
 
-      @algolia_indexes ||= {}
+      @ms_indexes ||= {}
 
-      options ||= algoliasearch_options
-      settings ||= algoliasearch_settings
+      options ||= meilisearch_options
+      settings ||= meilisearch_settings
 
-      return @algolia_indexes[settings] if @algolia_indexes[settings]
+      return @ms_indexes[settings] if @ms_indexes[settings]
 
-      @algolia_indexes[settings] = SafeIndex.new(algolia_index_name(options), algoliasearch_options[:raise_on_failure])
+      @ms_indexes[settings] = SafeIndex.new(ms_index_name(options), meilisearch_options[:raise_on_failure])
 
-      current_settings = @algolia_indexes[settings].settings(:getVersion => 1) rescue nil # if the index doesn't exist
+      current_settings = @ms_indexes[settings].settings(:getVersion => 1) rescue nil # if the index doesn't exist
 
       index_settings ||= settings.to_settings
       index_settings = options[:primary_settings].to_settings.merge(index_settings) if options[:inherit]
 
       options[:check_settings] = true if options[:check_settings].nil?
 
-      if !algolia_indexing_disabled?(options) && options[:check_settings] && algoliasearch_settings_changed?(current_settings, index_settings)
+      if !ms_indexing_disabled?(options) && options[:check_settings] && meilisearch_settings_changed?(current_settings, index_settings)
         used_slaves = !current_settings.nil? && !current_settings['slaves'].nil?
         replicas = index_settings.delete(:replicas) ||
                    index_settings.delete('replicas') ||
                    index_settings.delete(:slaves) ||
                    index_settings.delete('slaves')
         index_settings[used_slaves ? :slaves : :replicas] = replicas unless replicas.nil? || options[:inherit]
-        @algolia_indexes[settings].update_settings(index_settings)
+        @ms_indexes[settings].update_settings(index_settings)
       end
 
-      @algolia_indexes[settings]
+      @ms_indexes[settings]
     end
 
     private
 
-    def algolia_configurations
-      raise ArgumentError.new('No `algoliasearch` block found in your model.') if algoliasearch_settings.nil?
+    def ms_configurations
+      raise ArgumentError.new('No `meilisearch` block found in your model.') if meilisearch_settings.nil?
       if @configurations.nil?
         @configurations = {}
-        @configurations[algoliasearch_options] = algoliasearch_settings
-        algoliasearch_settings.additional_indexes.each do |k,v|
+        @configurations[meilisearch_options] = meilisearch_settings
+        meilisearch_settings.additional_indexes.each do |k,v|
           @configurations[k] = v
 
           if v.additional_indexes.any?
@@ -868,21 +865,21 @@ module MeiliSearch
       @configurations
     end
 
-    def algolia_object_id_method(options = nil)
-      options ||= algoliasearch_options
+    def ms_object_id_method(options = nil)
+      options ||= meilisearch_options
       options[:id] || options[:object_id] || :id
     end
 
-    def algolia_object_id_of(o, options = nil)
-      o.send(algolia_object_id_method(options)).to_s
+    def ms_object_id_of(o, options = nil)
+      o.send(ms_object_id_method(options)).to_s
     end
 
-    def algolia_object_id_changed?(o, options = nil)
-      changed = algolia_attribute_changed?(o, algolia_object_id_method(options))
+    def ms_object_id_changed?(o, options = nil)
+      changed = ms_attribute_changed?(o, ms_object_id_method(options))
       changed.nil? ? false : changed
     end
 
-    def algoliasearch_settings_changed?(prev, current)
+    def meilisearch_settings_changed?(prev, current)
       return true if prev.nil?
       current.each do |k, v|
         prev_v = prev[k.to_s]
@@ -896,7 +893,7 @@ module MeiliSearch
       false
     end
 
-    def algolia_full_const_get(name)
+    def ms_full_const_get(name)
       list = name.split('::')
       list.shift if list.first.blank?
       obj = Object.const_defined?(:RUBY_VERSION) && RUBY_VERSION.to_f < 1.9 ? Object : self
@@ -908,19 +905,19 @@ module MeiliSearch
       obj
     end
 
-    def algolia_conditional_index?(options = nil)
-      options ||= algoliasearch_options
+    def ms_conditional_index?(options = nil)
+      options ||= meilisearch_options
       options[:if].present? || options[:unless].present?
     end
 
-    def algolia_indexable?(object, options = nil)
-      options ||= algoliasearch_options
-      if_passes = options[:if].blank? || algolia_constraint_passes?(object, options[:if])
-      unless_passes = options[:unless].blank? || !algolia_constraint_passes?(object, options[:unless])
+    def ms_indexable?(object, options = nil)
+      options ||= meilisearch_options
+      if_passes = options[:if].blank? || ms_constraint_passes?(object, options[:if])
+      unless_passes = options[:unless].blank? || !ms_constraint_passes?(object, options[:unless])
       if_passes && unless_passes
     end
 
-    def algolia_constraint_passes?(object, constraint)
+    def ms_constraint_passes?(object, constraint)
       case constraint
       when Symbol
         object.send(constraint)
@@ -928,7 +925,7 @@ module MeiliSearch
         object.send(constraint.to_sym)
       when Enumerable
         # All constraints must pass
-        constraint.all? { |inner_constraint| algolia_constraint_passes?(object, inner_constraint) }
+        constraint.all? { |inner_constraint| ms_constraint_passes?(object, inner_constraint) }
       else
         if constraint.respond_to?(:call) # Proc
           constraint.call(object)
@@ -938,8 +935,8 @@ module MeiliSearch
       end
     end
 
-    def algolia_indexing_disabled?(options = nil)
-      options ||= algoliasearch_options
+    def ms_indexing_disabled?(options = nil)
+      options ||= meilisearch_options
       constraint = options[:disable_indexing] || options['disable_indexing']
       case constraint
       when nil
@@ -954,7 +951,7 @@ module MeiliSearch
       raise ArgumentError, "Unknown constraint type: #{constraint} (#{constraint.class})"
     end
 
-    def algolia_find_in_batches(batch_size, &block)
+    def ms_find_in_batches(batch_size, &block)
       if (defined?(::ActiveRecord) && ancestors.include?(::ActiveRecord::Base)) || respond_to?(:find_in_batches)
         find_in_batches(:batch_size => batch_size, &block)
       elsif defined?(::Sequel) && self < Sequel::Model
@@ -973,7 +970,7 @@ module MeiliSearch
       end
     end
 
-    def algolia_attribute_changed?(object, attr_name)
+    def ms_attribute_changed?(object, attr_name)
       # if one of two method is implemented, we return its result
       # true/false means whether it has changed or not
       # +#{attr_name}_changed?+ always defined for automatic attributes but deprecated after Rails 5.2
@@ -1023,67 +1020,67 @@ module MeiliSearch
 
     def self.included(base)
       base.instance_eval do
-        alias_method :index!, :algolia_index! unless method_defined? :index!
-        alias_method :remove_from_index!, :algolia_remove_from_index! unless method_defined? :remove_from_index!
+        alias_method :index!, :ms_index! unless method_defined? :index!
+        alias_method :remove_from_index!, :ms_remove_from_index! unless method_defined? :remove_from_index!
       end
     end
 
-    def algolia_index!(synchronous = false)
-      self.class.algolia_index!(self, synchronous || algolia_synchronous?)
+    def ms_index!(synchronous = false)
+      self.class.ms_index!(self, synchronous || ms_synchronous?)
     end
 
-    def algolia_remove_from_index!(synchronous = false)
-      self.class.algolia_remove_from_index!(self, synchronous || algolia_synchronous?)
+    def ms_remove_from_index!(synchronous = false)
+      self.class.ms_remove_from_index!(self, synchronous || ms_synchronous?)
     end
 
-    def algolia_enqueue_remove_from_index!(synchronous)
-      if algoliasearch_options[:enqueue]
-        algoliasearch_options[:enqueue].call(self, true) unless self.class.send(:algolia_indexing_disabled?, algoliasearch_options)
+    def ms_enqueue_remove_from_index!(synchronous)
+      if meilisearch_options[:enqueue]
+        meilisearch_options[:enqueue].call(self, true) unless self.class.send(:ms_indexing_disabled?, meilisearch_options)
       else
-        algolia_remove_from_index!(synchronous || algolia_synchronous?)
+        ms_remove_from_index!(synchronous || ms_synchronous?)
       end
     end
 
-    def algolia_enqueue_index!(synchronous)
-      if algoliasearch_options[:enqueue]
-        algoliasearch_options[:enqueue].call(self, false) unless self.class.send(:algolia_indexing_disabled?, algoliasearch_options)
+    def ms_enqueue_index!(synchronous)
+      if meilisearch_options[:enqueue]
+        meilisearch_options[:enqueue].call(self, false) unless self.class.send(:ms_indexing_disabled?, meilisearch_options)
       else
-        algolia_index!(synchronous)
+        ms_index!(synchronous)
       end
     end
 
     private
 
-    def algolia_synchronous?
-      @algolia_synchronous == true
+    def ms_synchronous?
+      @ms_synchronous == true
     end
 
-    def algolia_mark_synchronous
-      @algolia_synchronous = true
+    def ms_mark_synchronous
+      @ms_synchronous = true
     end
 
-    def algolia_mark_for_auto_indexing
-      @algolia_auto_indexing = true
+    def ms_mark_for_auto_indexing
+      @ms_auto_indexing = true
     end
 
-    def algolia_mark_must_reindex
-      # algolia_must_reindex flag is reset after every commit as part. If we must reindex at any point in
+    def ms_mark_must_reindex
+      # ms_must_reindex flag is reset after every commit as part. If we must reindex at any point in
       # a stransaction, keep flag set until it is explicitly unset
-      @algolia_must_reindex ||=
+      @ms_must_reindex ||=
        if defined?(::Sequel) && is_a?(Sequel::Model)
-         new? || self.class.algolia_must_reindex?(self)
+         new? || self.class.ms_must_reindex?(self)
        else
-         new_record? || self.class.algolia_must_reindex?(self)
+         new_record? || self.class.ms_must_reindex?(self)
        end
       true
     end
 
-    def algolia_perform_index_tasks
-      return if !@algolia_auto_indexing || @algolia_must_reindex == false
-      algolia_enqueue_index!(algolia_synchronous?)
-      remove_instance_variable(:@algolia_auto_indexing) if instance_variable_defined?(:@algolia_auto_indexing)
-      remove_instance_variable(:@algolia_synchronous) if instance_variable_defined?(:@algolia_synchronous)
-      remove_instance_variable(:@algolia_must_reindex) if instance_variable_defined?(:@algolia_must_reindex)
+    def ms_perform_index_tasks
+      return if !@ms_auto_indexing || @ms_must_reindex == false
+      ms_enqueue_index!(ms_synchronous?)
+      remove_instance_variable(:@ms_auto_indexing) if instance_variable_defined?(:@ms_auto_indexing)
+      remove_instance_variable(:@ms_synchronous) if instance_variable_defined?(:@ms_synchronous)
+      remove_instance_variable(:@ms_must_reindex) if instance_variable_defined?(:@ms_must_reindex)
     end
   end
 end
