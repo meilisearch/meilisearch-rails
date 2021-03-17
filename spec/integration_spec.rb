@@ -13,7 +13,7 @@ require 'logger'
 require 'sequel'
 require 'active_model_serializers'
 
-AlgoliaSearch.configuration = { :application_id => ENV['ALGOLIA_APPLICATION_ID'], :api_key => ENV['ALGOLIA_API_KEY'] }
+MeiliSearch.configuration = { :application_id => ENV['MEILISEARCH_HOST'], :api_key => ENV['MEILISEARCH_API_KEY'] }
 
 FileUtils.rm( 'data.sqlite3' ) rescue nil
 ActiveRecord::Base.logger = Logger.new(STDOUT)
@@ -132,9 +132,9 @@ ActiveRecord::Schema.define do
 end
 
 class Product < ActiveRecord::Base
-  include AlgoliaSearch
+  include MeiliSearch
 
-  algoliasearch :auto_index => false,
+  meilisearch :auto_index => false,
     :if => :published?, :unless => lambda { |o| o.href.blank? },
     :index_name => safe_index_name("my_products_index") do
 
@@ -163,10 +163,10 @@ class Camera < Product
 end
 
 class Color < ActiveRecord::Base
-  include AlgoliaSearch
+  include MeiliSearch
   attr_accessor :not_indexed
 
-  algoliasearch :synchronous => true, :index_name => safe_index_name("Color"), :per_environment => true do
+  meilisearch :synchronous => true, :index_name => safe_index_name("Color"), :per_environment => true do
     attributesToIndex [:name]
     attributesForFaceting ['searchable(short_name)']
     customRanking ["asc(hex)"]
@@ -191,23 +191,23 @@ class Color < ActiveRecord::Base
 end
 
 class DisabledBoolean < ActiveRecord::Base
-  include AlgoliaSearch
+  include MeiliSearch
 
-  algoliasearch :synchronous => true, :disable_indexing => true, :index_name => safe_index_name("DisabledBoolean") do
+  meilisearch :synchronous => true, :disable_indexing => true, :index_name => safe_index_name("DisabledBoolean") do
   end
 end
 
 class DisabledProc < ActiveRecord::Base
-  include AlgoliaSearch
+  include MeiliSearch
 
-  algoliasearch :synchronous => true, :disable_indexing => Proc.new { true }, :index_name => safe_index_name("DisabledProc") do
+  meilisearch :synchronous => true, :disable_indexing => Proc.new { true }, :index_name => safe_index_name("DisabledProc") do
   end
 end
 
 class DisabledSymbol < ActiveRecord::Base
-  include AlgoliaSearch
+  include MeiliSearch
 
-  algoliasearch :synchronous => true, :disable_indexing => :truth, :index_name => safe_index_name("DisabledSymbol") do
+  meilisearch :synchronous => true, :disable_indexing => :truth, :index_name => safe_index_name("DisabledSymbol") do
   end
 
   def self.truth
@@ -221,9 +221,9 @@ module Namespaced
   end
 end
 class Namespaced::Model < ActiveRecord::Base
-  include AlgoliaSearch
+  include MeiliSearch
 
-  algoliasearch :synchronous => true, :index_name => safe_index_name(algolia_index_name({})) do
+  meilisearch :synchronous => true, :index_name => safe_index_name(ms_index_name({})) do
     attribute :customAttr do
       40 + another_private_value
     end
@@ -236,16 +236,16 @@ class Namespaced::Model < ActiveRecord::Base
 end
 
 class UniqUser < ActiveRecord::Base
-  include AlgoliaSearch
+  include MeiliSearch
 
-  algoliasearch :synchronous => true, :index_name => safe_index_name("UniqUser"), :per_environment => true, :id => :name do
+  meilisearch :synchronous => true, :index_name => safe_index_name("UniqUser"), :per_environment => true, :id => :name do
   end
 end
 
 class NullableId < ActiveRecord::Base
-  include AlgoliaSearch
+  include MeiliSearch
 
-  algoliasearch :synchronous => true, :index_name => safe_index_name("NullableId"), :per_environment => true, :id => :custom_id, :if => :never do
+  meilisearch :synchronous => true, :index_name => safe_index_name("NullableId"), :per_environment => true, :id => :custom_id, :if => :never do
   end
 
   def custom_id
@@ -260,9 +260,9 @@ end
 class NestedItem < ActiveRecord::Base
   has_many :children, :class_name => "NestedItem", :foreign_key => "parent_id"
 
-  include AlgoliaSearch
+  include MeiliSearch
 
-  algoliasearch :synchronous => true, :index_name => safe_index_name("NestedItem"), :per_environment => true, :unless => :hidden do
+  meilisearch :synchronous => true, :index_name => safe_index_name("NestedItem"), :per_environment => true, :unless => :hidden do
     attribute :nb_children
   end
 
@@ -272,11 +272,11 @@ class NestedItem < ActiveRecord::Base
 end
 
 # create this index before the class actually loads, to ensure the customRanking is updated
-index = Algolia::Index.new(safe_index_name('City_replica2'))
+index = MeiliSearch::Index.new(safe_index_name('City_replica2'))
 index.wait_task index.set_settings({'customRanking' => ['desc(d)']})['taskID']
 
 class City < ActiveRecord::Base
-  include AlgoliaSearch
+  include MeiliSearch
 
   serialize :gl_array
 
@@ -284,7 +284,7 @@ class City < ActiveRecord::Base
     lat.present? && lng.present? ? { :lat => lat, :lng => lng } : gl_array
   end
 
-  algoliasearch :synchronous => true, :index_name => safe_index_name("City"), :per_environment => true do
+  meilisearch :synchronous => true, :index_name => safe_index_name("City"), :per_environment => true do
     geoloc do
       geoloc_array
     end
@@ -313,9 +313,9 @@ end
 class SequelBook < Sequel::Model(SEQUEL_DB)
   plugin :active_model
 
-  include AlgoliaSearch
+  include MeiliSearch
 
-  algoliasearch :synchronous => true, :index_name => safe_index_name("SequelBook"), :per_environment => true, :sanitize => true do
+  meilisearch :synchronous => true, :index_name => safe_index_name("SequelBook"), :per_environment => true, :sanitize => true do
     add_attribute :test
     add_attribute :test2
 
@@ -360,9 +360,9 @@ describe 'SequelBook' do
 end
 
 class MongoObject < ActiveRecord::Base
-  include AlgoliaSearch
+  include MeiliSearch
 
-  algoliasearch :index_name => safe_index_name("MongoObject") do
+  meilisearch :index_name => safe_index_name("MongoObject") do
   end
 
   def self.reindex!
@@ -375,9 +375,9 @@ class MongoObject < ActiveRecord::Base
 end
 
 class Book < ActiveRecord::Base
-  include AlgoliaSearch
+  include MeiliSearch
 
-  algoliasearch :synchronous => true, :index_name => safe_index_name("SecuredBook"), :per_environment => true, :sanitize => true do
+  meilisearch :synchronous => true, :index_name => safe_index_name("SecuredBook"), :per_environment => true, :sanitize => true do
     attributesToIndex [:name]
     tags do
       [premium ? 'premium' : 'standard', released ? 'public' : 'private']
@@ -399,14 +399,14 @@ class Book < ActiveRecord::Base
 end
 
 class Ebook < ActiveRecord::Base
-  include AlgoliaSearch
+  include MeiliSearch
   attr_accessor :current_time, :published_at
 
-  algoliasearch :synchronous => true, :index_name => safe_index_name("eBooks")do
+  meilisearch :synchronous => true, :index_name => safe_index_name("eBooks")do
     attributesToIndex [:name]
   end
 
-  def algolia_dirty?
+  def ms_dirty?
     return true if self.published_at.nil? || self.current_time.nil?
     # Consider dirty if published date is in the past
     # This doesn't make so much business sense but it's easy to test.
@@ -415,9 +415,9 @@ class Ebook < ActiveRecord::Base
 end
 
 class EncodedString < ActiveRecord::Base
-  include AlgoliaSearch
+  include MeiliSearch
 
-  algoliasearch :synchronous => true, :force_utf8_encoding => true, :index_name => safe_index_name("EncodedString") do
+  meilisearch :synchronous => true, :force_utf8_encoding => true, :index_name => safe_index_name("EncodedString") do
     attribute :value do
       "\xC2\xA0\xE2\x80\xA2\xC2\xA0".force_encoding('ascii-8bit')
     end
@@ -425,9 +425,9 @@ class EncodedString < ActiveRecord::Base
 end
 
 class SubReplicas < ActiveRecord::Base
-  include AlgoliaSearch
+  include MeiliSearch
 
-  algoliasearch :synchronous => true, :force_utf8_encoding => true, :index_name => safe_index_name("SubReplicas") do
+  meilisearch :synchronous => true, :force_utf8_encoding => true, :index_name => safe_index_name("SubReplicas") do
     attributesToIndex [:name]
     customRanking ["asc(name)"]
 
@@ -444,20 +444,20 @@ class SubReplicas < ActiveRecord::Base
 end
 
 class WithSlave < ActiveRecord::Base
-  include AlgoliaSearch
+  include MeiliSearch
 
-  algoliasearch :force_utf8_encoding => true, :index_name => safe_index_name("With slave") do
+  meilisearch :force_utf8_encoding => true, :index_name => safe_index_name("With slave") do
     add_slave safe_index_name("WithSlave_slave") do
     end
   end
 
   # Ensure the index is indeed using slaves
-  algolia_index.set_settings({:slaves => [safe_index_name("WithSlave_slave")]})
+  ms_index.set_settings({:slaves => [safe_index_name("WithSlave_slave")]})
 end
 
 unless OLD_RAILS
   class EnqueuedObject < ActiveRecord::Base
-    include AlgoliaSearch
+    include MeiliSearch
 
     include GlobalID::Identification
 
@@ -469,16 +469,16 @@ unless OLD_RAILS
       EnqueuedObject.first
     end
 
-    algoliasearch :enqueue => Proc.new { |record| raise "enqueued #{record.id}" },
+    meilisearch :enqueue => Proc.new { |record| raise "enqueued #{record.id}" },
       :index_name => safe_index_name('EnqueuedObject') do
       attributes [:name]
     end
   end
 
   class DisabledEnqueuedObject < ActiveRecord::Base
-    include AlgoliaSearch
+    include MeiliSearch
 
-    algoliasearch(:enqueue => Proc.new { |record| raise "enqueued" },
+    meilisearch(:enqueue => Proc.new { |record| raise "enqueued" },
       :index_name => safe_index_name('EnqueuedObject'),
       :disable_indexing => true) do
       attributes [:name]
@@ -487,7 +487,7 @@ unless OLD_RAILS
 end
 
 class MisconfiguredBlock < ActiveRecord::Base
-  include AlgoliaSearch
+  include MeiliSearch
 end
 
 if defined?(ActiveModel::Serializer)
@@ -496,9 +496,9 @@ if defined?(ActiveModel::Serializer)
   end
 
   class SerializedObject < ActiveRecord::Base
-    include AlgoliaSearch
+    include MeiliSearch
 
-    algoliasearch :index_name => safe_index_name('SerializedObject') do
+    meilisearch :index_name => safe_index_name('SerializedObject') do
       use_serializer SerializedObjectSerializer
 
       tags do
@@ -516,7 +516,7 @@ if defined?(ActiveModel::Serializer)
 
     it "should push the name but not the other attribute" do
       o = SerializedObject.new :name => 'test', :skip => 'skip me'
-      attributes = SerializedObject.algoliasearch_settings.get_attributes(o)
+      attributes = SerializedObject.meilisearch_settings.get_attributes(o)
       expect(attributes).to eq({:name => 'test', "_tags" => ['tag1', 'tag2']})
     end
   end
@@ -551,7 +551,7 @@ unless OLD_RAILS
     it "should throw an exception if the data is too big" do
       expect {
         Color.create! :name => 'big' * 100000
-      }.to raise_error(Algolia::AlgoliaProtocolError)
+      }.to raise_error(MeiliSearch::ApiError) #Algolia::AlgoliaProtocolError 
     end
 
   end
@@ -560,16 +560,16 @@ end
 describe 'Settings' do
 
   it "should detect settings changes" do
-    Color.send(:algoliasearch_settings_changed?, nil, {}).should == true
-    Color.send(:algoliasearch_settings_changed?, {}, {"attributesToIndex" => ["name"]}).should == true
-    Color.send(:algoliasearch_settings_changed?, {"attributesToIndex" => ["name"]}, {"attributesToIndex" => ["name", "hex"]}).should == true
-    Color.send(:algoliasearch_settings_changed?, {"attributesToIndex" => ["name"]}, {"customRanking" => ["asc(hex)"]}).should == true
+    Color.send(:meilisearch_settings_changed?, nil, {}).should == true
+    Color.send(:meilisearch_settings_changed?, {}, {"attributesToIndex" => ["name"]}).should == true
+    Color.send(:meilisearch_settings_changed?, {"attributesToIndex" => ["name"]}, {"attributesToIndex" => ["name", "hex"]}).should == true
+    Color.send(:meilisearch_settings_changed?, {"attributesToIndex" => ["name"]}, {"customRanking" => ["asc(hex)"]}).should == true
   end
 
   it "should not detect settings changes" do
-    Color.send(:algoliasearch_settings_changed?, {}, {}).should == false
-    Color.send(:algoliasearch_settings_changed?, {"attributesToIndex" => ["name"]}, {:attributesToIndex => ["name"]}).should == false
-    Color.send(:algoliasearch_settings_changed?, {"attributesToIndex" => ["name"], "customRanking" => ["asc(hex)"]}, {"customRanking" => ["asc(hex)"]}).should == false
+    Color.send(:meilisearch_settings_changed?, {}, {}).should == false
+    Color.send(:meilisearch_settings_changed?, {"attributesToIndex" => ["name"]}, {:attributesToIndex => ["name"]}).should == false
+    Color.send(:meilisearch_settings_changed?, {"attributesToIndex" => ["name"], "customRanking" => ["asc(hex)"]}, {"customRanking" => ["asc(hex)"]}).should == false
   end
 
 end
@@ -579,17 +579,17 @@ describe 'Change detection' do
   it "should detect attribute changes" do
     color = Color.new :name => "dark-blue", :short_name => "blue"
 
-    Color.algolia_must_reindex?(color).should == true
+    Color.ms_must_reindex?(color).should == true
     color.save
-    Color.algolia_must_reindex?(color).should == false
+    Color.ms_must_reindex?(color).should == false
 
     color.hex = 123456
-    Color.algolia_must_reindex?(color).should == false
+    Color.ms_must_reindex?(color).should == false
 
     color.not_indexed = "strstr"
-    Color.algolia_must_reindex?(color).should == false
+    Color.ms_must_reindex?(color).should == false
     color.name = "red"
-    Color.algolia_must_reindex?(color).should == true
+    Color.ms_must_reindex?(color).should == true
 
     color.delete
   end
@@ -598,28 +598,28 @@ describe 'Change detection' do
     color = Color.new :name => "dark-blue", :short_name => "blue"
     color.save
 
-    color.instance_variable_get("@algolia_must_reindex").should == nil
+    color.instance_variable_get("@ms_must_reindex").should == nil
     Color.transaction do
       color.name = "red"
       color.save
       color.not_indexed = "strstr"
       color.save
-      color.instance_variable_get("@algolia_must_reindex").should == true
+      color.instance_variable_get("@ms_must_reindex").should == true
     end
-    color.instance_variable_get("@algolia_must_reindex").should == nil
+    color.instance_variable_get("@ms_must_reindex").should == nil
 
     color.delete
   end
 
-  it "should detect change with algolia_dirty? method" do
+  it "should detect change with ms_dirty? method" do
     ebook = Ebook.new :name => "My life", :author => "Myself", :premium => false, :released => true
 
-    Ebook.algolia_must_reindex?(ebook).should == true # Because it's defined in algolia_dirty? method
+    Ebook.ms_must_reindex?(ebook).should == true # Because it's defined in ms_dirty? method
     ebook.current_time = 10
     ebook.published_at = 8
-    Ebook.algolia_must_reindex?(ebook).should == true
+    Ebook.ms_must_reindex?(ebook).should == true
     ebook.published_at = 12
-    Ebook.algolia_must_reindex?(ebook).should == false
+    Ebook.ms_must_reindex?(ebook).should == false
   end
 
   it "should know if the _changed? method is user-defined", :skip => Object.const_defined?(:RUBY_VERSION) && RUBY_VERSION.to_f < 1.9 do
@@ -652,7 +652,7 @@ describe 'Namespaced::Model' do
 
   it "should use the block to determine attribute's value" do
     m = Namespaced::Model.new(:another_private_value => 2)
-    attributes = Namespaced::Model.algoliasearch_settings.get_attributes(m)
+    attributes = Namespaced::Model.meilisearch_settings.get_attributes(m)
     attributes['customAttr'].should == 42
     attributes['myid'].should == m.id
   end
@@ -698,7 +698,7 @@ describe 'NestedItem' do
     @i2 = NestedItem.create :hidden => true
 
     @i1.children << NestedItem.create(:hidden => true) << NestedItem.create(:hidden => true)
-    NestedItem.where(:id => [@i1.id, @i2.id]).reindex!(AlgoliaSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
+    NestedItem.where(:id => [@i1.id, @i2.id]).reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
 
     result = NestedItem.index.get_object(@i1.id)
     result['nb_children'].should == 2
@@ -725,7 +725,7 @@ describe 'Colors' do
   it "should be synchronous" do
     c = Color.new
     c.valid?
-    c.send(:algolia_synchronous?).should == true
+    c.send(:ms_synchronous?).should == true
   end
 
   it "should auto index" do
@@ -754,7 +754,7 @@ describe 'Colors' do
       Color.create!(:name => "blue", :short_name => "b", :hex => 0xFF0000)
     end
     expect(Color.search("blue").size).to eq(1)
-    Color.reindex!(AlgoliaSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
+    Color.reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
     expect(Color.search("blue").size).to eq(2)
   end
 
@@ -787,10 +787,10 @@ describe 'Colors' do
 
   it "should use the specified scope" do
     Color.clear_index!(true)
-    Color.where(:name => 'red').reindex!(AlgoliaSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
+    Color.where(:name => 'red').reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
     expect(Color.search("").size).to eq(3)
     Color.clear_index!(true)
-    Color.where(:id => Color.first.id).reindex!(AlgoliaSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
+    Color.where(:id => Color.first.id).reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
     expect(Color.search("").size).to eq(1)
   end
 
@@ -880,19 +880,19 @@ describe 'An imaginary store' do
 
     @products_in_database = Product.all
 
-    Product.reindex(AlgoliaSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
+    Product.reindex(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
     sleep 5
   end
 
   it "should not be synchronous" do
     p = Product.new
     p.valid?
-    p.send(:algolia_synchronous?).should == false
+    p.send(:ms_synchronous?).should == false
   end
 
   describe 'pagination' do
     it 'should display total results correctly' do
-      results = Product.search('crapoola', :hitsPerPage => AlgoliaSearch::IndexSettings::DEFAULT_BATCH_SIZE)
+      results = Product.search('crapoola', :hitsPerPage => MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE)
       results.length.should == Product.where(:name => 'crapoola').count
     end
   end
@@ -966,12 +966,12 @@ describe 'An imaginary store' do
     end
 
     it "should not duplicate while reindexing" do
-      n = Product.search('', :hitsPerPage => AlgoliaSearch::IndexSettings::DEFAULT_BATCH_SIZE).length
-      Product.reindex!(AlgoliaSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
-      expect(Product.search('', :hitsPerPage => AlgoliaSearch::IndexSettings::DEFAULT_BATCH_SIZE).size).to eq(n)
-      Product.reindex!(AlgoliaSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
-      Product.reindex!(AlgoliaSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
-      expect(Product.search('', :hitsPerPage => AlgoliaSearch::IndexSettings::DEFAULT_BATCH_SIZE).size).to eq(n)
+      n = Product.search('', :hitsPerPage => MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE).length
+      Product.reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
+      expect(Product.search('', :hitsPerPage => MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE).size).to eq(n)
+      Product.reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
+      Product.reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
+      expect(Product.search('', :hitsPerPage => MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE).size).to eq(n)
     end
 
     it "should not return products that are not indexable" do
@@ -1006,10 +1006,10 @@ describe 'An imaginary store' do
     end
 
     it "should delete not-anymore-indexable product while reindexing" do
-      n = Product.search('', :hitsPerPage => AlgoliaSearch::IndexSettings::DEFAULT_BATCH_SIZE).size
+      n = Product.search('', :hitsPerPage => MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE).size
       Product.where(:release_date => nil).first.update_attribute :release_date, Time.now + 1.day
-      Product.reindex!(AlgoliaSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
-      expect(Product.search('', :hitsPerPage => AlgoliaSearch::IndexSettings::DEFAULT_BATCH_SIZE).size).to eq(n - 1)
+      Product.reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
+      expect(Product.search('', :hitsPerPage => MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE).size).to eq(n - 1)
     end
 
     it "should find using synonyms" do
@@ -1065,17 +1065,17 @@ describe 'Cities' do
   end
 
   it "should reindex with replicas in place" do
-    City.reindex!(AlgoliaSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
+    City.reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
     expect(City.index.get_settings['replicas'].length).to eq(2)
   end
 
   it "should reindex with replicas using a temporary index" do
-    City.reindex(AlgoliaSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
+    City.reindex(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
     expect(City.index.get_settings['replicas'].length).to eq(2)
   end
 
   it "should not include the replicas setting on replicas" do
-    City.send(:algolia_configurations).to_a.each do |v|
+    City.send(:ms_configurations).to_a.each do |v|
       if v[0][:replica]
         expect(v[1].to_settings[:replicas]).to be_nil
       else
@@ -1106,9 +1106,9 @@ describe "FowardToReplicas" do
     Object.send(:remove_const, :ForwardToReplicas) if Object.constants.include?(:ForwardToReplicas)
 
     class ForwardToReplicas < ActiveRecord::Base
-      include AlgoliaSearch
+      include MeiliSearch
 
-      algoliasearch :synchronous => true, :index_name => safe_index_name('ForwardToReplicas') do
+      meilisearch :synchronous => true, :index_name => safe_index_name('ForwardToReplicas') do
         attribute :name
         attributesToIndex %w(first_value)
         attributesToHighlight %w(primary_highlight)
@@ -1125,7 +1125,7 @@ describe "FowardToReplicas" do
   end
 
   it 'shouldn\'t have inherited from the primary' do
-    ForwardToReplicas.send :algolia_ensure_init
+    ForwardToReplicas.send :ms_ensure_init
 
     # Hacky way to have a wait on set_settings
     ForwardToReplicas.create(:name => 'val')
@@ -1144,9 +1144,9 @@ describe "FowardToReplicas" do
     Object.send(:remove_const, :ForwardToReplicasTwo) if Object.constants.include?(:ForwardToReplicasTwo)
 
     class ForwardToReplicasTwo < ActiveRecord::Base
-      include AlgoliaSearch
+      include MeiliSearch
 
-      algoliasearch :synchronous => true, :index_name => safe_index_name('ForwardToReplicas') do
+      meilisearch :synchronous => true, :index_name => safe_index_name('ForwardToReplicas') do
         attribute :name
         attributesToIndex %w(second_value)
         attributesToHighlight %w(primary_highlight)
@@ -1157,9 +1157,9 @@ describe "FowardToReplicas" do
       end
     end
 
-    ForwardToReplicas.send :algolia_ensure_init
+    ForwardToReplicas.send :ms_ensure_init
 
-    ForwardToReplicasTwo.send :algolia_ensure_init
+    ForwardToReplicasTwo.send :ms_ensure_init
 
     # Hacky way to have a wait on set_settings
     ForwardToReplicasTwo.create(:name => 'val')
@@ -1184,8 +1184,8 @@ describe "SubReplicas" do
 
   let(:expected_indicies) { %w(SubReplicas Additional_Index Replica_Index).map { |name| safe_index_name(name) } }
 
-  it "contains all levels in algolia_configurations" do
-    configured_indicies = SubReplicas.send(:algolia_configurations)
+  it "contains all levels in ms_configurations" do
+    configured_indicies = SubReplicas.send(:ms_configurations)
     configured_indicies.each_pair do |opts, _|
       expect(expected_indicies).to include(opts[:index_name])
 
@@ -1227,9 +1227,9 @@ describe "SlaveThenReplica" do
   it 'should throw with add_slave then add_replica' do
     test = lambda do
       class SlaveThenReplica
-        include AlgoliaSearch
+        include MeiliSearch
 
-        algoliasearch :synchronous => true, :force_utf8_encoding => true, :index_name => safe_index_name("SlaveThenReplica") do
+        meilisearch :synchronous => true, :force_utf8_encoding => true, :index_name => safe_index_name("SlaveThenReplica") do
           add_slave safe_index_name("SlaveThenReplica_slave") do
           end
           add_replica safe_index_name("SlaveThenReplica_replica") do
@@ -1237,7 +1237,7 @@ describe "SlaveThenReplica" do
         end
       end
     end
-    expect(test).to raise_error(AlgoliaSearch::MixedSlavesAndReplicas)
+    expect(test).to raise_error(MeiliSearch::MixedSlavesAndReplicas)
   end
 end
 
@@ -1245,9 +1245,9 @@ describe "ReplicaThenSlave" do
   it 'should throw with add_replice then add_slave' do
     test = lambda do
       class ReplicaThenSlave
-        include AlgoliaSearch
+        include MeiliSearch
 
-        algoliasearch :synchronous => true, :force_utf8_encoding => true, :index_name => safe_index_name("ReplicaThenSlave") do
+        meilisearch :synchronous => true, :force_utf8_encoding => true, :index_name => safe_index_name("ReplicaThenSlave") do
           add_replica safe_index_name("ReplicaThenSlave_replica") do
           end
           add_slave safe_index_name("ReplicaThenSlave_slave") do
@@ -1255,7 +1255,7 @@ describe "ReplicaThenSlave" do
         end
       end
     end
-    expect(test).to raise_error(AlgoliaSearch::MixedSlavesAndReplicas)
+    expect(test).to raise_error(MeiliSearch::MixedSlavesAndReplicas)
   end
 end
 
@@ -1263,8 +1263,8 @@ describe 'MongoObject' do
   it "should not have method conflicts" do
     expect { MongoObject.reindex! }.to raise_error(NameError)
     expect { MongoObject.new.index! }.to raise_error(NameError)
-    MongoObject.algolia_reindex!
-    MongoObject.create(:name => 'mongo').algolia_index!
+    MongoObject.ms_reindex!
+    MongoObject.create(:name => 'mongo').ms_index!
   end
 end
 
@@ -1348,7 +1348,7 @@ end
 describe 'Kaminari' do
   before(:all) do
     require 'kaminari'
-    AlgoliaSearch.configuration = { :application_id => ENV['ALGOLIA_APPLICATION_ID'], :api_key => ENV['ALGOLIA_API_KEY'], :pagination_backend => :kaminari }
+    MeiliSearch.configuration = { :application_id => ENV['MEILISEARCH_HOST'], :api_key => ENV['MEILISEARCH_API_KEY'], :pagination_backend => :kaminari }
   end
 
   it "should paginate" do
@@ -1370,7 +1370,7 @@ end
 describe 'Will_paginate' do
   before(:all) do
     require 'will_paginate'
-    AlgoliaSearch.configuration = { :application_id => ENV['ALGOLIA_APPLICATION_ID'], :api_key => ENV['ALGOLIA_API_KEY'], :pagination_backend => :will_paginate }
+    MeiliSearch.configuration = { :application_id => ENV['MEILISEARCH_HOST'], :api_key => ENV['MEILISEARCH_API_KEY'], :pagination_backend => :will_paginate }
   end
 
   it "should paginate" do
@@ -1440,7 +1440,7 @@ unless OLD_RAILS
 end
 
 describe 'Misconfigured Block' do
-  it "should force the algoliasearch block" do
+  it "should force the meilisearch block" do
     expect {
       MisconfiguredBlock.reindex
     }.to raise_error(ArgumentError)
