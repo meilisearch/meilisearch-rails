@@ -7,13 +7,13 @@ Bundler.setup :test
 $LOAD_PATH.unshift(File.dirname(__FILE__))
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 
-require 'algoliasearch-rails'
+require 'meilisearch-rails'
 require 'rspec'
 require 'rails/all'
 
-raise "missing ALGOLIA_APPLICATION_ID or ALGOLIA_API_KEY environment variables" if ENV['ALGOLIA_APPLICATION_ID'].nil? || ENV['ALGOLIA_API_KEY'].nil?
+raise "missing MEILISEARCH_HOST or MEILISEARCH_API_KEY environment variables" if ENV['MEILISEARCH_HOST'].nil? || ENV['MEILISEARCH_API_KEY'].nil?
 
-Thread.current[:algolia_hosts] = nil
+Thread.current[:meilisearch_hosts] = nil
 
 RSpec.configure do |c|
   c.mock_with :rspec
@@ -30,7 +30,7 @@ RSpec.configure do |c|
   # Remove all indexes setup in this run in local or CI
   c.after(:suite) do
     safe_index_list.each do |index|
-      Algolia.client.delete_index!(index['name'])
+      MeiliSearch.client.delete_index!(index['name'])
     end
   end
 end
@@ -45,7 +45,7 @@ end
 
 # get a list of safe indexes in local or CI
 def safe_index_list
-  list = Algolia.client.list_indexes()['items']
+  list = MeiliSearch.client.list_indexes()['items']
   list = list.select { |index| index["name"].include?(SAFE_INDEX_PREFIX) }
   list.sort_by { |index| index["primary"] || "" }
 end
