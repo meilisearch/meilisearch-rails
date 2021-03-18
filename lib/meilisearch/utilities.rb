@@ -26,7 +26,7 @@ module MeiliSearch
         klasses.each do |klass|
           puts klass
           puts "Reindexing #{klass.count} records..."
-          klass.algolia_reindex
+          klass.ms_reindex
         end
       end
 
@@ -39,7 +39,7 @@ module MeiliSearch
 
         klasses.each do |klass|
           puts "Pushing #{klass} settings..."
-          klass.algolia_set_settings
+          klass.ms_set_settings
         end
       end
     end
