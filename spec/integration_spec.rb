@@ -272,7 +272,8 @@ class NestedItem < ActiveRecord::Base
 end
 
 # create this index before the class actually loads, to ensure the rankingRules are updated
-index = MeiliSearch::Index.new(safe_index_name('City_replica2'))
+# index = MeiliSearch::Index.new(safe_index_name('City_replica2'))
+index = MeiliSearch.client.create_index(safe_index_name('City_replica2'))
 
 index.wait_for_pending_update index.update_settings({'rankingRules' => ["typo", "words", "proximity", "attribute", "wordsPosition", "exactness", "desc(d)"]})['updateId']
 
