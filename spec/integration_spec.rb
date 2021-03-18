@@ -169,7 +169,7 @@ class Color < ActiveRecord::Base
   meilisearch :synchronous => true, :index_name => safe_index_name("Color"), :per_environment => true do
     searchableAttributes [:name]
     attributesForFaceting ['searchable(short_name)']
-    customRanking ["asc(hex)"]
+    rankingRules ['typo', 'words', 'proximity', 'attribute', 'wordsPosition', 'exactness','asc(hex)']
     tags do
       name # single tag
     end
@@ -271,9 +271,10 @@ class NestedItem < ActiveRecord::Base
   end
 end
 
-# create this index before the class actually loads, to ensure the customRanking is updated
+# create this index before the class actually loads, to ensure the rankingRules are updated
 index = MeiliSearch::Index.new(safe_index_name('City_replica2'))
-index.wait_task index.set_settings({'customRanking' => ['desc(d)']})['taskID']
+
+index.wait_for_pending_update index.update_settings({'rankingRules' => ["typo", "words", "proximity", "attribute", "wordsPosition", "exactness", "desc(d)"]})['updateId']
 
 class City < ActiveRecord::Base
   include MeiliSearch
@@ -289,15 +290,15 @@ class City < ActiveRecord::Base
       geoloc_array
     end
     add_attribute :a_null_lat, :a_lng
-    customRanking ['desc(b)']
+    rankingRules ['typo', 'words', 'proximity', 'attribute', 'wordsPosition', 'desc(b)']
 
     add_replica safe_index_name('City_replica1'), :per_environment => true do
       searchableAttributes [:country]
-      customRanking ['asc(a)']
+      rankingRules['typo', 'words', 'proximity', 'attribute', 'wordsPosition', 'asc(a)']
     end
-
+  
     add_replica safe_index_name('City_replica2'), :per_environment => true do
-      customRanking ['asc(a)', 'desc(c)']
+      rankingRules ['typo', 'words', 'proximity', 'attribute', 'wordsPosition','asc(a)', 'desc(c)']
     end
   end
 
@@ -429,15 +430,15 @@ class SubReplicas < ActiveRecord::Base
 
   meilisearch :synchronous => true, :force_utf8_encoding => true, :index_name => safe_index_name("SubReplicas") do
     searchableAttributes [:name]
-    customRanking ["asc(name)"]
+    rankingRules ['typo', 'words', 'proximity', 'attribute', 'wordsPosition', 'asc(name)']
 
     add_index safe_index_name("Additional_Index"), :per_environment => true do
       searchableAttributes [:name]
-      customRanking ["asc(name)"]
+      rankingRules ['typo', 'words', 'proximity', 'attribute', 'wordsPosition', 'asc(name)']
 
       add_replica safe_index_name("Replica_Index"), :per_environment => true do
         searchableAttributes [:name]
-        customRanking ["desc(name)"]
+        rankingRules ['typo', 'words', 'proximity', 'attribute', 'wordsPosition', 'desc(name)']
       end
     end
   end
@@ -563,13 +564,13 @@ describe 'Settings' do
     Color.send(:meilisearch_settings_changed?, nil, {}).should == true
     Color.send(:meilisearch_settings_changed?, {}, {"searchableAttributes" => ["name"]}).should == true
     Color.send(:meilisearch_settings_changed?, {"searchableAttributes" => ["name"]}, {"searchableAttributes" => ["name", "hex"]}).should == true
-    Color.send(:meilisearch_settings_changed?, {"searchableAttributes" => ["name"]}, {"customRanking" => ["asc(hex)"]}).should == true
+    Color.send(:meilisearch_settings_changed?, {"searchableAttributes" => ["name"]}, {"rankingRules" => ["typo", "words", "proximity", "attribute", "wordsPosition", "exactness", "asc(hex)"]}).should == true
   end
 
   it "should not detect settings changes" do
     Color.send(:meilisearch_settings_changed?, {}, {}).should == false
     Color.send(:meilisearch_settings_changed?, {"searchableAttributes" => ["name"]}, {:searchableAttributes => ["name"]}).should == false
-    Color.send(:meilisearch_settings_changed?, {"searchableAttributes" => ["name"], "customRanking" => ["asc(hex)"]}, {"customRanking" => ["asc(hex)"]}).should == false
+    Color.send(:meilisearch_settings_changed?, {"searchableAttributes" => ["name"], "rankingRules" => ["typo", "words", "proximity", "attribute", "wordsPosition", "exactness", "asc(hex)"]}, {"rankingRules" => ["typo", "words", "proximity", "attribute", "wordsPosition", "exactness", "asc(hex)"]}).should == false
   end
 
 end
@@ -1094,9 +1095,9 @@ describe 'Cities' do
   end
 
   it "should have set the custom ranking on all indices" do
-    expect(City.index.get_settings['customRanking']).to eq(['desc(b)'])
-    expect(City.index(safe_index_name('City_replica1')).get_settings['customRanking']).to eq(['asc(a)'])
-    expect(City.index(safe_index_name('City_replica2')).get_settings['customRanking']).to eq(['asc(a)', 'desc(c)'])
+    expect(City.index.settings['rankingRules']).to eq(['typo', 'words', 'proximity', 'attribute', 'wordsPosition', 'exactness', 'desc(b)'])
+    expect(City.index(safe_index_name('City_replica1')).settings['rankingRules']).to eq(['typo', 'words', 'proximity', 'attribute', 'wordsPosition', 'exactness', 'asc(a)'])
+    expect(City.index(safe_index_name('City_replica2')).settings['rankingRules']).to eq(['typo', 'words', 'proximity', 'attribute', 'wordsPosition', 'exactness', 'asc(a)', 'desc(c)'])
   end
 
 end
