@@ -19,17 +19,17 @@ end
 require 'logger'
 
 ::MeiliSearch::Index.class_eval do
-  def add_documents_sync(documents, primary_key = nil)
+  def add_documents!(documents, primary_key = nil)
     update = add_documents(documents, primary_key)
     wait_for_pending_update(update['updateId'])      
   end
 
-  def delete_all_documents_sync 
+  def delete_all_documents! 
     update = delete_all_documents
     wait_for_pending_update(update['updateId']) 
   end
 
-  def delete_document_sync(documentId)
+  def delete_document!(documentId)
     update = delete_document(documentId)
     wait_for_pending_update(update['updateId'])
   end
@@ -611,14 +611,14 @@ module MeiliSearch
         if ms_indexable?(object, options)
           raise ArgumentError.new("Cannot index a record with a blank objectID") if object_id.blank?
           if synchronous || options[:synchronous]
-            index.add_documents_sync(settings.get_attributes(object))
+            index.add_documents!(settings.get_attributes(object))
           else
             index.add_documents(settings.get_attributes(object))
           end
         elsif ms_conditional_index?(options) && !object_id.blank?
           # remove non-indexable objects
           if synchronous || options[:synchronous]
-            index.delete_document_sync(object_id)
+            index.delete_document!(object_id)
           else
             index.delete_document(object_id)
           end
@@ -636,7 +636,7 @@ module MeiliSearch
         index = ms_ensure_init(options, settings)
         next if options[:slave] || options[:replica]
         if synchronous || options[:synchronous]
-          index.delete_document_sync(object_id)
+          index.delete_document!(object_id)
         else
           index.delete_document(object_id)
         end
@@ -649,7 +649,7 @@ module MeiliSearch
         next if ms_indexing_disabled?(options)
         index = ms_ensure_init(options, settings)
         next if options[:slave] || options[:replica]
-        synchronous || options[:synchronous] ? index.delete_all_documents_sync : index.delete_all_documents
+        synchronous || options[:synchronous] ? index.delete_all_documents! : index.delete_all_documents
         @ms_indexes[settings] = nil
       end
       nil
