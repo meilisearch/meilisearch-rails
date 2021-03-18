@@ -167,7 +167,7 @@ class Color < ActiveRecord::Base
   attr_accessor :not_indexed
 
   meilisearch :synchronous => true, :index_name => safe_index_name("Color"), :per_environment => true do
-    attributesToIndex [:name]
+    searchableAttributes [:name]
     attributesForFaceting ['searchable(short_name)']
     customRanking ["asc(hex)"]
     tags do
@@ -292,7 +292,7 @@ class City < ActiveRecord::Base
     customRanking ['desc(b)']
 
     add_replica safe_index_name('City_replica1'), :per_environment => true do
-      attributesToIndex [:country]
+      searchableAttributes [:country]
       customRanking ['asc(a)']
     end
 
@@ -319,7 +319,7 @@ class SequelBook < Sequel::Model(SEQUEL_DB)
     add_attribute :test
     add_attribute :test2
 
-    attributesToIndex [:name]
+    searchableAttributes [:name]
   end
 
   def after_create
@@ -378,17 +378,17 @@ class Book < ActiveRecord::Base
   include MeiliSearch
 
   meilisearch :synchronous => true, :index_name => safe_index_name("SecuredBook"), :per_environment => true, :sanitize => true do
-    attributesToIndex [:name]
+    searchableAttributes [:name]
     tags do
       [premium ? 'premium' : 'standard', released ? 'public' : 'private']
     end
 
     add_index safe_index_name('BookAuthor'), :per_environment => true do
-      attributesToIndex [:author]
+      searchableAttributes [:author]
     end
 
     add_index safe_index_name('Book'), :per_environment => true, :if => :public? do
-      attributesToIndex [:name]
+      searchableAttributes [:name]
     end
   end
 
@@ -403,7 +403,7 @@ class Ebook < ActiveRecord::Base
   attr_accessor :current_time, :published_at
 
   meilisearch :synchronous => true, :index_name => safe_index_name("eBooks")do
-    attributesToIndex [:name]
+    searchableAttributes [:name]
   end
 
   def ms_dirty?
@@ -428,15 +428,15 @@ class SubReplicas < ActiveRecord::Base
   include MeiliSearch
 
   meilisearch :synchronous => true, :force_utf8_encoding => true, :index_name => safe_index_name("SubReplicas") do
-    attributesToIndex [:name]
+    searchableAttributes [:name]
     customRanking ["asc(name)"]
 
     add_index safe_index_name("Additional_Index"), :per_environment => true do
-      attributesToIndex [:name]
+      searchableAttributes [:name]
       customRanking ["asc(name)"]
 
       add_replica safe_index_name("Replica_Index"), :per_environment => true do
-        attributesToIndex [:name]
+        searchableAttributes [:name]
         customRanking ["desc(name)"]
       end
     end
@@ -561,15 +561,15 @@ describe 'Settings' do
 
   it "should detect settings changes" do
     Color.send(:meilisearch_settings_changed?, nil, {}).should == true
-    Color.send(:meilisearch_settings_changed?, {}, {"attributesToIndex" => ["name"]}).should == true
-    Color.send(:meilisearch_settings_changed?, {"attributesToIndex" => ["name"]}, {"attributesToIndex" => ["name", "hex"]}).should == true
-    Color.send(:meilisearch_settings_changed?, {"attributesToIndex" => ["name"]}, {"customRanking" => ["asc(hex)"]}).should == true
+    Color.send(:meilisearch_settings_changed?, {}, {"searchableAttributes" => ["name"]}).should == true
+    Color.send(:meilisearch_settings_changed?, {"searchableAttributes" => ["name"]}, {"searchableAttributes" => ["name", "hex"]}).should == true
+    Color.send(:meilisearch_settings_changed?, {"searchableAttributes" => ["name"]}, {"customRanking" => ["asc(hex)"]}).should == true
   end
 
   it "should not detect settings changes" do
     Color.send(:meilisearch_settings_changed?, {}, {}).should == false
-    Color.send(:meilisearch_settings_changed?, {"attributesToIndex" => ["name"]}, {:attributesToIndex => ["name"]}).should == false
-    Color.send(:meilisearch_settings_changed?, {"attributesToIndex" => ["name"], "customRanking" => ["asc(hex)"]}, {"customRanking" => ["asc(hex)"]}).should == false
+    Color.send(:meilisearch_settings_changed?, {"searchableAttributes" => ["name"]}, {:searchableAttributes => ["name"]}).should == false
+    Color.send(:meilisearch_settings_changed?, {"searchableAttributes" => ["name"], "customRanking" => ["asc(hex)"]}, {"customRanking" => ["asc(hex)"]}).should == false
   end
 
 end
@@ -1110,7 +1110,7 @@ describe "FowardToReplicas" do
 
       meilisearch :synchronous => true, :index_name => safe_index_name('ForwardToReplicas') do
         attribute :name
-        attributesToIndex %w(first_value)
+        searchableAttributes %w(first_value)
         attributesToHighlight %w(primary_highlight)
 
         add_replica safe_index_name('ForwardToReplicas_replica') do
@@ -1132,11 +1132,11 @@ describe "FowardToReplicas" do
     ForwardToReplicas.reindex!
 
     primary_settings = ForwardToReplicas.index.get_settings
-    expect(primary_settings['attributesToIndex']).to eq(%w(first_value))
+    expect(primary_settings['searchableAttributes']).to eq(%w(first_value))
     expect(primary_settings['attributesToHighlight']).to eq(%w(primary_highlight))
 
     replica_settings = ForwardToReplicas.index(safe_index_name('ForwardToReplicas_replica')).get_settings
-    expect(replica_settings['attributesToIndex']).to eq(nil)
+    expect(replica_settings['searchableAttributes']).to eq(nil)
     expect(replica_settings['attributesToHighlight']).to eq(%w(replica_highlight))
   end
 
@@ -1148,7 +1148,7 @@ describe "FowardToReplicas" do
 
       meilisearch :synchronous => true, :index_name => safe_index_name('ForwardToReplicas') do
         attribute :name
-        attributesToIndex %w(second_value)
+        searchableAttributes %w(second_value)
         attributesToHighlight %w(primary_highlight)
 
         add_replica safe_index_name('ForwardToReplicas_replica'), :inherit => true do
@@ -1166,11 +1166,11 @@ describe "FowardToReplicas" do
     ForwardToReplicasTwo.reindex!
 
     primary_settings = ForwardToReplicas.index.get_settings
-    expect(primary_settings['attributesToIndex']).to eq(%w(second_value))
+    expect(primary_settings['searchableAttributes']).to eq(%w(second_value))
     expect(primary_settings['attributesToHighlight']).to eq(%w(primary_highlight))
 
     replica_settings = ForwardToReplicas.index(safe_index_name('ForwardToReplicas_replica')).get_settings
-    expect(replica_settings['attributesToIndex']).to eq(%w(second_value))
+    expect(replica_settings['searchableAttributes']).to eq(%w(second_value))
     expect(replica_settings['attributesToHighlight']).to eq(%w(replica_highlight))
 
     expect(ForwardToReplicas.index.name).to eq(ForwardToReplicasTwo.index.name)
