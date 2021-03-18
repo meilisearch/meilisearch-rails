@@ -445,18 +445,6 @@ class SubReplicas < ActiveRecord::Base
   end
 end
 
-class WithSlave < ActiveRecord::Base
-  include MeiliSearch
-
-  meilisearch :force_utf8_encoding => true, :index_name => safe_index_name("With slave") do
-    add_slave safe_index_name("WithSlave_slave") do
-    end
-  end
-
-  # Ensure the index is indeed using slaves
-  ms_index.set_settings({:slaves => [safe_index_name("WithSlave_slave")]})
-end
-
 unless OLD_RAILS
   class EnqueuedObject < ActiveRecord::Base
     include MeiliSearch
