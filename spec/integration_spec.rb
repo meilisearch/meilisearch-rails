@@ -295,7 +295,7 @@ class City < ActiveRecord::Base
 
     add_replica safe_index_name('City_replica1'), :per_environment => true do
       searchableAttributes [:country]
-      rankingRules['typo', 'words', 'proximity', 'attribute', 'wordsPosition', 'asc(a)']
+      rankingRules ['typo', 'words', 'proximity', 'attribute', 'wordsPosition', 'asc(a)']
     end
   
     add_replica safe_index_name('City_replica2'), :per_environment => true do
