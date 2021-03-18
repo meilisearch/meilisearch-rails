@@ -1,7 +1,7 @@
 require 'rubygems'
 require 'bundler'
 require 'timeout'
-
+require 'dotenv/load'
 Bundler.setup :test
 
 $LOAD_PATH.unshift(File.dirname(__FILE__))
@@ -30,7 +30,7 @@ RSpec.configure do |c|
   # Remove all indexes setup in this run in local or CI
   c.after(:suite) do
     safe_index_list.each do |index|
-      MeiliSearch.client.delete_index!(index['name'])
+      MeiliSearch.client.delete_index(index['name'])
     end
   end
 end
