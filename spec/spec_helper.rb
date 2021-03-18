@@ -45,7 +45,7 @@ end
 
 # get a list of safe indexes in local or CI
 def safe_index_list
-  list = MeiliSearch.client.list_indexes()['items']
+  list = MeiliSearch.client.indexes()
   list = list.select { |index| index["name"].include?(SAFE_INDEX_PREFIX) }
   list.sort_by { |index| index["primary"] || "" }
 end
