@@ -520,7 +520,7 @@ module MeiliSearch
           end
           last_task = index.add_documents(objects)
         end
-        index.wait_for_pending_update(last_task["taskID"]) if last_task and (synchronous || options[:synchronous])
+        index.wait_for_pending_update(last_task["updateId"]) if last_task and (synchronous || options[:synchronous])
       end
       nil
     end
