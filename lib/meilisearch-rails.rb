@@ -507,7 +507,7 @@ module MeiliSearch
           if ms_conditional_index?(options)
             # delete non-indexable objects
             ids = group.select { |o| !ms_indexable?(o, options) }.map { |o| ms_object_id_of(o, options) }
-            index.delete_objects(ids.select { |id| !id.blank? })
+            index.delete_documents(ids.select { |id| !id.blank? })
             # select only indexable objects
             group = group.select { |o| ms_indexable?(o, options) }
           end
