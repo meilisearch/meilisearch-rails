@@ -650,19 +650,19 @@ describe 'Namespaced::Model' do
   it "should always update when there is no custom _changed? function" do
     m = Namespaced::Model.new(:another_private_value => 2)
     m.save
-    results = Namespaced::Model.search(42)
-    expect(results.size).to eq(1)
-    expect(results[0].id).to eq(m.id)
+    results = Namespaced::Model.index.search('42')
+    expect(results['hits'].count).to eq(1)
+    expect(results['hits'][0]['myid']).to eq(m.id)
 
     m.another_private_value = 5
     m.save
 
-    results = Namespaced::Model.search(42)
-    expect(results.size).to eq(0)
+    results = Namespaced::Model.index.search('42')
+    expect(results['hits'].count).to eq(0)
 
-    results = Namespaced::Model.search(45)
-    expect(results.size).to eq(1)
-    expect(results[0].id).to eq(m.id)
+    results = Namespaced::Model.index.search('45')
+    expect(results['hits'].count).to eq(1)
+    expect(results['hits'][0]['myid']).to eq(m.id)
   end
 end
 
