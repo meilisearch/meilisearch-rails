@@ -349,7 +349,7 @@ describe 'SequelBook' do
 
   it "should index the book" do
     @steve_jobs = SequelBook.create :name => 'Steve Jobs', :author => 'Walter Isaacson', :premium => true, :released => true
-    results = SequelBook.search('steve')
+    results = SequelBook.index.search('steve')
     expect(results.size).to eq(1)
     expect(results[0].id).to eq(@steve_jobs.id)
   end
@@ -673,7 +673,7 @@ describe 'UniqUsers' do
 
   it "should not use the id field" do
     UniqUser.create :name => 'fooBar'
-    results = UniqUser.search('foo')
+    results = UniqUser.index.search('foo')
     expect(results.size).to eq(1)
   end
 end
@@ -720,13 +720,13 @@ describe 'Colors' do
 
   it "should auto index" do
     @blue = Color.create!(:name => "blue", :short_name => "b", :hex => 0xFF0000)
-    results = Color.search("blue")
+    results = Color.index.search("blue")
     expect(results.size).to eq(1)
     results.should include(@blue)
   end
 
   it "should return facet as well" do
-    results = Color.search("", :facets => '*')
+    results = Color.index.search("", :facets => '*')
     results.raw_answer.should_not be_nil
     results.facets.should_not be_nil
     results.facets.size.should eq(1)
@@ -743,14 +743,14 @@ describe 'Colors' do
     Color.without_auto_index do
       Color.create!(:name => "blue", :short_name => "b", :hex => 0xFF0000)
     end
-    expect(Color.search("blue").size).to eq(1)
+    expect(Color.index.search("blue").size).to eq(1)
     Color.reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
-    expect(Color.search("blue").size).to eq(2)
+    expect(Color.index.search("blue").size).to eq(2)
   end
 
   it "should not be searchable with non-indexed fields" do
     @blue = Color.create!(:name => "blue", :short_name => "x", :hex => 0xFF0000)
-    results = Color.search("x")
+    results = Color.index.search("x")
     expect(results.size).to eq(0)
   end
 
@@ -758,7 +758,7 @@ describe 'Colors' do
     @blue = Color.create!(:name => "red", :short_name => "r3", :hex => 3)
     @blue2 = Color.create!(:name => "red", :short_name => "r1", :hex => 1)
     @blue3 = Color.create!(:name => "red", :short_name => "r2", :hex => 2)
-    results = Color.search("red")
+    results = Color.index.search("red")
     expect(results.size).to eq(3)
     results[0].hex.should eq(1)
     results[1].hex.should eq(2)
@@ -767,21 +767,21 @@ describe 'Colors' do
 
   it "should update the index if the attribute changed" do
     @purple = Color.create!(:name => "purple", :short_name => "p")
-    expect(Color.search("purple").size).to eq(1)
-    expect(Color.search("pink").size).to eq(0)
+    expect(Color.index.search("purple").size).to eq(1)
+    expect(Color.index.search("pink").size).to eq(0)
     @purple.name = "pink"
     @purple.save
-    expect(Color.search("purple").size).to eq(0)
-    expect(Color.search("pink").size).to eq(1)
+    expect(Color.index.search("purple").size).to eq(0)
+    expect(Color.index.search("pink").size).to eq(1)
   end
 
   it "should use the specified scope" do
     Color.clear_index!(true)
     Color.where(:name => 'red').reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
-    expect(Color.search("").size).to eq(3)
+    expect(Color.index.search("").size).to eq(3)
     Color.clear_index!(true)
     Color.where(:id => Color.first.id).reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
-    expect(Color.search("").size).to eq(1)
+    expect(Color.index.search("").size).to eq(1)
   end
 
   it "should have a Rails env-based index name" do
@@ -790,13 +790,13 @@ describe 'Colors' do
 
   it "should add tags" do
     @blue = Color.create!(:name => "green", :short_name => "b", :hex => 0xFF0000)
-    results = Color.search("green", { :tagFilters => 'green' })
+    results = Color.index.search("green", { :tagFilters => 'green' })
     expect(results.size).to eq(1)
     results.should include(@blue)
   end
 
   it "should include the _highlightResult and _snippetResults" do
-    results = Color.search("gre", :attributesToSnippet => ['name'], :attributesToHighlight => ['name'])
+    results = Color.index.search("gre", :attributesToSnippet => ['name'], :attributesToHighlight => ['name'])
     expect(results.size).to eq(1)
     expect(results[0].highlight_result).to_not be_nil
     expect(results[0].snippet_result).to_not be_nil
@@ -821,7 +821,7 @@ describe 'Colors' do
     @blue = Color.create!(:name => "blue", :short_name => "blu", :hex => 0x0000FF)
     @black = Color.create!(:name => "black", :short_name => "bla", :hex => 0x000000)
     @green = Color.create!(:name => "green", :short_name => "gre", :hex => 0x00FF00)
-    facets = Color.search_for_facet_values('short_name', 'bl', :query => 'black')
+    facets = Color.index.search_for_facet_values('short_name', 'bl', :query => 'black')
     expect(facets.size).to eq(1)
     expect(facets.first['value']).to eq('bla')
     expect(facets.first['highlighted']).to eq('<em>bl</em>a')
@@ -882,7 +882,7 @@ describe 'An imaginary store' do
 
   describe 'pagination' do
     it 'should display total results correctly' do
-      results = Product.search('crapoola', :hitsPerPage => MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE)
+      results = Product.index.search('crapoola', :hitsPerPage => MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE)
       results.length.should == Product.where(:name => 'crapoola').count
     end
   end
@@ -890,120 +890,120 @@ describe 'An imaginary store' do
   describe 'basic searching' do
 
     it 'should find the iphone' do
-      results = Product.search('iphone')
+      results = Product.index.search('iphone')
       expect(results.size).to eq(1)
       results.should include(@iphone)
     end
 
     it "should search case insensitively" do
-      results = Product.search('IPHONE')
+      results = Product.index.search('IPHONE')
       expect(results.size).to eq(1)
       results.should include(@iphone)
     end
 
     it 'should find all amazon products' do
-      results = Product.search('amazon')
+      results = Product.index.search('amazon')
       expect(results.size).to eq(3)
       results.should include(@android, @samsung, @motorola)
     end
 
     it 'should find all "palm" phones with wildcard word search' do
-      results = Product.search('pal')
+      results = Product.index.search('pal')
       expect(results.size).to eq(2)
       results.should include(@palmpre, @palm_pixi_plus)
     end
 
     it 'should search multiple words from the same field' do
-      results = Product.search('palm pixi plus')
+      results = Product.index.search('palm pixi plus')
       expect(results.size).to eq(1)
       results.should include(@palm_pixi_plus)
     end
 
     it "should narrow the results by searching across multiple fields" do
-      results = Product.search('apple iphone')
+      results = Product.index.search('apple iphone')
       expect(results.size).to eq(1)
       results.should include(@iphone)
     end
 
     it "should not search on non-indexed fields" do
-      results = Product.search('features')
+      results = Product.index.search('features')
       expect(results.size).to eq(0)
     end
 
     it "should delete the associated record" do
       @iphone.destroy
-      results = Product.search('iphone')
+      results = Product.index.search('iphone')
       expect(results.size).to eq(0)
     end
 
     it "should not throw an exception if a search result isn't found locally" do
       Product.without_auto_index { @palmpre.destroy }
-      expect { Product.search('pal').to_json }.to_not raise_error
+      expect { Product.index.search('pal').to_json }.to_not raise_error
     end
 
     it 'should return the other results if those are still available locally' do
       Product.without_auto_index { @palmpre.destroy }
-      JSON.parse(Product.search('pal').to_json).size.should == 1
+      JSON.parse(Product.index.search('pal').to_json).size.should == 1
     end
 
     it "should not duplicate an already indexed record" do
-      expect(Product.search('nokia').size).to eq(1)
+      expect(Product.index.search('nokia').size).to eq(1)
       @nokia.index!
-      expect(Product.search('nokia').size).to eq(1)
+      expect(Product.index.search('nokia').size).to eq(1)
       @nokia.index!
       @nokia.index!
-      expect(Product.search('nokia').size).to eq(1)
+      expect(Product.index.search('nokia').size).to eq(1)
     end
 
     it "should not duplicate while reindexing" do
-      n = Product.search('', :hitsPerPage => MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE).length
+      n = Product.index.search('', :hitsPerPage => MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE).length
       Product.reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
-      expect(Product.search('', :hitsPerPage => MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE).size).to eq(n)
+      expect(Product.index.search('', :hitsPerPage => MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE).size).to eq(n)
       Product.reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
       Product.reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
-      expect(Product.search('', :hitsPerPage => MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE).size).to eq(n)
+      expect(Product.index.search('', :hitsPerPage => MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE).size).to eq(n)
     end
 
     it "should not return products that are not indexable" do
       @sekrit.index!
       @no_href.index!
-      results = Product.search('sekrit')
+      results = Product.index.search('sekrit')
       expect(results.size).to eq(0)
     end
 
     it "should include items belong to subclasses" do
       @camera.index!
-      results = Product.search('eos rebel')
+      results = Product.index.search('eos rebel')
       expect(results.size).to eq(1)
       results.should include(@camera)
     end
 
     it "should delete a not-anymore-indexable product" do
-      results = Product.search('sekrit')
+      results = Product.index.search('sekrit')
       expect(results.size).to eq(0)
 
       @sekrit.release_date = Time.now - 1.day
       @sekrit.save!
       @sekrit.index!(true)
-      results = Product.search('sekrit')
+      results = Product.index.search('sekrit')
       expect(results.size).to eq(1)
 
       @sekrit.release_date = Time.now + 1.day
       @sekrit.save!
       @sekrit.index!(true)
-      results = Product.search('sekrit')
+      results = Product.index.search('sekrit')
       expect(results.size).to eq(0)
     end
 
     it "should delete not-anymore-indexable product while reindexing" do
-      n = Product.search('', :hitsPerPage => MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE).size
+      n = Product.index.search('', :hitsPerPage => MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE).size
       Product.where(:release_date => nil).first.update_attribute :release_date, Time.now + 1.day
       Product.reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
-      expect(Product.search('', :hitsPerPage => MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE).size).to eq(n - 1)
+      expect(Product.index.search('', :hitsPerPage => MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE).size).to eq(n - 1)
     end
 
     it "should find using synonyms" do
-      expect(Product.search('pomme').size).to eq(Product.search('apple').size)
+      expect(Product.index.search('pomme').size).to eq(Product.index.search('apple').size)
     end
   end
 
@@ -1018,11 +1018,11 @@ describe 'Cities' do
     sf = City.create :name => 'San Francisco', :country => 'USA', :lat => 37.75, :lng => -122.68
     mv = City.create :name => 'Mountain View', :country => 'No man\'s land', :lat => 37.38, :lng => -122.08
     sf_and_mv = City.create :name => 'San Francisco & Mountain View', :country => 'Hybrid', :gl_array => [{ :lat => 37.75, :lng => -122.68 }, { :lat => 37.38, :lng => -122.08 }]
-    results = City.search('', { :aroundLatLng => "37.33, -121.89", :aroundRadius => 50000 })
+    results = City.index.search('', { :aroundLatLng => "37.33, -121.89", :aroundRadius => 50000 })
     expect(results.size).to eq(2)
     results.should include(mv, sf_and_mv)
 
-    results = City.search('', { :aroundLatLng => "37.33, -121.89", :aroundRadius => 500000 })
+    results = City.index.search('', { :aroundLatLng => "37.33, -121.89", :aroundRadius => 500000 })
     expect(results.size).to eq(3)
     results.should include(mv)
     results.should include(sf)
@@ -1045,12 +1045,12 @@ describe 'Cities' do
   end
 
   it "should be searchable using replica index 4" do
-    r = City.search 'no land', :index => safe_index_name('City_replica1')
+    r = City.index.search 'no land', :index => safe_index_name('City_replica1')
     r.size.should eq(1)
   end
 
   it "should be searchable using replica index 5" do
-    r = City.search 'no land', :replica => safe_index_name('City_replica1')
+    r = City.index.search 'no land', :replica => safe_index_name('City_replica1')
     r.size.should eq(1)
   end
 
@@ -1267,7 +1267,7 @@ describe 'Book' do
 
   it "should index the book in 2 indexes of 3" do
     @steve_jobs = Book.create! :name => 'Steve Jobs', :author => 'Walter Isaacson', :premium => true, :released => true
-    results = Book.search('steve')
+    results = Book.index.search('steve')
     expect(results.size).to eq(1)
     results.should include(@steve_jobs)
 
@@ -1342,15 +1342,15 @@ describe 'Kaminari' do
   end
 
   it "should paginate" do
-    pagination = City.search ''
+    pagination = City.index.search ''
     pagination.total_count.should eq(City.raw_search('')['nbHits'])
 
-    p1 = City.search '', :page => 1, :hitsPerPage => 1
+    p1 = City.index.search '', :page => 1, :hitsPerPage => 1
     p1.size.should eq(1)
     p1[0].should eq(pagination[0])
     p1.total_count.should eq(City.raw_search('')['nbHits'])
 
-    p2 = City.search '', :page => 2, :hitsPerPage => 1
+    p2 = City.index.search '', :page => 2, :hitsPerPage => 1
     p2.size.should eq(1)
     p2[0].should eq(pagination[1])
     p2.total_count.should eq(City.raw_search('')['nbHits'])
@@ -1364,7 +1364,7 @@ describe 'Will_paginate' do
   end
 
   it "should paginate" do
-    p1 = City.search '', :hitsPerPage => 2
+    p1 = City.index.search '', :hitsPerPage => 2
     p1.length.should eq(2)
     p1.per_page.should eq(2)
     p1.total_entries.should eq(City.raw_search('')['nbHits'])
@@ -1380,17 +1380,17 @@ describe 'Disabled' do
 
   it "should disable the indexing using a boolean" do
     DisabledBoolean.create :name => 'foo'
-    expect(DisabledBoolean.search('').size).to eq(0)
+    expect(DisabledBoolean.index.search('').size).to eq(0)
   end
 
   it "should disable the indexing using a proc" do
     DisabledProc.create :name => 'foo'
-    expect(DisabledProc.search('').size).to eq(0)
+    expect(DisabledProc.index.search('').size).to eq(0)
   end
 
   it "should disable the indexing using a symbol" do
     DisabledSymbol.create :name => 'foo'
-    expect(DisabledSymbol.search('').size).to eq(0)
+    expect(DisabledSymbol.index.search('').size).to eq(0)
   end
 end
 
