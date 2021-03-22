@@ -516,7 +516,7 @@ module MeiliSearch
             unless attributes.class == Hash
               attributes = attributes.to_hash
             end
-            attributes.merge 'objectID' => ms_object_id_of(o, options)
+             attributes.merge 'id' => ms_object_id_of(o, options)
           end
           last_task = index.add_documents(objects)
         end
@@ -609,7 +609,7 @@ module MeiliSearch
         index = ms_ensure_init(options, settings)
         next if options[:slave] || options[:replica]
         if ms_indexable?(object, options)
-          raise ArgumentError.new("Cannot index a record with a blank objectID") if object_id.blank?
+          # raise ArgumentError.new("Cannot index a record with a blank objectID") if object_id.blank?
           if synchronous || options[:synchronous]
             index.add_documents!(settings.get_attributes(object))
           else
@@ -630,7 +630,7 @@ module MeiliSearch
     def ms_remove_from_index!(object, synchronous = false)
       return if ms_without_auto_index_scope
       object_id = ms_object_id_of(object)
-      raise ArgumentError.new("Cannot index a record with a blank objectID") if object_id.blank?
+      # raise ArgumentError.new("Cannot index a record with a blank objectID") if object_id.blank?
       ms_configurations.each do |options, settings|
         next if ms_indexing_disabled?(options)
         index = ms_ensure_init(options, settings)
