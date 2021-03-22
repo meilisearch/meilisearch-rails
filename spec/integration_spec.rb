@@ -666,46 +666,46 @@ describe 'Namespaced::Model' do
   end
 end
 
-describe 'UniqUsers' do
-  before(:all) do
-    UniqUser.clear_index!(true)
-  end
+# describe 'UniqUsers' do
+#   before(:all) do
+#     UniqUser.clear_index!(true)
+#   end
 
-  it "should not use the id field" do
-    UniqUser.create :name => 'fooBar'
-    results = UniqUser.index.search('foo')
-    expect(results.size).to eq(1)
-  end
-end
+#   it "should not use the id field" do
+#     UniqUser.create :name => 'fooBar'
+#     results = UniqUser.index.search('foo')
+#     expect(results.size).to eq(1)
+#   end
+# end
 
-describe 'NestedItem' do
-  before(:all) do
-    NestedItem.clear_index!(true) rescue nil # not fatal
-  end
+# describe 'NestedItem' do
+#   before(:all) do
+#     NestedItem.clear_index!(true) rescue nil # not fatal
+#   end
 
-  it "should fetch attributes unscoped" do
-    @i1 = NestedItem.create :hidden => false
-    @i2 = NestedItem.create :hidden => true
+#   it "should fetch attributes unscoped" do
+#     @i1 = NestedItem.create :hidden => false
+#     @i2 = NestedItem.create :hidden => true
 
-    @i1.children << NestedItem.create(:hidden => true) << NestedItem.create(:hidden => true)
-    NestedItem.where(:id => [@i1.id, @i2.id]).reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
+#     @i1.children << NestedItem.create(:hidden => true) << NestedItem.create(:hidden => true)
+#     NestedItem.where(:id => [@i1.id, @i2.id]).reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
 
-    result = NestedItem.index.get_object(@i1.id)
-    result['nb_children'].should == 2
+#     result = NestedItem.index.get_object(@i1.id)
+#     result['nb_children'].should == 2
 
-    result = NestedItem.raw_search('')
-    result['nbHits'].should == 1
+#     result = NestedItem.raw_search('')
+#     result['nbHits'].should == 1
 
-    if @i2.respond_to? :update_attributes
-      @i2.update_attributes :hidden => false
-    else
-      @i2.update :hidden => false
-    end
+#     if @i2.respond_to? :update_attributes
+#       @i2.update_attributes :hidden => false
+#     else
+#       @i2.update :hidden => false
+#     end
 
-    result = NestedItem.raw_search('')
-    result['nbHits'].should == 2
-  end
-end
+#     result = NestedItem.raw_search('')
+#     result['nbHits'].should == 2
+#   end
+# end
 
 describe 'Colors' do
   before(:all) do
