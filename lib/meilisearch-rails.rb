@@ -663,6 +663,7 @@ module MeiliSearch
                    params.delete(:replica) ||
                    params.delete('replica')
       index = ms_index(index_name)
+      # index = ms_index(ms_index_name)
       index.search(q, Hash[params.map { |k,v| [k.to_s, v.to_s] }])
     end
 
@@ -694,31 +695,44 @@ module MeiliSearch
         params[:page] = (params.delete('page') || params.delete(:page)).to_i
         params[:page] -= 1 if params[:page].to_i > 0
       end
+
+      # Returns raw json hits as follows: 
+      # {"hits"=>[{"id"=>"13", "href"=>"apple", "name"=>"iphone"}], "offset"=>0, "limit"=>20, "nbHits"=>1, "exhaustiveNbHits"=>false, "processingTimeMs"=>0, "query"=>"iphone"}
       json = ms_raw_search(q, params)
-      hit_ids = json['hits'].map { |hit| hit['objectID'] }
+      
+      # Returns the ids of the hits: 13
+      hit_ids = json['hits'].map { |hit| hit['id'] }  
+      
+      # condition_key gets the primary key of the document; looks for "id" on the options
       if defined?(::Mongoid::Document) && self.include?(::Mongoid::Document)
         condition_key = ms_object_id_method.in
       else
         condition_key = ms_object_id_method
       end
+
+      # meilisearch_options[:type] refers to the Model name (e.g. Product)
+      # results_by_id creates a hash with the primaryKey of the document (id) as the key and the document itself as the value
+      # {"13"=>#<Product id: 13, name: "iphone", href: "apple", tags: nil, type: nil, description: "Puts even more features at your fingertips", release_date: nil>}
       results_by_id = meilisearch_options[:type].where(condition_key => hit_ids).index_by do |hit|
         ms_object_id_of(hit)
       end
+
       results = json['hits'].map do |hit|
-        o = results_by_id[hit['objectID'].to_s]
-        if o
-          o.highlight_result = hit['_highlightResult']
-          o.snippet_result = hit['_snippetResult']
-          o
-        end
+        o = results_by_id[hit['id'].to_s]
+        # if o
+        #   o.formatted_result = hit['_formatted']
+        #   o
+        # end
       end.compact
-      # Algolia has a default limit of 1000 retrievable hits
-      total_hits = json['nbHits'].to_i < json['nbPages'].to_i * json['hitsPerPage'].to_i ?
-        json['nbHits'].to_i: json['nbPages'].to_i * json['hitsPerPage'].to_i
-      res = MeiliSearch::Pagination.create(results, total_hits, meilisearch_options.merge({ :page => json['page'].to_i + 1, :per_page => json['hitsPerPage'] }))
-      res.extend(AdditionalMethods)
-      res.send(:ms_init_raw_answer, json)
-      res
+
+      # MeiliSearch has a default limit of 20 documents returned
+      # total_hits = json['nbHits'].to_i < json['nbPages'].to_i * json['hitsPerPage'].to_i ?
+      #   json['nbHits'].to_i: json['nbPages'].to_i * json['hitsPerPage'].to_i
+      # res = MeiliSearch::Pagination.create(results, total_hits, meilisearch_options.merge({ :page => json['page'].to_i + 1, :per_page => json['hitsPerPage'] }))
+      # res.extend(AdditionalMethods)
+      # res.send(:ms_init_raw_answer, json)
+      # res
+      results
     end
 
     def ms_search_for_facet_values(facet, text, params = {})
