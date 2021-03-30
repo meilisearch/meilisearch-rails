@@ -68,13 +68,13 @@ ActiveRecord::Schema.define do
     t.integer :parent_id
     t.boolean :hidden
   end
-  create_table :cities do |t|
-    t.string :name
-    t.string :country
-    t.float :lat
-    t.float :lng
-    t.string :gl_array
-  end
+  # create_table :cities do |t|
+  #   t.string :name
+  #   t.string :country
+  #   t.float :lat
+  #   t.float :lng
+  #   t.string :gl_array
+  # end
   create_table :with_slaves do |t|
   end
   create_table :mongo_objects do |t|
@@ -138,21 +138,23 @@ class Product < ActiveRecord::Base
     :if => :published?, :unless => lambda { |o| o.href.blank? },
     :index_name => safe_index_name("my_products_index") do
 
-    attribute :href, :name, :tags
-    tags do
-      [name, name] # multiple tags
-    end
+    # attribute :href, :name, :tags
+    attribute :href, :name
+    # tags do
+    #   [name, name] # multiple tags
+    # end
 
-    synonyms [
-      ['iphone', 'applephone', 'iBidule'],
-      ['apple', 'pomme'],
-      ['samsung', 'galaxy']
-    ]
+    synonyms({
+      iphone: ['applephone', 'iBidule'],
+      apple: ['pomme'],
+      samsung: ['galaxy']
+    })
+
   end
 
-  def tags=(names)
-    @tags = names.join(",")
-  end
+  # def tags=(names)
+  #   @tags = names.join(",")
+  # end
 
   def published?
     release_date.blank? || release_date <= Time.now
@@ -168,11 +170,11 @@ class Color < ActiveRecord::Base
 
   meilisearch :synchronous => true, :index_name => safe_index_name("Color"), :per_environment => true do
     searchableAttributes [:name]
-    attributesForFaceting ['searchable(short_name)']
+    attributesForFaceting ['short_name']
     rankingRules ['typo', 'words', 'proximity', 'attribute', 'wordsPosition', 'exactness','asc(hex)']
-    tags do
-      name # single tag
-    end
+    # tags do
+    #   name # single tag
+    # end
 
     # we're using all attributes of the Color class + the _tag "extra" attribute
   end
@@ -349,9 +351,9 @@ describe 'SequelBook' do
 
   it "should index the book" do
     @steve_jobs = SequelBook.create :name => 'Steve Jobs', :author => 'Walter Isaacson', :premium => true, :released => true
-    results = SequelBook.index.search('steve')
-    expect(results['hits'].size).to eq(1)
-    expect(results['hits'][0]['id']).to eq(@steve_jobs.id)
+    results = SequelBook.search('steve')
+    expect(results.size).to eq(1)
+    expect(results[0].id).to eq(@steve_jobs.id)
   end
 
   it "should not override after hooks" do
@@ -650,19 +652,19 @@ describe 'Namespaced::Model' do
   it "should always update when there is no custom _changed? function" do
     m = Namespaced::Model.new(:another_private_value => 2)
     m.save
-    results = Namespaced::Model.index.search('42')
-    expect(results['hits'].count).to eq(1)
-    expect(results['hits'][0]['myid']).to eq(m.id)
+    results = Namespaced::Model.search('42')
+    expect(results.size).to eq(1)
+    expect(results[0].id).to eq(m.id)
 
     m.another_private_value = 5
     m.save
 
-    results = Namespaced::Model.index.search('42')
-    expect(results['hits'].count).to eq(0)
+    results = Namespaced::Model.search('42')
+    expect(results.size).to eq(0)
 
-    results = Namespaced::Model.index.search('45')
-    expect(results['hits'].count).to eq(1)
-    expect(results['hits'][0]['myid']).to eq(m.id)
+    results = Namespaced::Model.search('45')
+    expect(results.size).to eq(1)
+    expect(results[0].id).to eq(m.id)
   end
 end
 
@@ -673,7 +675,7 @@ end
 
 #   it "should not use the id field" do
 #     UniqUser.create :name => 'fooBar'
-#     results = UniqUser.index.search('foo')
+#     results = UniqUser.search('foo')
 #     expect(results.size).to eq(1)
 #   end
 # end
@@ -720,17 +722,17 @@ describe 'Colors' do
 
   it "should auto index" do
     @blue = Color.create!(:name => "blue", :short_name => "b", :hex => 0xFF0000)
-    results = Color.index.search("blue")
+    results = Color.search("blue")
     expect(results.size).to eq(1)
     results.should include(@blue)
   end
 
-  it "should return facet as well" do
-    results = Color.index.search("", :facets => '*')
+  it "should return facets distribution" do
+    results = Color.search("", {facetsDistribution: ['short_name']})
     results.raw_answer.should_not be_nil
-    results.facets.should_not be_nil
-    results.facets.size.should eq(1)
-    results.facets['short_name']['b'].should eq(1)
+    results.facets_distribution.should_not be_nil
+    results.facets_distribution.size.should eq(1)
+    results.facets_distribution['short_name']['b'].should eq(1)
   end
 
   it "should be raw searchable" do
@@ -743,14 +745,14 @@ describe 'Colors' do
     Color.without_auto_index do
       Color.create!(:name => "blue", :short_name => "b", :hex => 0xFF0000)
     end
-    expect(Color.index.search("blue").size).to eq(1)
+    expect(Color.search("blue").size).to eq(1)
     Color.reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
-    expect(Color.index.search("blue").size).to eq(2)
+    expect(Color.search("blue").size).to eq(2)
   end
 
   it "should not be searchable with non-indexed fields" do
     @blue = Color.create!(:name => "blue", :short_name => "x", :hex => 0xFF0000)
-    results = Color.index.search("x")
+    results = Color.search("x")
     expect(results.size).to eq(0)
   end
 
@@ -758,7 +760,7 @@ describe 'Colors' do
     @blue = Color.create!(:name => "red", :short_name => "r3", :hex => 3)
     @blue2 = Color.create!(:name => "red", :short_name => "r1", :hex => 1)
     @blue3 = Color.create!(:name => "red", :short_name => "r2", :hex => 2)
-    results = Color.index.search("red")
+    results = Color.search("red")
     expect(results.size).to eq(3)
     results[0].hex.should eq(1)
     results[1].hex.should eq(2)
@@ -767,39 +769,42 @@ describe 'Colors' do
 
   it "should update the index if the attribute changed" do
     @purple = Color.create!(:name => "purple", :short_name => "p")
-    expect(Color.index.search("purple").size).to eq(1)
-    expect(Color.index.search("pink").size).to eq(0)
+    expect(Color.search("purple").size).to eq(1)
+    expect(Color.search("pink").size).to eq(0)
     @purple.name = "pink"
     @purple.save
-    expect(Color.index.search("purple").size).to eq(0)
-    expect(Color.index.search("pink").size).to eq(1)
+    expect(Color.search("purple").size).to eq(0)
+    expect(Color.search("pink").size).to eq(1)
   end
 
   it "should use the specified scope" do
     Color.clear_index!(true)
     Color.where(:name => 'red').reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
-    expect(Color.index.search("").size).to eq(3)
+    expect(Color.search("").size).to eq(3)
     Color.clear_index!(true)
     Color.where(:id => Color.first.id).reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
-    expect(Color.index.search("").size).to eq(1)
+    expect(Color.search("").size).to eq(1)
   end
 
   it "should have a Rails env-based index name" do
     Color.index_name.should == safe_index_name("Color") + "_#{Rails.env}"
   end
 
-  it "should add tags" do
-    @blue = Color.create!(:name => "green", :short_name => "b", :hex => 0xFF0000)
-    results = Color.index.search("green", { :tagFilters => 'green' })
-    expect(results.size).to eq(1)
-    results.should include(@blue)
-  end
+  # it "should add tags" do
+  #   @blue = Color.create!(:name => "green", :short_name => "b", :hex => 0xFF0000)
+  #   results = Color.search("green", { :tagFilters => 'green' })
+  #   expect(results.size).to eq(1)
+  #   results.should include(@blue)
+  # end
 
-  it "should include the _highlightResult and _snippetResults" do
-    results = Color.index.search("gre", :attributesToSnippet => ['name'], :attributesToHighlight => ['name'])
+  it "should include _formatted object" do
+    Color.create!(:name => "green", :short_name => "b", :hex => 0xFF0000)
+    results = Color.search("gre",  { 
+      attributesToCrop: ['name'],
+      cropLength: 10, 
+      attributesToHighlight: ['name'] })
     expect(results.size).to eq(1)
-    expect(results[0].highlight_result).to_not be_nil
-    expect(results[0].snippet_result).to_not be_nil
+    expect(results[0].formatted).to_not be_nil
   end
 
   it "should index an array of objects" do
@@ -813,19 +818,17 @@ describe 'Colors' do
     expect { Color.new(:name => 'purple').remove_from_index!(true) }.to raise_error(ArgumentError)
   end
 
-  it "should reindex with a temporary index name based on custom index name & per_environment" do
-    Color.reindex
-  end
+  # it "should reindex with a temporary index name based on custom index name & per_environment" do
+  #   Color.reindex
+  # end
 
   it "should search inside facets" do
     @blue = Color.create!(:name => "blue", :short_name => "blu", :hex => 0x0000FF)
     @black = Color.create!(:name => "black", :short_name => "bla", :hex => 0x000000)
     @green = Color.create!(:name => "green", :short_name => "gre", :hex => 0x00FF00)
-    facets = Color.index.search_for_facet_values('short_name', 'bl', :query => 'black')
+    facets = Color.search('bl', {facetFilters: ['short_name:bla']})
     expect(facets.size).to eq(1)
-    expect(facets.first['value']).to eq('bla')
-    expect(facets.first['highlighted']).to eq('<em>bl</em>a')
-    expect(facets.first['count']).to eq(1)
+    expect(facets).to include(@black)
   end
 end
 
@@ -833,6 +836,8 @@ describe 'An imaginary store' do
 
   before(:all) do
     Product.clear_index!(true)
+
+
 
     # Google products
     @blackberry = Product.create!(:name => 'blackberry', :href => "google", :tags => ['decent', 'businessmen love it'])
@@ -870,7 +875,7 @@ describe 'An imaginary store' do
 
     @products_in_database = Product.all
 
-    Product.reindex(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
+    Product.reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
     sleep 5
   end
 
@@ -882,7 +887,7 @@ describe 'An imaginary store' do
 
   describe 'pagination' do
     it 'should display total results correctly' do
-      results = Product.index.search('crapoola', :hitsPerPage => MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE)
+      results = Product.search('crapoola', :hitsPerPage => MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE)
       results.length.should == Product.where(:name => 'crapoola').count
     end
   end
@@ -890,364 +895,364 @@ describe 'An imaginary store' do
   describe 'basic searching' do
 
     it 'should find the iphone' do
-      results = Product.index.search('iphone')
+      results = Product.search('iphone')
       expect(results.size).to eq(1)
       results.should include(@iphone)
     end
 
     it "should search case insensitively" do
-      results = Product.index.search('IPHONE')
+      results = Product.search('IPHONE')
       expect(results.size).to eq(1)
       results.should include(@iphone)
     end
 
     it 'should find all amazon products' do
-      results = Product.index.search('amazon')
+      results = Product.search('amazon')
       expect(results.size).to eq(3)
       results.should include(@android, @samsung, @motorola)
     end
 
     it 'should find all "palm" phones with wildcard word search' do
-      results = Product.index.search('pal')
+      results = Product.search('pal')
       expect(results.size).to eq(2)
       results.should include(@palmpre, @palm_pixi_plus)
     end
 
     it 'should search multiple words from the same field' do
-      results = Product.index.search('palm pixi plus')
+      results = Product.search('palm pixi plus')
       expect(results.size).to eq(1)
       results.should include(@palm_pixi_plus)
     end
 
     it "should narrow the results by searching across multiple fields" do
-      results = Product.index.search('apple iphone')
+      results = Product.search('apple iphone')
       expect(results.size).to eq(1)
       results.should include(@iphone)
     end
 
     it "should not search on non-indexed fields" do
-      results = Product.index.search('features')
+      results = Product.search('features')
       expect(results.size).to eq(0)
     end
 
     it "should delete the associated record" do
       @iphone.destroy
-      results = Product.index.search('iphone')
+      results = Product.search('iphone')
       expect(results.size).to eq(0)
     end
 
     it "should not throw an exception if a search result isn't found locally" do
       Product.without_auto_index { @palmpre.destroy }
-      expect { Product.index.search('pal').to_json }.to_not raise_error
+      expect { Product.search('pal').to_json }.to_not raise_error
     end
 
     it 'should return the other results if those are still available locally' do
       Product.without_auto_index { @palmpre.destroy }
-      JSON.parse(Product.index.search('pal').to_json).size.should == 1
+      JSON.parse(Product.search('pal').to_json).size.should == 1
     end
 
     it "should not duplicate an already indexed record" do
-      expect(Product.index.search('nokia').size).to eq(1)
+      expect(Product.search('nokia').size).to eq(1)
       @nokia.index!
-      expect(Product.index.search('nokia').size).to eq(1)
+      expect(Product.search('nokia').size).to eq(1)
       @nokia.index!
       @nokia.index!
-      expect(Product.index.search('nokia').size).to eq(1)
+      expect(Product.search('nokia').size).to eq(1)
     end
 
-    it "should not duplicate while reindexing" do
-      n = Product.index.search('', :hitsPerPage => MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE).length
-      Product.reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
-      expect(Product.index.search('', :hitsPerPage => MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE).size).to eq(n)
-      Product.reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
-      Product.reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
-      expect(Product.index.search('', :hitsPerPage => MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE).size).to eq(n)
-    end
+    # it "should not duplicate while reindexing" do
+    #   n = Product.search('', :hitsPerPage => MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE).length
+    #   Product.reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
+    #   expect(Product.search('', :hitsPerPage => MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE).size).to eq(n)
+    #   Product.reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
+    #   Product.reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
+    #   expect(Product.search('', :hitsPerPage => MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE).size).to eq(n)
+    # end
 
     it "should not return products that are not indexable" do
       @sekrit.index!
       @no_href.index!
-      results = Product.index.search('sekrit')
+      results = Product.search('sekrit')
       expect(results.size).to eq(0)
     end
 
     it "should include items belong to subclasses" do
       @camera.index!
-      results = Product.index.search('eos rebel')
+      results = Product.search('eos rebel')
       expect(results.size).to eq(1)
       results.should include(@camera)
     end
 
     it "should delete a not-anymore-indexable product" do
-      results = Product.index.search('sekrit')
+      results = Product.search('sekrit')
       expect(results.size).to eq(0)
 
       @sekrit.release_date = Time.now - 1.day
       @sekrit.save!
       @sekrit.index!(true)
-      results = Product.index.search('sekrit')
+      results = Product.search('sekrit')
       expect(results.size).to eq(1)
 
       @sekrit.release_date = Time.now + 1.day
       @sekrit.save!
       @sekrit.index!(true)
-      results = Product.index.search('sekrit')
+      results = Product.search('sekrit')
       expect(results.size).to eq(0)
     end
 
-    it "should delete not-anymore-indexable product while reindexing" do
-      n = Product.index.search('', :hitsPerPage => MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE).size
-      Product.where(:release_date => nil).first.update_attribute :release_date, Time.now + 1.day
-      Product.reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
-      expect(Product.index.search('', :hitsPerPage => MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE).size).to eq(n - 1)
-    end
+    # it "should delete not-anymore-indexable product while reindexing" do
+    #   n = Product.search('', :hitsPerPage => MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE).size
+    #   Product.where(:release_date => nil).first.update_attribute :release_date, Time.now + 1.day
+    #   Product.reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
+    #   expect(Product.search('', :hitsPerPage => MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE).size).to eq(n - 1)
+    # end
 
     it "should find using synonyms" do
-      expect(Product.index.search('pomme').size).to eq(Product.index.search('apple').size)
+      expect(Product.search('pomme').size).to eq(Product.search('apple').size)
     end
   end
 
 end
 
-describe 'Cities' do
-  before(:all) do
-    City.clear_index!(true)
-  end
+# describe 'Cities' do
+#   before(:all) do
+#     City.clear_index!(true)
+#   end
 
-  it "should index geo" do
-    sf = City.create :name => 'San Francisco', :country => 'USA', :lat => 37.75, :lng => -122.68
-    mv = City.create :name => 'Mountain View', :country => 'No man\'s land', :lat => 37.38, :lng => -122.08
-    sf_and_mv = City.create :name => 'San Francisco & Mountain View', :country => 'Hybrid', :gl_array => [{ :lat => 37.75, :lng => -122.68 }, { :lat => 37.38, :lng => -122.08 }]
-    results = City.index.search('', { :aroundLatLng => "37.33, -121.89", :aroundRadius => 50000 })
-    expect(results.size).to eq(2)
-    results.should include(mv, sf_and_mv)
+#   it "should index geo" do
+#     sf = City.create :name => 'San Francisco', :country => 'USA', :lat => 37.75, :lng => -122.68
+#     mv = City.create :name => 'Mountain View', :country => 'No man\'s land', :lat => 37.38, :lng => -122.08
+#     sf_and_mv = City.create :name => 'San Francisco & Mountain View', :country => 'Hybrid', :gl_array => [{ :lat => 37.75, :lng => -122.68 }, { :lat => 37.38, :lng => -122.08 }]
+#     results = City.search('', { :aroundLatLng => "37.33, -121.89", :aroundRadius => 50000 })
+#     expect(results.size).to eq(2)
+#     results.should include(mv, sf_and_mv)
 
-    results = City.index.search('', { :aroundLatLng => "37.33, -121.89", :aroundRadius => 500000 })
-    expect(results.size).to eq(3)
-    results.should include(mv)
-    results.should include(sf)
-    results.should include(sf_and_mv)
-  end
+#     results = City.search('', { :aroundLatLng => "37.33, -121.89", :aroundRadius => 500000 })
+#     expect(results.size).to eq(3)
+#     results.should include(mv)
+#     results.should include(sf)
+#     results.should include(sf_and_mv)
+#   end
 
-  it "should be searchable using replica index" do
-    r = City.index(safe_index_name('City_replica1')).search 'no land'
-    r['nbHits'].should eq(1)
-  end
+#   it "should be searchable using replica index" do
+#     r = City.index(safe_index_name('City_replica1')).search 'no land'
+#     r['nbHits'].should eq(1)
+#   end
 
-  it "should be searchable using replica index 2" do
-    r = City.raw_search 'no land', :index => safe_index_name('City_replica1')
-    r['nbHits'].should eq(1)
-  end
+#   it "should be searchable using replica index 2" do
+#     r = City.raw_search 'no land', :index => safe_index_name('City_replica1')
+#     r['nbHits'].should eq(1)
+#   end
 
-  it "should be searchable using replica index 3" do
-    r = City.raw_search 'no land', :replica => safe_index_name('City_replica1')
-    r['nbHits'].should eq(1)
-  end
+#   it "should be searchable using replica index 3" do
+#     r = City.raw_search 'no land', :replica => safe_index_name('City_replica1')
+#     r['nbHits'].should eq(1)
+#   end
 
-  it "should be searchable using replica index 4" do
-    r = City.index.search 'no land', :index => safe_index_name('City_replica1')
-    r.size.should eq(1)
-  end
+#   it "should be searchable using replica index 4" do
+#     r = City.index.search 'no land', :index => safe_index_name('City_replica1')
+#     r.size.should eq(1)
+#   end
 
-  it "should be searchable using replica index 5" do
-    r = City.index.search 'no land', :replica => safe_index_name('City_replica1')
-    r.size.should eq(1)
-  end
+#   it "should be searchable using replica index 5" do
+#     r = City.index.search 'no land', :replica => safe_index_name('City_replica1')
+#     r.size.should eq(1)
+#   end
 
-  it "should reindex with replicas in place" do
-    City.reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
-    expect(City.index.get_settings['replicas'].length).to eq(2)
-  end
+#   it "should reindex with replicas in place" do
+#     City.reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
+#     expect(City.index.get_settings['replicas'].length).to eq(2)
+#   end
 
-  it "should reindex with replicas using a temporary index" do
-    City.reindex(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
-    expect(City.index.get_settings['replicas'].length).to eq(2)
-  end
+#   it "should reindex with replicas using a temporary index" do
+#     City.reindex(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
+#     expect(City.index.get_settings['replicas'].length).to eq(2)
+#   end
 
-  it "should not include the replicas setting on replicas" do
-    City.send(:ms_configurations).to_a.each do |v|
-      if v[0][:replica]
-        expect(v[1].to_settings[:replicas]).to be_nil
-      else
-        expect(v[1].to_settings[:replicas]).to match_array(["#{safe_index_name('City_replica1')}_#{Rails.env}", "#{safe_index_name('City_replica2')}_#{Rails.env}"])
-      end
-    end
-  end
+#   it "should not include the replicas setting on replicas" do
+#     City.send(:ms_configurations).to_a.each do |v|
+#       if v[0][:replica]
+#         expect(v[1].to_settings[:replicas]).to be_nil
+#       else
+#         expect(v[1].to_settings[:replicas]).to match_array(["#{safe_index_name('City_replica1')}_#{Rails.env}", "#{safe_index_name('City_replica2')}_#{Rails.env}"])
+#       end
+#     end
+#   end
 
-  it "should browse" do
-    total = City.index.search('')['nbHits']
-    n = 0
-    City.index.browse do |hit|
-      n += 1
-    end
-    expect(n).to eq(total)
-  end
+#   it "should browse" do
+#     total = City.search('')['nbHits']
+#     n = 0
+#     City.index.browse do |hit|
+#       n += 1
+#     end
+#     expect(n).to eq(total)
+#   end
 
-  it "should have set the custom ranking on all indices" do
-    expect(City.index.settings['rankingRules']).to eq(['typo', 'words', 'proximity', 'attribute', 'wordsPosition', 'exactness', 'desc(b)'])
-    expect(City.index(safe_index_name('City_replica1')).settings['rankingRules']).to eq(['typo', 'words', 'proximity', 'attribute', 'wordsPosition', 'exactness', 'asc(a)'])
-    expect(City.index(safe_index_name('City_replica2')).settings['rankingRules']).to eq(['typo', 'words', 'proximity', 'attribute', 'wordsPosition', 'exactness', 'asc(a)', 'desc(c)'])
-  end
+#   it "should have set the custom ranking on all indices" do
+#     expect(City.index.settings['rankingRules']).to eq(['typo', 'words', 'proximity', 'attribute', 'wordsPosition', 'exactness', 'desc(b)'])
+#     expect(City.index(safe_index_name('City_replica1')).settings['rankingRules']).to eq(['typo', 'words', 'proximity', 'attribute', 'wordsPosition', 'exactness', 'asc(a)'])
+#     expect(City.index(safe_index_name('City_replica2')).settings['rankingRules']).to eq(['typo', 'words', 'proximity', 'attribute', 'wordsPosition', 'exactness', 'asc(a)', 'desc(c)'])
+#   end
 
-end
+# end
 
-describe "FowardToReplicas" do
-  before(:each) do
-    Object.send(:remove_const, :ForwardToReplicas) if Object.constants.include?(:ForwardToReplicas)
+# describe "FowardToReplicas" do
+#   before(:each) do
+#     Object.send(:remove_const, :ForwardToReplicas) if Object.constants.include?(:ForwardToReplicas)
 
-    class ForwardToReplicas < ActiveRecord::Base
-      include MeiliSearch
+#     class ForwardToReplicas < ActiveRecord::Base
+#       include MeiliSearch
 
-      meilisearch :synchronous => true, :index_name => safe_index_name('ForwardToReplicas') do
-        attribute :name
-        searchableAttributes %w(first_value)
-        attributesToHighlight %w(primary_highlight)
+#       meilisearch :synchronous => true, :index_name => safe_index_name('ForwardToReplicas') do
+#         attribute :name
+#         searchableAttributes %w(first_value)
+#         attributesToHighlight %w(primary_highlight)
 
-        add_replica safe_index_name('ForwardToReplicas_replica') do
-          attributesToHighlight %w(replica_highlight)
-        end
-      end
-    end
-  end
+#         add_replica safe_index_name('ForwardToReplicas_replica') do
+#           attributesToHighlight %w(replica_highlight)
+#         end
+#       end
+#     end
+#   end
 
-  after(:each) do
-    ForwardToReplicas.index.delete!
-  end
+#   after(:each) do
+#     ForwardToReplicas.index.delete!
+#   end
 
-  it 'shouldn\'t have inherited from the primary' do
-    ForwardToReplicas.send :ms_ensure_init
+#   it 'shouldn\'t have inherited from the primary' do
+#     ForwardToReplicas.send :ms_ensure_init
 
-    # Hacky way to have a wait on set_settings
-    ForwardToReplicas.create(:name => 'val')
-    ForwardToReplicas.reindex!
+#     # Hacky way to have a wait on set_settings
+#     ForwardToReplicas.create(:name => 'val')
+#     ForwardToReplicas.reindex!
 
-    primary_settings = ForwardToReplicas.index.get_settings
-    expect(primary_settings['searchableAttributes']).to eq(%w(first_value))
-    expect(primary_settings['attributesToHighlight']).to eq(%w(primary_highlight))
+#     primary_settings = ForwardToReplicas.index.get_settings
+#     expect(primary_settings['searchableAttributes']).to eq(%w(first_value))
+#     expect(primary_settings['attributesToHighlight']).to eq(%w(primary_highlight))
 
-    replica_settings = ForwardToReplicas.index(safe_index_name('ForwardToReplicas_replica')).get_settings
-    expect(replica_settings['searchableAttributes']).to eq(nil)
-    expect(replica_settings['attributesToHighlight']).to eq(%w(replica_highlight))
-  end
+#     replica_settings = ForwardToReplicas.index(safe_index_name('ForwardToReplicas_replica')).get_settings
+#     expect(replica_settings['searchableAttributes']).to eq(nil)
+#     expect(replica_settings['attributesToHighlight']).to eq(%w(replica_highlight))
+#   end
 
-  it 'should update the replica settings when changed' do
-    Object.send(:remove_const, :ForwardToReplicasTwo) if Object.constants.include?(:ForwardToReplicasTwo)
+#   it 'should update the replica settings when changed' do
+#     Object.send(:remove_const, :ForwardToReplicasTwo) if Object.constants.include?(:ForwardToReplicasTwo)
 
-    class ForwardToReplicasTwo < ActiveRecord::Base
-      include MeiliSearch
+#     class ForwardToReplicasTwo < ActiveRecord::Base
+#       include MeiliSearch
 
-      meilisearch :synchronous => true, :index_name => safe_index_name('ForwardToReplicas') do
-        attribute :name
-        searchableAttributes %w(second_value)
-        attributesToHighlight %w(primary_highlight)
+#       meilisearch :synchronous => true, :index_name => safe_index_name('ForwardToReplicas') do
+#         attribute :name
+#         searchableAttributes %w(second_value)
+#         attributesToHighlight %w(primary_highlight)
 
-        add_replica safe_index_name('ForwardToReplicas_replica'), :inherit => true do
-          attributesToHighlight %w(replica_highlight)
-        end
-      end
-    end
+#         add_replica safe_index_name('ForwardToReplicas_replica'), :inherit => true do
+#           attributesToHighlight %w(replica_highlight)
+#         end
+#       end
+#     end
 
-    ForwardToReplicas.send :ms_ensure_init
+#     ForwardToReplicas.send :ms_ensure_init
 
-    ForwardToReplicasTwo.send :ms_ensure_init
+#     ForwardToReplicasTwo.send :ms_ensure_init
 
-    # Hacky way to have a wait on set_settings
-    ForwardToReplicasTwo.create(:name => 'val')
-    ForwardToReplicasTwo.reindex!
+#     # Hacky way to have a wait on set_settings
+#     ForwardToReplicasTwo.create(:name => 'val')
+#     ForwardToReplicasTwo.reindex!
 
-    primary_settings = ForwardToReplicas.index.get_settings
-    expect(primary_settings['searchableAttributes']).to eq(%w(second_value))
-    expect(primary_settings['attributesToHighlight']).to eq(%w(primary_highlight))
+#     primary_settings = ForwardToReplicas.index.get_settings
+#     expect(primary_settings['searchableAttributes']).to eq(%w(second_value))
+#     expect(primary_settings['attributesToHighlight']).to eq(%w(primary_highlight))
 
-    replica_settings = ForwardToReplicas.index(safe_index_name('ForwardToReplicas_replica')).get_settings
-    expect(replica_settings['searchableAttributes']).to eq(%w(second_value))
-    expect(replica_settings['attributesToHighlight']).to eq(%w(replica_highlight))
+#     replica_settings = ForwardToReplicas.index(safe_index_name('ForwardToReplicas_replica')).get_settings
+#     expect(replica_settings['searchableAttributes']).to eq(%w(second_value))
+#     expect(replica_settings['attributesToHighlight']).to eq(%w(replica_highlight))
 
-    expect(ForwardToReplicas.index.name).to eq(ForwardToReplicasTwo.index.name)
-  end
-end
+#     expect(ForwardToReplicas.index.name).to eq(ForwardToReplicasTwo.index.name)
+#   end
+# end
 
-describe "SubReplicas" do
-  before(:all) do
-    SubReplicas.clear_index!(true)
-  end
+# describe "SubReplicas" do
+#   before(:all) do
+#     SubReplicas.clear_index!(true)
+#   end
 
-  let(:expected_indicies) { %w(SubReplicas Additional_Index Replica_Index).map { |name| safe_index_name(name) } }
+#   let(:expected_indicies) { %w(SubReplicas Additional_Index Replica_Index).map { |name| safe_index_name(name) } }
 
-  it "contains all levels in ms_configurations" do
-    configured_indicies = SubReplicas.send(:ms_configurations)
-    configured_indicies.each_pair do |opts, _|
-      expect(expected_indicies).to include(opts[:index_name])
+#   it "contains all levels in ms_configurations" do
+#     configured_indicies = SubReplicas.send(:ms_configurations)
+#     configured_indicies.each_pair do |opts, _|
+#       expect(expected_indicies).to include(opts[:index_name])
 
-      expect(opts[:replica]).to be true if opts[:index_name] == safe_index_name('Replica_Index')
-    end
-  end
+#       expect(opts[:replica]).to be true if opts[:index_name] == safe_index_name('Replica_Index')
+#     end
+#   end
 
-  it "should be searchable through default index" do
-    expect { SubReplicas.raw_search('something') }.not_to raise_error
-  end
+#   it "should be searchable through default index" do
+#     expect { SubReplicas.raw_search('something') }.not_to raise_error
+#   end
 
-  it "should be searchable through added index" do
-    expect { SubReplicas.raw_search('something', :index => safe_index_name('Additional_Index')) }.not_to raise_error
-  end
+#   it "should be searchable through added index" do
+#     expect { SubReplicas.raw_search('something', :index => safe_index_name('Additional_Index')) }.not_to raise_error
+#   end
 
-  it "should be searchable through added indexes replica" do
-    expect { SubReplicas.raw_search('something', :index => safe_index_name('Replica_Index')) }.not_to raise_error
-  end
-end
+#   it "should be searchable through added indexes replica" do
+#     expect { SubReplicas.raw_search('something', :index => safe_index_name('Replica_Index')) }.not_to raise_error
+#   end
+# end
 
-describe "WithSlave" do
-  before(:all) do
-    WithSlave.clear_index!(true)
-  end
+# describe "WithSlave" do
+#   before(:all) do
+#     WithSlave.clear_index!(true)
+#   end
 
-  let(:expected_indicies) { %w(WithSlave WithSlave_slave).map { |name| safe_index_name(name) } }
+#   let(:expected_indicies) { %w(WithSlave WithSlave_slave).map { |name| safe_index_name(name) } }
 
-  it "should be searchable through added indexes slaves" do
-    expect { WithSlave.raw_search('something', :index => safe_index_name('WithSlave_slave')) }.not_to raise_error
-  end
+#   it "should be searchable through added indexes slaves" do
+#     expect { WithSlave.raw_search('something', :index => safe_index_name('WithSlave_slave')) }.not_to raise_error
+#   end
 
-  it "should reindex with slaves in place" do
-    WithSlave.reindex!
-    expect(WithSlave.index.get_settings['slaves'].length).to eq(1)
-  end
-end
+#   it "should reindex with slaves in place" do
+#     WithSlave.reindex!
+#     expect(WithSlave.index.get_settings['slaves'].length).to eq(1)
+#   end
+# end
 
-describe "SlaveThenReplica" do
-  it 'should throw with add_slave then add_replica' do
-    test = lambda do
-      class SlaveThenReplica
-        include MeiliSearch
+# describe "SlaveThenReplica" do
+#   it 'should throw with add_slave then add_replica' do
+#     test = lambda do
+#       class SlaveThenReplica
+#         include MeiliSearch
 
-        meilisearch :synchronous => true, :force_utf8_encoding => true, :index_name => safe_index_name("SlaveThenReplica") do
-          add_slave safe_index_name("SlaveThenReplica_slave") do
-          end
-          add_replica safe_index_name("SlaveThenReplica_replica") do
-          end
-        end
-      end
-    end
-    expect(test).to raise_error(MeiliSearch::MixedSlavesAndReplicas)
-  end
-end
+#         meilisearch :synchronous => true, :force_utf8_encoding => true, :index_name => safe_index_name("SlaveThenReplica") do
+#           add_slave safe_index_name("SlaveThenReplica_slave") do
+#           end
+#           add_replica safe_index_name("SlaveThenReplica_replica") do
+#           end
+#         end
+#       end
+#     end
+#     expect(test).to raise_error(MeiliSearch::MixedSlavesAndReplicas)
+#   end
+# end
 
-describe "ReplicaThenSlave" do
-  it 'should throw with add_replice then add_slave' do
-    test = lambda do
-      class ReplicaThenSlave
-        include MeiliSearch
+# describe "ReplicaThenSlave" do
+#   it 'should throw with add_replice then add_slave' do
+#     test = lambda do
+#       class ReplicaThenSlave
+#         include MeiliSearch
 
-        meilisearch :synchronous => true, :force_utf8_encoding => true, :index_name => safe_index_name("ReplicaThenSlave") do
-          add_replica safe_index_name("ReplicaThenSlave_replica") do
-          end
-          add_slave safe_index_name("ReplicaThenSlave_slave") do
-          end
-        end
-      end
-    end
-    expect(test).to raise_error(MeiliSearch::MixedSlavesAndReplicas)
-  end
-end
+#         meilisearch :synchronous => true, :force_utf8_encoding => true, :index_name => safe_index_name("ReplicaThenSlave") do
+#           add_replica safe_index_name("ReplicaThenSlave_replica") do
+#           end
+#           add_slave safe_index_name("ReplicaThenSlave_slave") do
+#           end
+#         end
+#       end
+#     end
+#     expect(test).to raise_error(MeiliSearch::MixedSlavesAndReplicas)
+#   end
+# end
 
 describe 'MongoObject' do
   it "should not have method conflicts" do
@@ -1261,13 +1266,13 @@ end
 describe 'Book' do
   before(:all) do
     Book.clear_index!(true)
-    Book.index(safe_index_name('BookAuthor')).clear
-    Book.index(safe_index_name('Book')).clear
+    Book.index(safe_index_name('BookAuthor')).delete_all_documents
+    Book.index(safe_index_name('Book')).delete_all_documents
   end
 
   it "should index the book in 2 indexes of 3" do
     @steve_jobs = Book.create! :name => 'Steve Jobs', :author => 'Walter Isaacson', :premium => true, :released => true
-    results = Book.index.search('steve')
+    results = Book.search('steve')
     expect(results.size).to eq(1)
     results.should include(@steve_jobs)
 
@@ -1287,23 +1292,23 @@ describe 'Book' do
 
   it "should sanitize attributes" do
     @hack = Book.create! :name => "\"><img src=x onerror=alert(1)> hack0r", :author => "<script type=\"text/javascript\">alert(1)</script>", :premium => true, :released => true
-    b = Book.raw_search('hack')
+    b = Book.raw_search('hack', { attributesToHighlight: ['*'] })
     expect(b['hits'].length).to eq(1)
     begin
       expect(b['hits'][0]['name']).to eq('"> hack0r')
       expect(b['hits'][0]['author']).to eq('alert(1)')
-      expect(b['hits'][0]['_highlightResult']['name']['value']).to eq('"> <em>hack</em>0r')
+      expect(b['hits'][0]['_formatted']['name']).to eq('"> <em>hack</em>0r')
     rescue
       # rails 4.2's sanitizer
       begin
         expect(b['hits'][0]['name']).to eq('&quot;&gt; hack0r')
         expect(b['hits'][0]['author']).to eq('')
-        expect(b['hits'][0]['_highlightResult']['name']['value']).to eq('&quot;&gt; <em>hack</em>0r')
+        expect(b['hits'][0]['_formatted']['name']).to eq('&quot;&gt; <em>hack</em>0r')
       rescue
         # jruby
         expect(b['hits'][0]['name']).to eq('"&gt; hack0r')
         expect(b['hits'][0]['author']).to eq('')
-        expect(b['hits'][0]['_highlightResult']['name']['value']).to eq('"&gt; <em>hack</em>0r')
+        expect(b['hits'][0]['_formatted']['name']).to eq('"&gt; <em>hack</em>0r')
       end
     end
   end
@@ -1331,7 +1336,7 @@ describe 'Book' do
 
   it "should use the per_environment option in the additional index as well" do
     index = Book.index(safe_index_name('Book'))
-    expect(index.name).to eq("#{safe_index_name('Book')}_#{Rails.env}")
+    expect(index.uid).to eq("#{safe_index_name('Book')}_#{Rails.env}")
   end
 end
 
@@ -1373,35 +1378,35 @@ end
 
 describe 'Disabled' do
   before(:all) do
-    DisabledBoolean.index.clear_index!
-    DisabledProc.index.clear_index!
-    DisabledSymbol.index.clear_index!
+    DisabledBoolean.index.delete_all_documents!
+    DisabledProc.index.delete_all_documents!
+    DisabledSymbol.index.delete_all_documents!
   end
 
   it "should disable the indexing using a boolean" do
     DisabledBoolean.create :name => 'foo'
-    expect(DisabledBoolean.index.search('').size).to eq(0)
+    expect(DisabledBoolean.search('').size).to eq(0)
   end
 
   it "should disable the indexing using a proc" do
     DisabledProc.create :name => 'foo'
-    expect(DisabledProc.index.search('').size).to eq(0)
+    expect(DisabledProc.search('').size).to eq(0)
   end
 
   it "should disable the indexing using a symbol" do
     DisabledSymbol.create :name => 'foo'
-    expect(DisabledSymbol.index.search('').size).to eq(0)
+    expect(DisabledSymbol.search('').size).to eq(0)
   end
 end
 
-describe 'NullableId' do
-  before(:all) do
-  end
+# describe 'NullableId' do
+#   before(:all) do
+#   end
 
-  it "should not delete a null objectID" do
-    NullableId.create!
-  end
-end
+#   it "should not delete a null objectID" do
+#     NullableId.create!
+#   end
+# end
 
 unless OLD_RAILS
   describe 'EnqueuedObject' do
