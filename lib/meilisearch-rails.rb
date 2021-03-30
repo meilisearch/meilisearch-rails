@@ -306,10 +306,10 @@ module MeiliSearch
     end
 
     # special handling of wait_for_pending_update to handle null task_id
-    def wait_for_pending_update(task_id)
-      return if task_id.nil? && !@raise_on_failure # ok
+    def wait_for_pending_update(update_id)
+      return if update_id.nil? && !@raise_on_failure # ok
       SafeIndex.log_or_throw(:wait_for_pending_update, @raise_on_failure) do
-        @index.wait_for_pending_update(task_id)
+        @index.wait_for_pending_update(update_id)
       end
     end
 
@@ -344,7 +344,7 @@ module MeiliSearch
         case method.to_s
         when 'search'
           # some attributes are required
-          { 'hits' => [], 'hitsPerPage' => 0, 'page' => 0, 'facets' => {}, 'error' => e }
+          { 'hits' => [], 'hitsPerPage' => 0, 'page' => 0, 'facetsDistribution' => {}, 'error' => e }
         else
           # empty answer
           { 'error' => e }
@@ -381,7 +381,7 @@ module MeiliSearch
       self.meilisearch_settings = IndexSettings.new(options, &block)
       self.meilisearch_options = { :type => ms_full_const_get(model_name.to_s), :per_page => meilisearch_settings.get_setting(:hitsPerPage) || 10, :page => 1 }.merge(options)
 
-      attr_accessor :highlight_result, :snippet_result
+      attr_accessor :formatted
 
       if options[:synchronous] == true
         if defined?(::Sequel) && self < Sequel::Model
@@ -501,7 +501,7 @@ module MeiliSearch
         next if ms_indexing_disabled?(options)
         index = ms_ensure_init(options, settings)
         next if options[:slave] || options[:replica]
-        last_task = nil
+        last_update = nil
 
         ms_find_in_batches(batch_size) do |group|
           if ms_conditional_index?(options)
@@ -518,9 +518,9 @@ module MeiliSearch
             end
              attributes.merge 'id' => ms_object_id_of(o, options)
           end
-          last_task = index.add_documents(objects)
+          last_update= index.add_documents(objects)
         end
-        index.wait_for_pending_update(last_task["updateId"]) if last_task and (synchronous || options[:synchronous])
+        index.wait_for_pending_update(last_update["updateId"]) if last_update and (synchronous || options[:synchronous])
       end
       nil
     end
@@ -567,7 +567,7 @@ module MeiliSearch
         end
 
         move_task = SafeIndex.move_index(tmp_index.name, src_index_name)
-        master_index.wait_for_pending_update(move_task["taskID"]) if synchronous || options[:synchronous]
+        master_index.wait_for_pending_update(move_task["updateId"]) if synchronous || options[:synchronous]
       end
       nil
     end
@@ -586,8 +586,8 @@ module MeiliSearch
         end
 
         index = SafeIndex.new(ms_index_name(options), true)
-        task = index.update_settings(final_settings)
-        index.wait_for_pending_update(task["taskID"]) if synchronous
+        update = index.update_settings(final_settings)
+        index.wait_for_pending_update(update["updateId"]) if synchronous
       end
     end
 
@@ -596,8 +596,8 @@ module MeiliSearch
         next if ms_indexing_disabled?(options)
         index = ms_ensure_init(options, settings)
         next if options[:slave] || options[:replica]
-        task = index.add_documents(objects.map { |o| settings.get_attributes(o).merge 'objectID' => ms_object_id_of(o, options) })
-        index.wait_for_pending_update(task["taskID"]) if synchronous || options[:synchronous]
+        update = index.add_documents(objects.map { |o| settings.get_attributes(o).merge 'id' => ms_object_id_of(o, options) })
+        index.wait_for_pending_update(update["updateId"]) if synchronous || options[:synchronous]
       end
     end
 
@@ -609,11 +609,15 @@ module MeiliSearch
         index = ms_ensure_init(options, settings)
         next if options[:slave] || options[:replica]
         if ms_indexable?(object, options)
-          # raise ArgumentError.new("Cannot index a record with a blank objectID") if object_id.blank?
+          raise ArgumentError.new("Cannot index a record with a blank objectID") if object_id.blank?
           if synchronous || options[:synchronous]
-            index.add_documents!(settings.get_attributes(object))
+            doc = settings.get_attributes(object)
+            doc = doc.merge 'id' => object_id
+            index.add_documents!(doc)
           else
-            index.add_documents(settings.get_attributes(object))
+            doc = settings.get_attributes(object)
+            doc = doc.merge 'id' => object_id
+            index.add_documents(doc)
           end
         elsif ms_conditional_index?(options) && !object_id.blank?
           # remove non-indexable objects
@@ -630,7 +634,7 @@ module MeiliSearch
     def ms_remove_from_index!(object, synchronous = false)
       return if ms_without_auto_index_scope
       object_id = ms_object_id_of(object)
-      # raise ArgumentError.new("Cannot index a record with a blank objectID") if object_id.blank?
+      raise ArgumentError.new("Cannot index a record with a blank objectID") if object_id.blank?
       ms_configurations.each do |options, settings|
         next if ms_indexing_disabled?(options)
         index = ms_ensure_init(options, settings)
@@ -664,14 +668,15 @@ module MeiliSearch
                    params.delete('replica')
       index = ms_index(index_name)
       # index = ms_index(ms_index_name)
-      index.search(q, Hash[params.map { |k,v| [k.to_s, v.to_s] }])
+      # index.search(q, Hash[params.map { |k,v| [k.to_s, v.to_s] }])
+      index.search(q, Hash[params.map { |k,v| [k, v] }])
     end
 
     module AdditionalMethods
       def self.extended(base)
         class <<base
           alias_method :raw_answer, :ms_raw_answer unless method_defined? :raw_answer
-          alias_method :facets, :ms_facets unless method_defined? :facets
+          alias_method :facets_distribution, :ms_facets_distribution unless method_defined? :facets_distribution
         end
       end
 
@@ -679,8 +684,8 @@ module MeiliSearch
         @ms_json
       end
 
-      def ms_facets
-        @ms_json['facets']
+      def ms_facets_distribution
+        @ms_json['facetsDistribution']
       end
 
       private
@@ -699,7 +704,6 @@ module MeiliSearch
       # Returns raw json hits as follows: 
       # {"hits"=>[{"id"=>"13", "href"=>"apple", "name"=>"iphone"}], "offset"=>0, "limit"=>20, "nbHits"=>1, "exhaustiveNbHits"=>false, "processingTimeMs"=>0, "query"=>"iphone"}
       json = ms_raw_search(q, params)
-      
       # Returns the ids of the hits: 13
       hit_ids = json['hits'].map { |hit| hit['id'] }  
       
@@ -719,10 +723,10 @@ module MeiliSearch
 
       results = json['hits'].map do |hit|
         o = results_by_id[hit['id'].to_s]
-        # if o
-        #   o.formatted_result = hit['_formatted']
-        #   o
-        # end
+        if o
+          o.formatted = hit['_formatted']
+          o
+        end
       end.compact
 
       # MeiliSearch has a default limit of 20 documents returned
@@ -732,6 +736,8 @@ module MeiliSearch
       # res.extend(AdditionalMethods)
       # res.send(:ms_init_raw_answer, json)
       # res
+      results.extend(AdditionalMethods)
+      results.send(:ms_init_raw_answer, json)
       results
     end
 
