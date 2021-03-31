@@ -379,7 +379,7 @@ module MeiliSearch
 
     def meilisearch(options = {}, &block)
       self.meilisearch_settings = IndexSettings.new(options, &block)
-      self.meilisearch_options = { :type => ms_full_const_get(model_name.to_s), :per_page => meilisearch_settings.get_setting(:hitsPerPage) || 10, :page => 1 }.merge(options)
+      self.meilisearch_options = { :type => ms_full_const_get(model_name.to_s), :per_page => meilisearch_settings.get_setting(:hitsPerPage) || 20, :page => 1 }.merge(options)
 
       attr_accessor :formatted
 
@@ -662,10 +662,10 @@ module MeiliSearch
     def ms_raw_search(q, params = {})
       index_name = params.delete(:index) ||
                    params.delete('index') ||
-                   params.delete(:slave) ||
-                   params.delete('slave') ||
-                   params.delete(:replica) ||
-                   params.delete('replica')
+                  #  params.delete(:slave) ||
+                  #  params.delete('slave') ||
+                  #  params.delete(:replica) ||
+                  #  params.delete('replica')
       index = ms_index(index_name)
       # index = ms_index(ms_index_name)
       # index.search(q, Hash[params.map { |k,v| [k.to_s, v.to_s] }])
@@ -695,15 +695,21 @@ module MeiliSearch
     end
 
     def ms_search(q, params = {})
+
       if MeiliSearch.configuration[:pagination_backend]
         # kaminari and will_paginate start pagination at 1, Algolia starts at 0
-        params[:page] = (params.delete('page') || params.delete(:page)).to_i
-        params[:page] -= 1 if params[:page].to_i > 0
+        # params[:page] = (params.delete('page') || params.delete(:page)).to_i
+        # params[:page] -= 1 if params[:page].to_i > 0
+        page = params[:page]
+        hits_per_page = params[:hitsPerPage]
+        params.delete(:page)
+        params.delete(:hitsPerPage)
+        params[:limit] = 200
       end
-
       # Returns raw json hits as follows: 
-      # {"hits"=>[{"id"=>"13", "href"=>"apple", "name"=>"iphone"}], "offset"=>0, "limit"=>20, "nbHits"=>1, "exhaustiveNbHits"=>false, "processingTimeMs"=>0, "query"=>"iphone"}
+      # {"hits"=>[{"id"=>"13", "href"=>"apple", "name"=>"iphone"}], "offset"=>0, "limit"=>|| 20, "nbHits"=>1, "exhaustiveNbHits"=>false, "processingTimeMs"=>0, "query"=>"iphone"}
       json = ms_raw_search(q, params)
+
       # Returns the ids of the hits: 13
       hit_ids = json['hits'].map { |hit| hit['id'] }  
       
@@ -729,16 +735,14 @@ module MeiliSearch
         end
       end.compact
 
-      # MeiliSearch has a default limit of 20 documents returned
-      # total_hits = json['nbHits'].to_i < json['nbPages'].to_i * json['hitsPerPage'].to_i ?
-      #   json['nbHits'].to_i: json['nbPages'].to_i * json['hitsPerPage'].to_i
-      # res = MeiliSearch::Pagination.create(results, total_hits, meilisearch_options.merge({ :page => json['page'].to_i + 1, :per_page => json['hitsPerPage'] }))
-      # res.extend(AdditionalMethods)
-      # res.send(:ms_init_raw_answer, json)
-      # res
-      results.extend(AdditionalMethods)
-      results.send(:ms_init_raw_answer, json)
-      results
+      total_hits = json['hits'].length
+      hits_per_page = hits_per_page || 20
+      page = page || 1
+
+      res = MeiliSearch::Pagination.create(results, total_hits, meilisearch_options.merge({ :page =>  page , :per_page => hits_per_page }))
+      res.extend(AdditionalMethods)
+      res.send(:ms_init_raw_answer, json)
+      res
     end
 
     def ms_search_for_facet_values(facet, text, params = {})
