@@ -69,7 +69,9 @@ module MeiliSearch
     # MeiliSearch settings
     OPTIONS = [
       :searchableAttributes, :attributesForFaceting, :displayedAttributes, :distinctAttribute,
-      :synonyms, :stopWords, :rankingRules
+      :synonyms, :stopWords, :rankingRules,
+      :attributesToHighlight,
+      :attributesToCrop, :cropLength
     ]
 
     OPTIONS.each do |k|
@@ -298,11 +300,16 @@ module MeiliSearch
     end
 
     ::MeiliSearch::Index.instance_methods(false).each do |m|
-      define_method(m) do |*args, &block|
-        SafeIndex.log_or_throw(m, @raise_on_failure) do
-          @index.send(m, *args, &block)
+        define_method(m) do |*args, &block|
+          if (m == :update_settings)
+            args[0].delete(:attributesToHighlight) if args[0][:attributesToHighlight]
+            args[0].delete(:attributesToCrop) if args[0][:attributesToCrop]
+            args[0].delete(:cropLength) if args[0][:cropLength]
+          end
+          SafeIndex.log_or_throw(m, @raise_on_failure) do
+            @index.send(m, *args, &block)
+          end
         end
-      end
     end
 
     # special handling of wait_for_pending_update to handle null task_id
@@ -662,10 +669,15 @@ module MeiliSearch
     def ms_raw_search(q, params = {})
       index_name = params.delete(:index) ||
                    params.delete('index') ||
-                  #  params.delete(:slave) ||
-                  #  params.delete('slave') ||
-                  #  params.delete(:replica) ||
-                  #  params.delete('replica')
+
+      if !meilisearch_settings.get_setting(:attributesToHighlight).nil?
+        params[:attributesToHighlight] = meilisearch_settings.get_setting(:attributesToHighlight)
+      end
+
+      if !meilisearch_settings.get_setting(:attributesToCrop).nil?
+        params[:attributesToCrop] = meilisearch_settings.get_setting(:attributesToCrop)
+        params[:cropLength] = meilisearch_settings.get_setting(:cropLength) if !meilisearch_settings.get_setting(:cropLength).nil?
+      end
       index = ms_index(index_name)
       # index = ms_index(ms_index_name)
       # index.search(q, Hash[params.map { |k,v| [k.to_s, v.to_s] }])
@@ -694,8 +706,7 @@ module MeiliSearch
       end
     end
 
-    def ms_search(q, params = {})
-
+    def ms_search(q, params = {}) 
       if MeiliSearch.configuration[:pagination_backend]
         # kaminari and will_paginate start pagination at 1, Algolia starts at 0
         # params[:page] = (params.delete('page') || params.delete(:page)).to_i
@@ -705,6 +716,15 @@ module MeiliSearch
         params.delete(:page)
         params.delete(:hitsPerPage)
         params[:limit] = 200
+      end
+
+      if !meilisearch_settings.get_setting(:attributesToHighlight).nil?
+        params[:attributesToHighlight] = meilisearch_settings.get_setting(:attributesToHighlight)
+      end
+
+      if !meilisearch_settings.get_setting(:attributesToCrop).nil?
+        params[:attributesToCrop] = meilisearch_settings.get_setting(:attributesToCrop)
+        params[:cropLength] = meilisearch_settings.get_setting(:cropLength) if !meilisearch_settings.get_setting(:cropLength).nil?
       end
       # Returns raw json hits as follows: 
       # {"hits"=>[{"id"=>"13", "href"=>"apple", "name"=>"iphone"}], "offset"=>0, "limit"=>|| 20, "nbHits"=>1, "exhaustiveNbHits"=>false, "processingTimeMs"=>0, "query"=>"iphone"}
