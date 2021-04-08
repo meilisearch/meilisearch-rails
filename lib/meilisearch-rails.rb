@@ -668,7 +668,7 @@ module MeiliSearch
 
     def ms_raw_search(q, params = {})
       index_name = params.delete(:index) ||
-                   params.delete('index') ||
+                   params.delete('index')
 
       if !meilisearch_settings.get_setting(:attributesToHighlight).nil?
         params[:attributesToHighlight] = meilisearch_settings.get_setting(:attributesToHighlight)
