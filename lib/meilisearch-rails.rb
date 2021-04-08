@@ -756,8 +756,8 @@ module MeiliSearch
       end.compact
 
       total_hits = json['hits'].length
-      hits_per_page = hits_per_page || 20
-      page = page || 1
+      hits_per_page ||= 20
+      page ||= 1
 
       res = MeiliSearch::Pagination.create(results, total_hits, meilisearch_options.merge({ :page =>  page , :per_page => hits_per_page }))
       res.extend(AdditionalMethods)
