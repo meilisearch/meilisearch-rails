@@ -42,6 +42,12 @@ unless SEQUEL_DB.table_exists?(:sequel_books)
 end
 
 ActiveRecord::Schema.define do
+  create_table :restaurants do |t|
+    t.string :name
+    t.string :kind
+    t.text :description
+    t.datetime :release_date
+  end
   create_table :products do |t|
     t.string :name
     t.string :href
@@ -164,6 +170,14 @@ end
 class Camera < Product
 end
 
+class Restaurant < ActiveRecord::Base
+  include MeiliSearch
+  meilisearch do
+    attributesToCrop [:description]
+    cropLength 10
+  end
+end
+
 class Color < ActiveRecord::Base
   include MeiliSearch
   attr_accessor :not_indexed
@@ -172,6 +186,7 @@ class Color < ActiveRecord::Base
     searchableAttributes [:name]
     attributesForFaceting ['short_name']
     rankingRules ['typo', 'words', 'proximity', 'attribute', 'wordsPosition', 'exactness','asc(hex)']
+    attributesToHighlight [:name]
     # tags do
     #   name # single tag
     # end
@@ -550,6 +565,7 @@ end
 #   end
 # end
 
+
 describe 'Settings' do
 
   it "should detect settings changes" do
@@ -800,10 +816,7 @@ describe 'Colors' do
 
   it "should include _formatted object" do
     Color.create!(:name => "green", :short_name => "b", :hex => 0xFF0000)
-    results = Color.search("gre",  { 
-      attributesToCrop: ['name'],
-      cropLength: 10, 
-      attributesToHighlight: ['name'] })
+    results = Color.search("gre")
     expect(results.size).to eq(1)
     expect(results[0].formatted).to_not be_nil
   end
@@ -1345,53 +1358,35 @@ describe 'Kaminari' do
   before(:all) do
     require 'kaminari'
     MeiliSearch.configuration = { :application_id => ENV['MEILISEARCH_HOST'], :api_key => ENV['MEILISEARCH_API_KEY'], :pagination_backend => :kaminari }
-    Product.clear_index!(true)
+    Restaurant.clear_index!(true)
+  
 
+    10.times do 
+      Restaurant.create(
+        name: Faker::Restaurant.name,
+        kind: Faker::Restaurant.type,
+        description: Faker::Restaurant.description
+      )
+    end
 
-
-    # Google products
-    @blackberry = Product.create!(:name => 'blackberry', :href => "google", :tags => ['decent', 'businessmen love it'])
-    @nokia = Product.create!(:name => 'nokia', :href => "google", :tags => ['decent'])
-
-    # Amazon products
-    @android = Product.create!(:name => 'android', :href => "amazon", :tags => ['awesome'])
-    @samsung = Product.create!(:name => 'samsung', :href => "amazon", :tags => ['decent'])
-    @motorola = Product.create!(:name => 'motorola', :href => "amazon", :tags => ['decent'],
-      :description => "Not sure about features since I've never owned one.")
-
-    # Ebay products
-    @palmpre = Product.create!(:name => 'palmpre', :href => "ebay", :tags => ['discontinued', 'worst phone ever'])
-    @palm_pixi_plus = Product.create!(:name => 'palm pixi plus', :href => "ebay", :tags => ['terrible'])
-    @lg_vortex = Product.create!(:name => 'lg vortex', :href => "ebay", :tags => ['decent'])
-    @t_mobile = Product.create!(:name => 't mobile', :href => "ebay", :tags => ['terrible'])
-
-    # Yahoo products
-    @htc = Product.create!(:name => 'htc', :href => "yahoo", :tags => ['decent'])
-    @htc_evo = Product.create!(:name => 'htc evo', :href => "yahoo", :tags => ['decent'])
-    @ericson = Product.create!(:name => 'ericson', :href => "yahoo", :tags => ['decent'])
-
-    # Apple products
-    @iphone = Product.create!(:name => 'iphone', :href => "apple", :tags => ['awesome', 'poor reception'],
-      :description => 'Puts even more features at your fingertips')
-    
-    Product.reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
+    Restaurant.reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
     sleep 5
   end
   
 
   it "should paginate" do
-    pagination = Product.search ''
-    pagination.total_count.should eq(Product.raw_search('')['hits'].size)
+    pagination = Restaurant.search ''
+    pagination.total_count.should eq(Restaurant.raw_search('')['hits'].size)
 
-    p1 = Product.search '', :page => 1, :hitsPerPage => 1
+    p1 = Restaurant.search '', :page => 1, :hitsPerPage => 1
     p1.size.should eq(1)
     p1[0].should eq(pagination[0])
-    p1.total_count.should eq(Product.raw_search('')['hits'].count)
+    p1.total_count.should eq(Restaurant.raw_search('')['hits'].count)
 
-    p2 = Product.search '', :page => 2, :hitsPerPage => 1
+    p2 = Restaurant.search '', :page => 2, :hitsPerPage => 1
     p2.size.should eq(1)
     p2[0].should eq(pagination[1])
-    p2.total_count.should eq(Product.raw_search('')['hits'].count)
+    p2.total_count.should eq(Restaurant.raw_search('')['hits'].count)
   end
 end
 
@@ -1399,44 +1394,25 @@ describe 'Will_paginate' do
   before(:all) do
     require 'will_paginate'
     MeiliSearch.configuration = { :application_id => ENV['MEILISEARCH_HOST'], :api_key => ENV['MEILISEARCH_API_KEY'], :pagination_backend => :will_paginate }
-    Product.clear_index!(true)
+    Restaurant.clear_index!(true)
 
+    10.times do 
+      Restaurant.create(
+        name: Faker::Restaurant.name,
+        kind: Faker::Restaurant.type,
+        description: Faker::Restaurant.description
+      )
+    end
 
-
-    # Google products
-    @blackberry = Product.create!(:name => 'blackberry', :href => "google", :tags => ['decent', 'businessmen love it'])
-    @nokia = Product.create!(:name => 'nokia', :href => "google", :tags => ['decent'])
-
-    # Amazon products
-    @android = Product.create!(:name => 'android', :href => "amazon", :tags => ['awesome'])
-    @samsung = Product.create!(:name => 'samsung', :href => "amazon", :tags => ['decent'])
-    @motorola = Product.create!(:name => 'motorola', :href => "amazon", :tags => ['decent'],
-      :description => "Not sure about features since I've never owned one.")
-
-    # Ebay products
-    @palmpre = Product.create!(:name => 'palmpre', :href => "ebay", :tags => ['discontinued', 'worst phone ever'])
-    @palm_pixi_plus = Product.create!(:name => 'palm pixi plus', :href => "ebay", :tags => ['terrible'])
-    @lg_vortex = Product.create!(:name => 'lg vortex', :href => "ebay", :tags => ['decent'])
-    @t_mobile = Product.create!(:name => 't mobile', :href => "ebay", :tags => ['terrible'])
-
-    # Yahoo products
-    @htc = Product.create!(:name => 'htc', :href => "yahoo", :tags => ['decent'])
-    @htc_evo = Product.create!(:name => 'htc evo', :href => "yahoo", :tags => ['decent'])
-    @ericson = Product.create!(:name => 'ericson', :href => "yahoo", :tags => ['decent'])
-
-    # Apple products
-    @iphone = Product.create!(:name => 'iphone', :href => "apple", :tags => ['awesome', 'poor reception'],
-      :description => 'Puts even more features at your fingertips')
-    
-    Product.reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
+    Restaurant.reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
     sleep 5
   end
 
   it "should paginate" do
-    p1 = Product.search '', :hitsPerPage => 2
-    p1.length.should eq(2)
+    p1 = Restaurant.search '', :hitsPerPage => 2
     p1.per_page.should eq(2)
-    p1.total_entries.should eq(Product.raw_search('')['hits'].count)
+    p1.total_pages.should eq(5)
+    p1.total_entries.should eq(Restaurant.raw_search('')['hits'].count)
   end
 end
 
