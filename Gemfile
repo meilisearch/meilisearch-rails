@@ -47,6 +47,7 @@ group :test do
 
   sequel_version = ENV['SEQUEL_VERSION'] ? "~> #{ENV['SEQUEL_VERSION']}" : '>= 4.0'
   gem 'sequel', sequel_version
+  gem 'faker', '~> 2.17'
 end
 
 group :development do
@@ -66,4 +67,6 @@ group :test, :development do
     gem 'kaminari'
   end
 end
+
+gem 'dotenv', '~> 2.7', '>= 2.7.6'
 

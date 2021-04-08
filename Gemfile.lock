@@ -56,7 +56,10 @@ GEM
     concurrent-ruby (1.1.8)
     crass (1.0.6)
     diff-lcs (1.4.4)
+    dotenv (2.7.6)
     erubi (1.10.0)
+    faker (2.17.0)
+      i18n (>= 1.6, < 2)
     faraday (1.3.0)
       faraday-net_http (~> 1.0)
       multipart-post (>= 1.2, < 3)
@@ -201,6 +204,8 @@ DEPENDENCIES
   active_model_serializers
   activerecord-jdbc-adapter
   activerecord-jdbcsqlite3-adapter
+  dotenv (~> 2.7, >= 2.7.6)
+  faker (~> 2.17)
   jdbc-sqlite3
   json (~> 1.8, >= 1.8.6)
   kaminari
