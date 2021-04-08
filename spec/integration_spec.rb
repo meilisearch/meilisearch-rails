@@ -42,11 +42,14 @@ unless SEQUEL_DB.table_exists?(:sequel_books)
 end
 
 ActiveRecord::Schema.define do
+  create_table :movies do |t|
+    t.string :title
+  end
+  
   create_table :restaurants do |t|
     t.string :name
     t.string :kind
     t.text :description
-    t.datetime :release_date
   end
   create_table :products do |t|
     t.string :name
@@ -175,6 +178,12 @@ class Restaurant < ActiveRecord::Base
   meilisearch do
     attributesToCrop [:description]
     cropLength 10
+  end
+end
+
+class Movies < ActiveRecord::Base
+  include MeiliSearch
+  meilisearch do
   end
 end
 
@@ -1394,25 +1403,23 @@ describe 'Will_paginate' do
   before(:all) do
     require 'will_paginate'
     MeiliSearch.configuration = { :application_id => ENV['MEILISEARCH_HOST'], :api_key => ENV['MEILISEARCH_API_KEY'], :pagination_backend => :will_paginate }
-    Restaurant.clear_index!(true)
+    Movies.clear_index!(true)
 
     10.times do 
-      Restaurant.create(
-        name: Faker::Restaurant.name,
-        kind: Faker::Restaurant.type,
-        description: Faker::Restaurant.description
+      Movies.create(
+        title: Faker::Movie.title,
       )
     end
 
-    Restaurant.reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
+    Movies.reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
     sleep 5
   end
 
   it "should paginate" do
-    p1 = Restaurant.search '', :hitsPerPage => 2
+    p1 = Movies.search '', :hitsPerPage => 2
     p1.per_page.should eq(2)
     p1.total_pages.should eq(5)
-    p1.total_entries.should eq(Restaurant.raw_search('')['hits'].count)
+    p1.total_entries.should eq(Movies.raw_search('')['hits'].count)
   end
 end
 
