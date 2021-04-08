@@ -1416,6 +1416,32 @@ describe 'Will_paginate' do
   end
 end
 
+describe "attributesToCrop" do
+  before(:all) do
+    10.times do 
+      Restaurant.create(
+        name: Faker::Restaurant.name,
+        kind: Faker::Restaurant.type,
+        description: Faker::Restaurant.description
+      )
+    end
+
+    Restaurant.reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
+    sleep 5
+  end
+
+  it 'should include _formatted object' do
+    results = Restaurant.search('')
+    raw_search_results = Restaurant.raw_search('')
+    expect(results[0].formatted).to_not be_nil
+    expect(results[0].formatted).to eq(raw_search_results['hits'].first['_formatted'])
+    expect(results.first.formatted['description']).to eq(raw_search_results['hits'].first['_formatted']['description'])
+    expect(results.first.formatted['description']).not_to eq(results.first['description'])
+  end
+  
+
+end
+
 describe 'Disabled' do
   before(:all) do
     DisabledBoolean.index.delete_all_documents!
