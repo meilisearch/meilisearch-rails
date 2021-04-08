@@ -2,6 +2,7 @@ require 'rubygems'
 require 'bundler'
 require 'timeout'
 require 'dotenv/load'
+require 'faker'
 Bundler.setup :test
 
 $LOAD_PATH.unshift(File.dirname(__FILE__))
