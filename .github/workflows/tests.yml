@@ -23,4 +23,6 @@ jobs:
       run: docker run -d -p 7700:7700 getmeili/meilisearch:latest ./meilisearch --master-key=masterKey --no-analytics=true
     - name: Run tests
       run: bundle exec rspec
-
+    env:
+      VUE_APP_MEILISEARCH_HOST: ${{ secrets.MEILISEARCH_HOST }}
+      VUE_APP_MEILISEARCH_API_KEY: ${{ secrets.MEILISEARCH_API_KEY }}
