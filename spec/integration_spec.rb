@@ -1425,6 +1425,7 @@ end
 
 describe "attributesToCrop" do
   before(:all) do
+    MeiliSearch.configuration = { :application_id => ENV['MEILISEARCH_HOST'], :api_key => ENV['MEILISEARCH_API_KEY']}
     10.times do 
       Restaurant.create(
         name: Faker::Restaurant.name,
