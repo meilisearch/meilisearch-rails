@@ -1397,6 +1397,16 @@ describe 'Kaminari' do
     p2[0].should eq(pagination[1])
     p2.total_count.should eq(Restaurant.raw_search('')['hits'].count)
   end
+
+  it "should not return error if pagination params are strings" do 
+    p1 = Restaurant.search '', :page => '1', :hitsPerPage => '1'
+    p1.size.should eq(1)
+    p1.total_count.should eq(Restaurant.raw_search('')['hits'].count)
+
+    p2 = Restaurant.search '', :page => '2', :hitsPerPage => '1'
+    p2.size.should eq(1)
+    p2.total_count.should eq(Restaurant.raw_search('')['hits'].count)
+  end
 end
 
 describe 'Will_paginate' do
@@ -1416,10 +1426,23 @@ describe 'Will_paginate' do
   end
 
   it "should paginate" do
-    p1 = Movies.search '', :hitsPerPage => 2
-    p1.per_page.should eq(2)
-    p1.total_pages.should eq(5)
-    p1.total_entries.should eq(Movies.raw_search('')['hits'].count)
+    hits = Movies.search '', :hitsPerPage => 2
+    hits.per_page.should eq(2)
+    hits.total_pages.should eq(5)
+    hits.total_entries.should eq(Movies.raw_search('')['hits'].count)
+  end
+  
+  it "should not return error if pagination params are strings" do
+    hits = Movies.search '', :hitsPerPage => '5'
+    hits.per_page.should eq(5)
+    hits.total_pages.should eq(2)
+    hits.current_page.should eq(1)
+
+    hits = Movies.search '', :hitsPerPage => '5', :page => '2'
+    hits.per_page.should eq(5)
+    hits.total_pages.should eq(2)
+    hits.current_page.should eq(2)
+
   end
 end
 
