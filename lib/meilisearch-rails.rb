@@ -711,8 +711,9 @@ module MeiliSearch
         # kaminari and will_paginate start pagination at 1, Algolia starts at 0
         # params[:page] = (params.delete('page') || params.delete(:page)).to_i
         # params[:page] -= 1 if params[:page].to_i > 0
-        page = params[:page]
-        hits_per_page = params[:hitsPerPage]
+        page = params[:page].nil? ? params[:page] : params[:page].to_i
+        hits_per_page = params[:hitsPerPage].nil? ? params[:hitsPerPage] : params[:hitsPerPage].to_i
+
         params.delete(:page)
         params.delete(:hitsPerPage)
         params[:limit] = 200
