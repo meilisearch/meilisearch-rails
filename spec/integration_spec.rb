@@ -1384,17 +1384,17 @@ describe 'Kaminari' do
   
 
   it "should paginate" do
-    pagination = Restaurant.search ''
-    pagination.total_count.should eq(Restaurant.raw_search('')['hits'].size)
+    hits = Restaurant.search ''
+    hits.total_count.should eq(Restaurant.raw_search('')['hits'].size)
 
     p1 = Restaurant.search '', :page => 1, :hitsPerPage => 1
     p1.size.should eq(1)
-    p1[0].should eq(pagination[0])
+    p1[0].should eq(hits[0])
     p1.total_count.should eq(Restaurant.raw_search('')['hits'].count)
 
     p2 = Restaurant.search '', :page => 2, :hitsPerPage => 1
     p2.size.should eq(1)
-    p2[0].should eq(pagination[1])
+    p2[0].should eq(hits[1])
     p2.total_count.should eq(Restaurant.raw_search('')['hits'].count)
   end
 
@@ -1431,6 +1431,16 @@ describe 'Will_paginate' do
     hits.total_pages.should eq(5)
     hits.total_entries.should eq(Movies.raw_search('')['hits'].count)
   end
+
+  it "should return most relevant elements in the first page" do
+    hits = Movies.search '', :hitsPerPage => 2
+    raw_hits = Movies.raw_search ''
+    hits[0]['id'].should eq(raw_hits['hits'][0]['id'].to_i)
+
+    hits = Movies.search '', :hitsPerPage => 2, :page => 2
+    raw_hits = Movies.raw_search ''
+    hits[0]['id'].should eq(raw_hits['hits'][2]['id'].to_i)
+  end
   
   it "should not return error if pagination params are strings" do
     hits = Movies.search '', :hitsPerPage => '5'
@@ -1442,7 +1452,6 @@ describe 'Will_paginate' do
     hits.per_page.should eq(5)
     hits.total_pages.should eq(2)
     hits.current_page.should eq(2)
-
   end
 end
 
