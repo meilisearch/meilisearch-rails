@@ -13,6 +13,7 @@ Book.destroy_all
 50.times do
     Book.create(
         title: Faker::Book.title, 
+        description: Faker::Lorem.paragraph_by_chars,
         author: Faker::Book.author,
         publisher: Faker::Book.publisher,
         genre: Faker::Book.genre,
