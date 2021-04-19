@@ -68,3 +68,6 @@ yarn-debug.log*
 
 # Ignore Gemfile.lock
 Gemfile.lock
+
+# Ignore db files
+*.sqlite3
