@@ -10,7 +10,7 @@ require 'faker'
 
 Book.destroy_all
 
-10.times do
+50.times do
     Book.create(
         title: Faker::Book.title, 
         author: Faker::Book.author,
