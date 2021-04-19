@@ -21,13 +21,23 @@
   <div class="container">
       <h3 class="text-center"> Results</h3>
       <% @hits.each do |hit| %>
-        <div class="card text-dark bg-light mb-3 mt-3 mx-auto" style="width: 18rem;">
+        <div class="card text-dark bg-light mb-3 mt-3 mx-auto" style="width: 28rem;">
           <div class="card-body">
             <h5 class="card-title"><%= hit.title %></h5>
             <h6 class="card-subtitle mb-2 text-muted"><%= hit.publication_year %></h6>
             <p class="card-text"><%= hit.author %></p>
+            <p class="card-text"><%= hit.description %></p>
             <p class="card-text"><%= hit.genre %></p>
             <p class="card-text"><%= hit.publisher %></p>
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item"><h5>Formatted info</h5></li>
+              <li class="list-group-item"><%= hit.formatted['title'] %></li>
+              <li class="list-group-item"><%= hit.formatted['publication_year'] %></li>
+              <li class="list-group-item"><%= hit.formatted['author'] %></li>
+              <li class="list-group-item"><%= hit.formatted['description'] %></li>
+              <li class="list-group-item"><%= hit.formatted['genre'] %></li>
+              <li class="list-group-item"><%= hit.formatted['publisher'] %></li>
+            </ul>
           </div>
         </div>
       <% end %>
