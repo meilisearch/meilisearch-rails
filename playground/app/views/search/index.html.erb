@@ -1,0 +1,38 @@
+<% content_for :title do %>Backend-search<% end %>
+
+<div class="container-fluid">
+  <h1>Backend-search</h1>
+
+  <div class="well">
+    A results page based on <code>MeiliSearch Ruby Client</code> + <code>kaminari</code>.
+  </div>
+
+  <div class="container my-5">
+    <div class="row">
+      <div class="col-sm-6 col-sm-offset-3 mx-auto">
+        <%= form_for Book.new, url: '/backend-search', method: 'get' do |f| %>
+          <%= text_field :book, :q, class: "form-control" %>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <% if @hits %>
+  <div class="container">
+      <h3 class="text-center"> Results</h3>
+      <% @hits.each do |hit| %>
+        <div class="card text-dark bg-light mb-3 mt-3 mx-auto" style="width: 18rem;">
+          <div class="card-body">
+            <h5 class="card-title"><%= hit.title %></h5>
+            <h6 class="card-subtitle mb-2 text-muted"><%= hit.publication_year %></h6>
+            <p class="card-text"><%= hit.author %></p>
+            <p class="card-text"><%= hit.genre %></p>
+            <p class="card-text"><%= hit.publisher %></p>
+          </div>
+        </div>
+      <% end %>
+      <%#= will_paginate @hits %>
+      <%= paginate @hits%> 
+    </div>
+  <% end %>
+</div>
