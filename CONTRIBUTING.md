@@ -70,6 +70,7 @@ rails db:migrate
 rails db:seed
 rails server
 ```
+ ⚠️ Set your MeiliSearch credentials by modifying the file [`playground/config/initializers/meilisearch.rb`](/playground/config/initializers/meilisearch.rb)
 
 ## Git Guidelines
 
@@ -116,7 +117,7 @@ _[Read more about this](https://github.com/meilisearch/integration-guides/blob/m
 
 ⚠️ Before doing anything, make sure you got through the guide about [Releasing an Integration](https://github.com/meilisearch/integration-guides/blob/main/guides/integration-release.md).
 
-Make a PR modifying the file `[lib/meilisearch.version.rb]`(/lib/meilisearch.version.rb) with the right version.
+Make a PR modifying the file [`lib/meilisearch.version.rb`](/lib/meilisearch.version.rb) with the right version.
 
 ```ruby
 VERSION = 'X.X.X' 
