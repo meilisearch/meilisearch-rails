@@ -60,6 +60,12 @@ bundle exec rubocop -a lib/ spec/
 
 ### Playground <!-- omit in toc -->
 
+First, you need to run a MeiliSearch instance:
+
+```bash
+docker run -p 7700:7700 getmeili/meilisearch:latest ./meilisearch --no-analytics=true
+```
+
 To test directly your changes in `meilisearch-rails`, you can run the Rails playground:
 
 ```bash
