@@ -65,10 +65,11 @@ To test directly your changes in `meilisearch-rails`, you can run the Rails play
 ```bash
 cd playground
 bundle install
-rails db:create
-rails db:migrate
-rails db:seed
-rails server
+bundle exec rails db:create
+bundle exec rails db:migrate
+bundle exec rails db:seed
+bundle exec rails webpacker:install
+bundle exec rails server
 ```
  ⚠️ Set your MeiliSearch credentials by modifying the file [`playground/config/initializers/meilisearch.rb`](/playground/config/initializers/meilisearch.rb)
 
