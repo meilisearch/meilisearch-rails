@@ -13,6 +13,7 @@
         <%= form_for Book.new, url: '/', method: 'get' do |f| %>
           <%= text_field :book, :q, class: "form-control" %>
         <% end %>
+        <p>Press enter to search</p>
       </div>
     </div>
   </div>
