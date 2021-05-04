@@ -558,7 +558,7 @@ module MeiliSearch
         tmp_settings = settings.dup
 
         if options[:check_settings] == false
-          ::Algolia::copy_index!(src_index_name, tmp_index_name, %w(settings synonyms rules))
+          ::MeiliSearch::copy_index!(src_index_name, tmp_index_name, %w(settings synonyms rules))
           tmp_index = SafeIndex.new(tmp_index_name, !!options[:raise_on_failure])
         else
           tmp_index = ms_ensure_init(tmp_options, tmp_settings, master_settings)
