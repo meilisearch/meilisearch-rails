@@ -9,10 +9,10 @@ Gem::Specification.new do |s|
   s.version = MeiliSearch::VERSION
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = ["Algolia"]
+  s.authors = ["Meili"]
   s.date = Date.today
-  s.description = "AlgoliaSearch integration to your favorite ORM"
-  s.email = "contact@algolia.com"
+  s.description = "MeiliSearch integration for Ruby on Rails. See https://github.com/meilisearch/MeiliSearch"
+  s.email = "bonjour@meilisearch.com"
   s.extra_rdoc_files = [
     "CHANGELOG.MD",
     "LICENSE",
@@ -72,7 +72,7 @@ Gem::Specification.new do |s|
   s.licenses = ["MIT"]
   s.require_paths = ["lib"]
   s.rubygems_version = "2.1.11"
-  s.summary = "AlgoliaSearch integration to your favorite ORM"
+  s.summary = "MeiliSearch integration for Ruby on Rails."
 
   if s.respond_to? :specification_version then
     s.specification_version = 4
