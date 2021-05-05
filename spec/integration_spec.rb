@@ -303,40 +303,40 @@ index = MeiliSearch.client.create_index(safe_index_name('City_replica2'))
 
 index.wait_for_pending_update index.update_settings({'rankingRules' => ["typo", "words", "proximity", "attribute", "wordsPosition", "exactness", "desc(d)"]})['updateId']
 
-class City < ActiveRecord::Base
-  include MeiliSearch
+# class City < ActiveRecord::Base
+#   include MeiliSearch
 
-  serialize :gl_array
+#   serialize :gl_array
 
-  def geoloc_array
-    lat.present? && lng.present? ? { :lat => lat, :lng => lng } : gl_array
-  end
+#   def geoloc_array
+#     lat.present? && lng.present? ? { :lat => lat, :lng => lng } : gl_array
+#   end
 
-  meilisearch :synchronous => true, :index_name => safe_index_name("City"), :per_environment => true do
-    geoloc do
-      geoloc_array
-    end
-    add_attribute :a_null_lat, :a_lng
-    rankingRules ['typo', 'words', 'proximity', 'attribute', 'wordsPosition', 'desc(b)']
+#   meilisearch :synchronous => true, :index_name => safe_index_name("City"), :per_environment => true do
+#     geoloc do
+#       geoloc_array
+#     end
+#     add_attribute :a_null_lat, :a_lng
+#     rankingRules ['typo', 'words', 'proximity', 'attribute', 'wordsPosition', 'desc(b)']
 
-    add_replica safe_index_name('City_replica1'), :per_environment => true do
-      searchableAttributes [:country]
-      rankingRules ['typo', 'words', 'proximity', 'attribute', 'wordsPosition', 'asc(a)']
-    end
+#     add_replica safe_index_name('City_replica1'), :per_environment => true do
+#       searchableAttributes [:country]
+#       rankingRules ['typo', 'words', 'proximity', 'attribute', 'wordsPosition', 'asc(a)']
+#     end
   
-    add_replica safe_index_name('City_replica2'), :per_environment => true do
-      rankingRules ['typo', 'words', 'proximity', 'attribute', 'wordsPosition','asc(a)', 'desc(c)']
-    end
-  end
+#     add_replica safe_index_name('City_replica2'), :per_environment => true do
+#       rankingRules ['typo', 'words', 'proximity', 'attribute', 'wordsPosition','asc(a)', 'desc(c)']
+#     end
+#   end
 
-  def a_null_lat
-    nil
-  end
+#   def a_null_lat
+#     nil
+#   end
 
-  def a_lng
-    1.2345678
-  end
-end
+#   def a_lng
+#     1.2345678
+#   end
+# end
 
 class SequelBook < Sequel::Model(SEQUEL_DB)
   plugin :active_model
@@ -518,9 +518,9 @@ if defined?(ActiveModel::Serializer)
     meilisearch :index_name => safe_index_name('SerializedObject') do
       use_serializer SerializedObjectSerializer
 
-      tags do
-        ['tag1', 'tag2']
-      end
+      # tags do
+      #   ['tag1', 'tag2']
+      # end
     end
   end
 end
@@ -534,7 +534,7 @@ if defined?(ActiveModel::Serializer)
     it "should push the name but not the other attribute" do
       o = SerializedObject.new :name => 'test', :skip => 'skip me'
       attributes = SerializedObject.meilisearch_settings.get_attributes(o)
-      expect(attributes).to eq({:name => 'test', "_tags" => ['tag1', 'tag2']})
+      expect(attributes).to eq({:name => 'test'})
     end
   end
 end
@@ -575,7 +575,7 @@ end
 # end
 
 
-describe 'Settings' do
+describe 'Settings change detection' do
 
   it "should detect settings changes" do
     Color.send(:meilisearch_settings_changed?, nil, {}).should == true
@@ -592,7 +592,7 @@ describe 'Settings' do
 
 end
 
-describe 'Change detection' do
+describe 'Attributes change detection' do
 
   it "should detect attribute changes" do
     color = Color.new :name => "dark-blue", :short_name => "blue"
