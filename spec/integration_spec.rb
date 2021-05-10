@@ -45,6 +45,12 @@ ActiveRecord::Schema.define do
   create_table :movies do |t|
     t.string :title
   end
+
+  create_table :people do |t|
+    t.string :first_name
+    t.string :last_name
+    t.string :card_number
+  end
   
   create_table :restaurants do |t|
     t.string :name
@@ -184,6 +190,20 @@ end
 class Movies < ActiveRecord::Base
   include MeiliSearch
   meilisearch do
+  end
+end
+
+class People 
+  include MeiliSearch
+
+  meilisearch  auto_remove: false index_name: "MyCustomName" id: :card_number do
+    attribute :full_name do
+      "#{first_name} #{last_name}"
+    end
+  end
+
+  def full_name_changed?
+    first_name_changed? || last_name_changed?
   end
 end
 
