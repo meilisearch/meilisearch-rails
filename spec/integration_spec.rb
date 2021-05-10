@@ -49,7 +49,7 @@ ActiveRecord::Schema.define do
   create_table :people do |t|
     t.string :first_name
     t.string :last_name
-    t.string :card_number
+    t.integer :card_number
   end
   
   create_table :restaurants do |t|
@@ -193,10 +193,10 @@ class Movies < ActiveRecord::Base
   end
 end
 
-class People 
+class People < ActiveRecord::Base
   include MeiliSearch
 
-  meilisearch  auto_remove: false index_name: "MyCustomName" id: :card_number do
+  meilisearch index_name: "MyCustomPeople", id: :card_number, auto_remove: false, auto_index: false do
     attribute :full_name do
       "#{first_name} #{last_name}"
     end
@@ -1561,5 +1561,11 @@ describe 'Misconfigured Block' do
     expect {
       MisconfiguredBlock.reindex
     }.to raise_error(ArgumentError)
+  end
+end
+
+describe 'People' do
+  it 'should should have as uid the custom name specified' do
+    expect(People.index.uid).to eq('MyCustomPeople')
   end
 end
