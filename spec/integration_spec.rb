@@ -608,14 +608,12 @@ describe 'Attributes change detection' do
     Color.ms_must_reindex?(color).should == false
     color.name = "red"
     Color.ms_must_reindex?(color).should == true
-
     color.delete
   end
 
   it "should detect attribute changes even in a transaction" do
     color = Color.new :name => "dark-blue", :short_name => "blue"
     color.save
-
     color.instance_variable_get("@ms_must_reindex").should == nil
     Color.transaction do
       color.name = "red"
@@ -625,13 +623,11 @@ describe 'Attributes change detection' do
       color.instance_variable_get("@ms_must_reindex").should == true
     end
     color.instance_variable_get("@ms_must_reindex").should == nil
-
     color.delete
   end
 
   it "should detect change with ms_dirty? method" do
     ebook = Ebook.new :name => "My life", :author => "Myself", :premium => false, :released => true
-
     Ebook.ms_must_reindex?(ebook).should == true # Because it's defined in ms_dirty? method
     ebook.current_time = 10
     ebook.published_at = 8
@@ -706,34 +702,34 @@ end
 #   end
 # end
 
-# describe 'NestedItem' do
-#   before(:all) do
-#     NestedItem.clear_index!(true) rescue nil # not fatal
-#   end
+describe 'NestedItem' do
+  before(:all) do
+    NestedItem.clear_index!(true) rescue nil # not fatal
+  end
 
-#   it "should fetch attributes unscoped" do
-#     @i1 = NestedItem.create :hidden => false
-#     @i2 = NestedItem.create :hidden => true
+  it "should fetch attributes unscoped" do
+    @i1 = NestedItem.create :hidden => false
+    @i2 = NestedItem.create :hidden => true
 
-#     @i1.children << NestedItem.create(:hidden => true) << NestedItem.create(:hidden => true)
-#     NestedItem.where(:id => [@i1.id, @i2.id]).reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
+    @i1.children << NestedItem.create(:hidden => true) << NestedItem.create(:hidden => true)
+    NestedItem.where(:id => [@i1.id, @i2.id]).reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
 
-#     result = NestedItem.index.get_object(@i1.id)
-#     result['nb_children'].should == 2
+    result = NestedItem.index.get_document(@i1.id)
+    result['nb_children'].should == 2
 
-#     result = NestedItem.raw_search('')
-#     result['nbHits'].should == 1
+    result = NestedItem.raw_search('')
+    result['hits'].size.should == 1
 
-#     if @i2.respond_to? :update_attributes
-#       @i2.update_attributes :hidden => false
-#     else
-#       @i2.update :hidden => false
-#     end
+    if @i2.respond_to? :update_attributes
+      @i2.update_attributes :hidden => false
+    else
+      @i2.update :hidden => false
+    end
 
-#     result = NestedItem.raw_search('')
-#     result['nbHits'].should == 2
-#   end
-# end
+    result = NestedItem.raw_search('')
+    result['hits'].size.should == 2
+  end
+end
 
 describe 'Colors' do
   before(:all) do
@@ -767,7 +763,7 @@ describe 'Colors' do
     results['nbHits'].should eq(1)
   end
 
-  it "should not auto index if scoped" do
+  it "should be able to temporarily disable auto-indexing" do
     Color.without_auto_index do
       Color.create!(:name => "blue", :short_name => "b", :hex => 0xFF0000)
     end
@@ -776,7 +772,7 @@ describe 'Colors' do
     expect(Color.search("blue").size).to eq(2)
   end
 
-  it "should not be searchable with non-indexed fields" do
+  it "should not be searchable with non-searchable fields" do
     @blue = Color.create!(:name => "blue", :short_name => "x", :hex => 0xFF0000)
     results = Color.search("x")
     expect(results.size).to eq(0)
@@ -833,7 +829,7 @@ describe 'Colors' do
   it "should index an array of objects" do
     json = Color.raw_search('')
     Color.index_objects Color.limit(1), true # reindex last color, `limit` is incompatible with the reindex! method
-    json['nbHits'].should eq(Color.raw_search('')['nbHits'])
+    json['hits'].count.should eq(Color.raw_search('')['hits'].count)
   end
 
   it "should not index non-saved object" do
