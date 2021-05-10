@@ -887,7 +887,7 @@ module MeiliSearch
 
     def ms_primary_key_method(options = nil)
       options ||= meilisearch_options
-      options[:id] || options[:primary_key] || :id
+      options[:primary_key] || options[:id] || :id
     end
 
     def ms_primary_key_of(o, options = nil)
