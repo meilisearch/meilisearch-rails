@@ -513,7 +513,7 @@ module MeiliSearch
         ms_find_in_batches(batch_size) do |group|
           if ms_conditional_index?(options)
             # delete non-indexable objects
-            ids = group.select { |o| !ms_indexable?(o, options) }.map { |o| ms_object_id_of(o, options) }
+            ids = group.select { |o| !ms_indexable?(o, options) }.map { |o| ms_primary_key_of(o, options) }
             index.delete_documents(ids.select { |id| !id.blank? })
             # select only indexable objects
             group = group.select { |o| ms_indexable?(o, options) }
@@ -523,7 +523,7 @@ module MeiliSearch
             unless attributes.class == Hash
               attributes = attributes.to_hash
             end
-             attributes.merge 'id' => ms_object_id_of(o, options)
+             attributes.merge 'id' => ms_primary_key_of(o, options)
           end
           last_update= index.add_documents(objects)
         end
@@ -569,7 +569,7 @@ module MeiliSearch
             # select only indexable objects
             group = group.select { |o| ms_indexable?(o, tmp_options) }
           end
-          objects = group.map { |o| tmp_settings.get_attributes(o).merge 'objectID' => ms_object_id_of(o, tmp_options) }
+          objects = group.map { |o| tmp_settings.get_attributes(o).merge 'objectID' => ms_primary_key_of(o, tmp_options) }
           tmp_index.add_documents(objects)
         end
 
@@ -603,7 +603,7 @@ module MeiliSearch
         next if ms_indexing_disabled?(options)
         index = ms_ensure_init(options, settings)
         next if options[:slave] || options[:replica]
-        update = index.add_documents(objects.map { |o| settings.get_attributes(o).merge 'id' => ms_object_id_of(o, options) })
+        update = index.add_documents(objects.map { |o| settings.get_attributes(o).merge 'id' => ms_primary_key_of(o, options) })
         index.wait_for_pending_update(update["updateId"]) if synchronous || options[:synchronous]
       end
     end
@@ -612,26 +612,26 @@ module MeiliSearch
       return if ms_without_auto_index_scope
       ms_configurations.each do |options, settings|
         next if ms_indexing_disabled?(options)
-        object_id = ms_object_id_of(object, options)
+        primary_key = ms_primary_key_of(object, options)
         index = ms_ensure_init(options, settings)
         next if options[:slave] || options[:replica]
         if ms_indexable?(object, options)
-          raise ArgumentError.new("Cannot index a record with a blank objectID") if object_id.blank?
+          raise ArgumentError.new("Cannot index a record with a blank objectID") if primary_key.blank?
           if synchronous || options[:synchronous]
             doc = settings.get_attributes(object)
-            doc = doc.merge 'id' => object_id
+            doc = doc.merge 'id' => primary_key
             index.add_documents!(doc)
           else
             doc = settings.get_attributes(object)
-            doc = doc.merge 'id' => object_id
+            doc = doc.merge 'id' => primary_key
             index.add_documents(doc)
           end
-        elsif ms_conditional_index?(options) && !object_id.blank?
+        elsif ms_conditional_index?(options) && !primary_key.blank?
           # remove non-indexable objects
           if synchronous || options[:synchronous]
-            index.delete_document!(object_id)
+            index.delete_document!(primary_key)
           else
-            index.delete_document(object_id)
+            index.delete_document(primary_key)
           end
         end
       end
@@ -640,16 +640,16 @@ module MeiliSearch
 
     def ms_remove_from_index!(object, synchronous = false)
       return if ms_without_auto_index_scope
-      object_id = ms_object_id_of(object)
-      raise ArgumentError.new("Cannot index a record with a blank objectID") if object_id.blank?
+      primary_key = ms_primary_key_of(object)
+      raise ArgumentError.new("Cannot index a record with a blank objectID") if primary_key.blank?
       ms_configurations.each do |options, settings|
         next if ms_indexing_disabled?(options)
         index = ms_ensure_init(options, settings)
         next if options[:slave] || options[:replica]
         if synchronous || options[:synchronous]
-          index.delete_document!(object_id)
+          index.delete_document!(primary_key)
         else
-          index.delete_document(object_id)
+          index.delete_document(primary_key)
         end
       end
       nil
@@ -736,16 +736,16 @@ module MeiliSearch
       
       # condition_key gets the primary key of the document; looks for "id" on the options
       if defined?(::Mongoid::Document) && self.include?(::Mongoid::Document)
-        condition_key = ms_object_id_method.in
+        condition_key = ms_primary_key_method.in
       else
-        condition_key = ms_object_id_method
+        condition_key = ms_primary_key_method
       end
 
       # meilisearch_options[:type] refers to the Model name (e.g. Product)
       # results_by_id creates a hash with the primaryKey of the document (id) as the key and the document itself as the value
       # {"13"=>#<Product id: 13, name: "iphone", href: "apple", tags: nil, type: nil, description: "Puts even more features at your fingertips", release_date: nil>}
       results_by_id = meilisearch_options[:type].where(condition_key => hit_ids).index_by do |hit|
-        ms_object_id_of(hit)
+        ms_primary_key_of(hit)
       end
 
       results = json['hits'].map do |hit|
@@ -805,7 +805,7 @@ module MeiliSearch
       ms_configurations.each do |options, settings|
         next if ms_indexing_disabled?(options)
         next if options[:slave] || options[:replica]
-        return true if ms_object_id_changed?(object, options)
+        return true if ms_primary_key_changed?(object, options)
         settings.get_attribute_names(object).each do |k|
           return true if ms_attribute_changed?(object, k)
           # return true if !object.respond_to?(changed_method) || object.send(changed_method)
@@ -881,17 +881,17 @@ module MeiliSearch
       @configurations
     end
 
-    def ms_object_id_method(options = nil)
+    def ms_primary_key_method(options = nil)
       options ||= meilisearch_options
-      options[:id] || options[:object_id] || :id
+      options[:id] || options[:primary_key] || :id
     end
 
-    def ms_object_id_of(o, options = nil)
-      o.send(ms_object_id_method(options)).to_s
+    def ms_primary_key_of(o, options = nil)
+      o.send(ms_primary_key_method(options)).to_s
     end
 
-    def ms_object_id_changed?(o, options = nil)
-      changed = ms_attribute_changed?(o, ms_object_id_method(options))
+    def ms_primary_key_changed?(o, options = nil)
+      changed = ms_attribute_changed?(o, ms_primary_key_method(options))
       changed.nil? ? false : changed
     end
 
