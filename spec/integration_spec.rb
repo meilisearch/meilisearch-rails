@@ -257,7 +257,7 @@ class Namespaced::Model < ActiveRecord::Base
       id
     end
     searchableAttributes ['customAttr']
-    tags ['static_tag1', 'static_tag2']
+    # tags ['static_tag1', 'static_tag2']
   end
 end
 
