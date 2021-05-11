@@ -181,7 +181,7 @@ end
 
 class Restaurant < ActiveRecord::Base
   include MeiliSearch
-  meilisearch do
+  meilisearch :index_name => safe_index_name("Restaurant")do
     attributesToCrop [:description]
     cropLength 10
   end
@@ -189,14 +189,14 @@ end
 
 class Movies < ActiveRecord::Base
   include MeiliSearch
-  meilisearch do
+  meilisearch :index_name => safe_index_name("Movies")do
   end
 end
 
 class People < ActiveRecord::Base
   include MeiliSearch
 
-  meilisearch index_name: "MyCustomPeople", id: :card_number, auto_remove: false, auto_index: false do
+  meilisearch :index_name => safe_index_name("MyCustomPeople"), primary_key: :card_number do
     attribute :full_name do
       "#{first_name} #{last_name}"
     end
@@ -1569,3 +1569,4 @@ describe 'People' do
     expect(People.index.uid).to eq('MyCustomPeople')
   end
 end
+
