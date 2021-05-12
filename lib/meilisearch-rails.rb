@@ -66,6 +66,8 @@ module MeiliSearch
   class IndexSettings
     DEFAULT_BATCH_SIZE = 1000
 
+    DEFAULT_PRIMARY_KEY = 'id'
+
     # MeiliSearch settings
     OPTIONS = [
       :searchableAttributes, :attributesForFaceting, :displayedAttributes, :distinctAttribute,
@@ -293,9 +295,10 @@ module MeiliSearch
   # this class wraps an Algolia::Index object ensuring all raised exceptions
   # are correctly logged or thrown depending on the `raise_on_failure` option
   class SafeIndex
-    def initialize(index_uid, raise_on_failure)
+    def initialize(index_uid, raise_on_failure, options)
       client = MeiliSearch.client
-      @index = client.get_or_create_index(index_uid)
+      primary_key = options[:primary_key] ||  MeiliSearch::IndexSettings::DEFAULT_PRIMARY_KEY
+      @index = client.get_or_create_index(index_uid, { primaryKey: primary_key })
       @raise_on_failure = raise_on_failure.nil? || raise_on_failure
     end
 
@@ -523,7 +526,7 @@ module MeiliSearch
             unless attributes.class == Hash
               attributes = attributes.to_hash
             end
-             attributes.merge 'id' => ms_primary_key_of(o, options)
+             attributes.merge ms_pk(options) => ms_primary_key_of(o, options)
           end
           last_update= index.add_documents(objects)
         end
@@ -559,7 +562,7 @@ module MeiliSearch
 
         if options[:check_settings] == false
           ::MeiliSearch::copy_index!(src_index_name, tmp_index_name, %w(settings synonyms rules))
-          tmp_index = SafeIndex.new(tmp_index_name, !!options[:raise_on_failure])
+          tmp_index = SafeIndex.new(tmp_index_name, !!options[:raise_on_failure], options)
         else
           tmp_index = ms_ensure_init(tmp_options, tmp_settings, master_settings)
         end
@@ -569,7 +572,7 @@ module MeiliSearch
             # select only indexable objects
             group = group.select { |o| ms_indexable?(o, tmp_options) }
           end
-          objects = group.map { |o| tmp_settings.get_attributes(o).merge 'objectID' => ms_primary_key_of(o, tmp_options) }
+          objects = group.map { |o| tmp_settings.get_attributes(o).merge ms_pk(options) => ms_primary_key_of(o, tmp_options) }
           tmp_index.add_documents(objects)
         end
 
@@ -592,7 +595,7 @@ module MeiliSearch
           final_settings = settings.to_settings
         end
 
-        index = SafeIndex.new(ms_index_name(options), true)
+        index = SafeIndex.new(ms_index_name(options), true, options)
         update = index.update_settings(final_settings)
         index.wait_for_pending_update(update["updateId"]) if synchronous
       end
@@ -603,7 +606,7 @@ module MeiliSearch
         next if ms_indexing_disabled?(options)
         index = ms_ensure_init(options, settings)
         next if options[:slave] || options[:replica]
-        update = index.add_documents(objects.map { |o| settings.get_attributes(o).merge 'id' => ms_primary_key_of(o, options) })
+        update = index.add_documents(objects.map { |o| settings.get_attributes(o).merge ms_pk(options) => ms_primary_key_of(o, options) })
         index.wait_for_pending_update(update["updateId"]) if synchronous || options[:synchronous]
       end
     end
@@ -619,11 +622,11 @@ module MeiliSearch
           raise ArgumentError.new("Cannot index a record with a blank objectID") if primary_key.blank?
           if synchronous || options[:synchronous]
             doc = settings.get_attributes(object)
-            doc = doc.merge 'id' => primary_key
+            doc = doc.merge ms_pk(options) => primary_key
             index.add_documents!(doc)
           else
             doc = settings.get_attributes(object)
-            doc = doc.merge 'id' => primary_key
+            doc = doc.merge ms_pk(options) => primary_key
             index.add_documents(doc)
           end
         elsif ms_conditional_index?(options) && !primary_key.blank?
@@ -732,7 +735,7 @@ module MeiliSearch
       json = ms_raw_search(q, params)
 
       # Returns the ids of the hits: 13
-      hit_ids = json['hits'].map { |hit| hit['id'] }  
+      hit_ids = json['hits'].map { |hit| hit[ms_pk(meilisearch_options).to_s] }  
       
       # condition_key gets the primary key of the document; looks for "id" on the options
       if defined?(::Mongoid::Document) && self.include?(::Mongoid::Document)
@@ -749,7 +752,8 @@ module MeiliSearch
       end
 
       results = json['hits'].map do |hit|
-        o = results_by_id[hit['id'].to_s]
+
+        o = results_by_id[hit[ms_pk(meilisearch_options).to_s].to_s]
         if o
           o.formatted = hit['_formatted']
           o
@@ -839,7 +843,7 @@ module MeiliSearch
 
       return @ms_indexes[settings] if @ms_indexes[settings]
 
-      @ms_indexes[settings] = SafeIndex.new(ms_index_name(options), meilisearch_options[:raise_on_failure])
+      @ms_indexes[settings] = SafeIndex.new(ms_index_name(options), meilisearch_options[:raise_on_failure], meilisearch_options)
 
       current_settings = @ms_indexes[settings].settings(:getVersion => 1) rescue nil # if the index doesn't exist
 
@@ -893,6 +897,10 @@ module MeiliSearch
     def ms_primary_key_changed?(o, options = nil)
       changed = ms_attribute_changed?(o, ms_primary_key_method(options))
       changed.nil? ? false : changed
+    end
+
+    def ms_pk(options = nil) 
+      options[:primary_key] || MeiliSearch::IndexSettings::DEFAULT_PRIMARY_KEY
     end
 
     def meilisearch_settings_changed?(prev, current)
