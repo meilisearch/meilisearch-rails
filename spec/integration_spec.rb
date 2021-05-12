@@ -42,6 +42,12 @@ unless SEQUEL_DB.table_exists?(:sequel_books)
 end
 
 ActiveRecord::Schema.define do
+  create_table :people do |t|
+    t.string :first_name
+    t.string :last_name
+    t.integer :card_number
+  end
+  
   create_table :movies do |t|
     t.string :title
   end
@@ -196,15 +202,15 @@ end
 class People < ActiveRecord::Base
   include MeiliSearch
 
-  meilisearch :index_name => safe_index_name("MyCustomPeople"), primary_key: :card_number do
-    attribute :full_name do
-      "#{first_name} #{last_name}"
-    end
+  meilisearch :index_name => safe_index_name("MyCustomPeople"), :primary_key => :card_number do
+    # attribute :full_name do
+    #   "#{first_name} #{last_name}"
+    # end
   end
 
-  def full_name_changed?
-    first_name_changed? || last_name_changed?
-  end
+  # def full_name_changed?
+  #   first_name_changed? || last_name_changed?
+  # end
 end
 
 class Color < ActiveRecord::Base
@@ -1565,8 +1571,11 @@ describe 'Misconfigured Block' do
 end
 
 describe 'People' do
-  it 'should should have as uid the custom name specified' do
-    expect(People.index.uid).to eq('MyCustomPeople')
+  it 'should have as uid the custom name specified' do
+    expect(People.index.uid).to eq(safe_index_name('MyCustomPeople'))
+  end
+  it 'should have the chosen field as custom primary key' do
+    index = MeiliSearch.client.fetch_index(safe_index_name('MyCustomPeople'))
+    expect(index.primary_key).to eq('card_number')
   end
 end
-
