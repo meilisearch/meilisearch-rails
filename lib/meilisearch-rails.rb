@@ -66,6 +66,8 @@ module MeiliSearch
   class IndexSettings
     DEFAULT_BATCH_SIZE = 1000
 
+    DEFAULT_PRIMARY_KEY = 'id'
+
     # MeiliSearch settings
     OPTIONS = [
       :searchableAttributes, :attributesForFaceting, :displayedAttributes, :distinctAttribute,
@@ -295,7 +297,7 @@ module MeiliSearch
   class SafeIndex
     def initialize(index_uid, raise_on_failure, options)
       client = MeiliSearch.client
-      primary_key = options[:primary_key].to_s ||  MeiliSearch::IndexSettings::DEFAULT_PRIMARY_KEY
+      primary_key = options[:primary_key] ||  MeiliSearch::IndexSettings::DEFAULT_PRIMARY_KEY
       @index = client.get_or_create_index(index_uid, { primaryKey: primary_key })
       @raise_on_failure = raise_on_failure.nil? || raise_on_failure
     end
