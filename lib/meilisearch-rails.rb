@@ -898,8 +898,7 @@ module MeiliSearch
     end
 
     def ms_pk(options = nil) 
-      options[:primary_key].nil? ? pk = 'id' : pk = options[:primary_key] 
-      pk
+      options[:primary_key] || MeiliSearch::IndexSettings::DEFAULT_PRIMARY_KEY
     end
 
     def meilisearch_settings_changed?(prev, current)
