@@ -295,8 +295,8 @@ module MeiliSearch
   class SafeIndex
     def initialize(index_uid, raise_on_failure, options)
       client = MeiliSearch.client
-      options[:primary_key].nil? ?  primary_key = {} : primary_key = { primaryKey: options[:primary_key].to_s }
-      @index = client.get_or_create_index(index_uid, primary_key)
+      primary_key = options[:primary_key].to_s ||  MeiliSearch::IndexSettings::DEFAULT_PRIMARY_KEY
+      @index = client.get_or_create_index(index_uid, { primaryKey: primary_key })
       @raise_on_failure = raise_on_failure.nil? || raise_on_failure
     end
 
