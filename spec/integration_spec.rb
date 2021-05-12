@@ -47,17 +47,9 @@ ActiveRecord::Schema.define do
     t.string :last_name
     t.integer :card_number
   end
-  
   create_table :movies do |t|
     t.string :title
   end
-
-  create_table :people do |t|
-    t.string :first_name
-    t.string :last_name
-    t.integer :card_number
-  end
-  
   create_table :restaurants do |t|
     t.string :name
     t.string :kind
