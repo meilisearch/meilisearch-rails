@@ -194,15 +194,13 @@ end
 class People < ActiveRecord::Base
   include MeiliSearch
 
-  meilisearch :index_name => safe_index_name("MyCustomPeople"), :primary_key => :card_number do
-    # attribute :full_name do
-    #   "#{first_name} #{last_name}"
-    # end
+  meilisearch :synchronous => true, :index_name => safe_index_name("MyCustomPeople"), :primary_key => :card_number do
+    add_attribute :full_name
   end
 
-  # def full_name_changed?
-  #   first_name_changed? || last_name_changed?
-  # end
+  def full_name
+    "#{first_name} #{last_name}"
+  end
 end
 
 class Color < ActiveRecord::Base
@@ -317,9 +315,9 @@ end
 
 # create this index before the class actually loads, to ensure the rankingRules are updated
 # index = MeiliSearch::Index.new(safe_index_name('City_replica2'))
-index = MeiliSearch.client.create_index(safe_index_name('City_replica2'))
+# index = MeiliSearch.client.create_index(safe_index_name('City_replica2'))
 
-index.wait_for_pending_update index.update_settings({'rankingRules' => ["typo", "words", "proximity", "attribute", "wordsPosition", "exactness", "desc(d)"]})['updateId']
+# index.wait_for_pending_update index.update_settings({'rankingRules' => ["typo", "words", "proximity", "attribute", "wordsPosition", "exactness", "desc(d)"]})['updateId']
 
 # class City < ActiveRecord::Base
 #   include MeiliSearch
@@ -1569,5 +1567,10 @@ describe 'People' do
   it 'should have the chosen field as custom primary key' do
     index = MeiliSearch.client.fetch_index(safe_index_name('MyCustomPeople'))
     expect(index.primary_key).to eq('card_number')
+  end
+  it 'should add custom complex attribute' do
+    person = People.create(:first_name => 'Jane', :last_name => 'Doe', :card_number => 75801887)
+    result = People.raw_search("Jane")
+    expect(result['hits'][0]["full_name"]).to eq("Jane Doe")
   end
 end
