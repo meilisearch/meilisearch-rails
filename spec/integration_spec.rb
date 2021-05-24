@@ -202,8 +202,8 @@ class People < ActiveRecord::Base
     "#{first_name} #{last_name}"
   end
 
-  def full_name_changed?
-    first_name_changed? || last_name_changed?
+  def will_save_change_to_full_name?
+    will_save_change_to_first_name? || will_save_change_to_last_name?
   end
 end
 
@@ -1574,13 +1574,29 @@ describe 'People' do
   end
   it 'should add custom complex attribute' do
     person = People.create(:first_name => 'Jane', :last_name => 'Doe', :card_number => 75801887)
-    result = People.raw_search("Jane")
-    expect(result['hits'][0]["full_name"]).to eq("Jane Doe")
+    result = People.raw_search('Jane')
+    expect(result['hits'][0]['full_name']).to eq('Jane Doe')
+  end
+  it 'should not call the API if there has been no attribute change' do
+    person =  People.search('Jane')[0]
+    before_save_statuses = People.index.get_all_update_status
+    before_save_status = before_save_statuses.last
+    person.first_name = 'Jane'
+    person.save
+    after_save_statuses = People.index.get_all_update_status
+    after_save_status = after_save_statuses.last
+    expect(before_save_status['updateId']).to eq(after_save_status['updateId'])
+    person.first_name = 'Alice'
+    person.save
+    after_change_statuses = People.index.get_all_update_status
+    after_change_status = after_change_statuses.last
+    expect(before_save_status['updateId']).not_to eq(after_change_status['updateId'])
   end
   it 'should not auto-remove' do
-    jane = People.search("Jane")[0]
-    jane.delete
-    result = People.raw_search("Jane")
+    People.create(:first_name => 'Joanna', :last_name => 'Banana', :card_number => 75801888)
+    joanna = People.search('Joanna')[0]
+    joanna.destroy
+    result = People.raw_search('Joanna')
     expect(result['hits'].size).to eq(1)  
   end
 end
