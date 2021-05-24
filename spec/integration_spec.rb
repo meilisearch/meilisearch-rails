@@ -194,12 +194,16 @@ end
 class People < ActiveRecord::Base
   include MeiliSearch
 
-  meilisearch :synchronous => true, :index_name => safe_index_name("MyCustomPeople"), :primary_key => :card_number do
+  meilisearch :synchronous => true, :index_name => safe_index_name("MyCustomPeople"), :primary_key => :card_number, auto_remove: false do
     add_attribute :full_name
   end
 
   def full_name
     "#{first_name} #{last_name}"
+  end
+
+  def full_name_changed?
+    first_name_changed? || last_name_changed?
   end
 end
 
@@ -1572,5 +1576,11 @@ describe 'People' do
     person = People.create(:first_name => 'Jane', :last_name => 'Doe', :card_number => 75801887)
     result = People.raw_search("Jane")
     expect(result['hits'][0]["full_name"]).to eq("Jane Doe")
+  end
+  it 'should not auto-remove' do
+    jane = People.search("Jane")[0]
+    jane.delete
+    result = People.raw_search("Jane")
+    expect(result['hits'].size).to eq(1)  
   end
 end
