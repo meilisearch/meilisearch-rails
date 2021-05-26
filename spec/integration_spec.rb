@@ -1599,4 +1599,12 @@ describe 'People' do
     result = People.raw_search('Joanna')
     expect(result['hits'].size).to eq(1)  
   end
+  it 'should be able to remove manually' do
+    bob = People.create(:first_name => 'Bob', :last_name => 'Sponge', :card_number => 75801889)
+    result = People.raw_search('Bob')
+    expect(result['hits'].size).to eq(1)  
+    bob.remove_from_index!
+    result = People.raw_search('Bob')
+    expect(result['hits'].size).to eq(0)  
+  end
 end
