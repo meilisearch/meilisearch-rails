@@ -42,6 +42,12 @@ unless SEQUEL_DB.table_exists?(:sequel_books)
 end
 
 ActiveRecord::Schema.define do
+  create_table :cats do |t|
+    t.string :name
+  end
+  create_table :dogs do |t|
+    t.string :name
+  end
   create_table :people do |t|
     t.string :first_name
     t.string :last_name
@@ -206,6 +212,33 @@ class People < ActiveRecord::Base
     will_save_change_to_first_name? || will_save_change_to_last_name?
   end
 end
+
+class Cat < ActiveRecord::Base
+  include MeiliSearch
+
+  meilisearch index_name: 'animals', id: :ms_id do
+
+  end
+
+  private
+  def ms_id
+    "cat_#{id}"
+  end
+end
+
+class Dog < ActiveRecord::Base
+  include MeiliSearch
+
+  meilisearch index_name: 'animals', id: :ms_id do
+
+  end
+
+  private
+  def ms_id
+    "dog_#{id}"
+  end
+end
+
 
 class Color < ActiveRecord::Base
   include MeiliSearch
@@ -1625,4 +1658,15 @@ describe 'People' do
     results = People.raw_search('')
     expect(results['hits'].size).to eq(0) 
   end 
+end
+
+describe 'Animals' do
+  it 'should share a single index' do
+    Dog.create!(:name => 'Toby')
+    Cat.create!(:name => 'Felix')
+    client = MeiliSearch.client
+    index = client.index('animals')
+    docs = index.documents()
+    expect(docs.size).to eq(2)
+  end
 end
