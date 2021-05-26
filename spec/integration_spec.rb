@@ -1714,8 +1714,8 @@ describe 'Animals' do
   it 'should share a single index' do
     Dog.create!(:name => 'Toby')
     Cat.create!(:name => 'Felix')
-    sleep(1)
     index = MeiliSearch.client.index(safe_index_name('animals'))
+    index.wait_for_pending_update(index.get_all_update_status.last['updateId'])
     docs = index.search('')
     expect(docs['hits'].size).to eq(2)
   end
@@ -1726,7 +1726,8 @@ describe "Songs" do
     Song.create!(name: 'Coconut nut', artist: 'Smokey Mountain', premium: false, released: true) #Only song supposed to be added to Songs index
     Song.create!(name: 'Smoking hot', artist: 'Cigarettes before lunch', premium: true, released: true)
     Song.create!(name: 'Floor is lava', artist: 'Volcano', premium: true, released: false)
-    sleep(2)
+    Song.index.wait_for_pending_update(Song.index.get_all_update_status.last['updateId'])
+    MeiliSearch.client.index(safe_index_name('PrivateSongs')).wait_for_pending_update(MeiliSearch.client.index(safe_index_name('PrivateSongs')).get_all_update_status.last['updateId'])
     results = Song.search('', index: safe_index_name('Songs'))
     expect(results.size).to eq(1)
     raw_results = Song.raw_search('', index: safe_index_name('Songs'))
