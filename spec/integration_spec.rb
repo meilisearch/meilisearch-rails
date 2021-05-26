@@ -42,13 +42,18 @@ unless SEQUEL_DB.table_exists?(:sequel_books)
 end
 
 ActiveRecord::Schema.define do
+  create_table :fruits do |t|
+    t.string :name
+  end
+  create_table :vegetables do |t|
+    t.string :name
+  end
   create_table :songs do |t|
     t.string :name
     t.string :artist
     t.boolean :released
     t.boolean :premium
   end
-
   create_table :cats do |t|
     t.string :name
   end
@@ -266,6 +271,23 @@ class Song < ActiveRecord::Base
     released && !premium
   end
 
+end
+
+class Fruit < ActiveRecord::Base
+  include MeiliSearch
+
+  # only raise exceptions in development env
+  meilisearch raise_on_failure: true do
+    attribute :name
+  end
+end
+
+class Vegetable < ActiveRecord::Base
+  include MeiliSearch
+
+  meilisearch raise_on_failure: false do
+    attribute :name
+  end
 end
 
 class Color < ActiveRecord::Base
@@ -1714,3 +1736,17 @@ describe "Songs" do
     expect(raw_results['hits'].size).to eq(3)
   end
 end
+
+describe "Raise on failure" do
+  it 'should raise on failure' do
+    expect do
+      Fruit.search('', { filters: 'title = Nightshift' })
+    end.to raise_error(MeiliSearch::ApiError)
+  end
+  it 'should not raise on failure' do
+    expect do
+      Vegetable.search('', { filters: 'title = Kale' })
+    end.not_to raise_error
+  end
+end
+
