@@ -228,7 +228,7 @@ end
 class Cat < ActiveRecord::Base
   include MeiliSearch
 
-  meilisearch index_name: 'animals', id: :ms_id do
+  meilisearch :index_name =>  safe_index_name('animals'), id: :ms_id do
 
   end
 
@@ -241,7 +241,7 @@ end
 class Dog < ActiveRecord::Base
   include MeiliSearch
 
-  meilisearch index_name: 'animals', id: :ms_id do
+  meilisearch :index_name => safe_index_name('animals'), id: :ms_id do
 
   end
 
@@ -255,8 +255,8 @@ class Song < ActiveRecord::Base
 
   include MeiliSearch
 
-  PUBLIC_INDEX_NAME  = "Songs"
-  SECURED_INDEX_NAME = "PrivateSongs"
+  PUBLIC_INDEX_NAME  = safe_index_name('Songs')
+  SECURED_INDEX_NAME = safe_index_name('PrivateSongs')
 
   meilisearch index_name: SECURED_INDEX_NAME do
     searchableAttributes [:name, :artist]
@@ -277,7 +277,7 @@ class Fruit < ActiveRecord::Base
   include MeiliSearch
 
   # only raise exceptions in development env
-  meilisearch raise_on_failure: true do
+  meilisearch raise_on_failure: true, :index_name => safe_index_name('Fruit') do
     attribute :name
   end
 end
@@ -285,7 +285,7 @@ end
 class Vegetable < ActiveRecord::Base
   include MeiliSearch
 
-  meilisearch raise_on_failure: false do
+  meilisearch raise_on_failure: false, :index_name => safe_index_name('Fruit') do
     attribute :name
   end
 end
@@ -1714,10 +1714,10 @@ describe 'Animals' do
   it 'should share a single index' do
     Dog.create!(:name => 'Toby')
     Cat.create!(:name => 'Felix')
-    client = MeiliSearch.client
-    index = client.index('animals')
-    docs = index.documents()
-    expect(docs.size).to eq(2)
+    sleep(1)
+    index = MeiliSearch.client.index(safe_index_name('animals'))
+    docs = index.search('')
+    expect(docs['hits'].size).to eq(2)
   end
 end
 
@@ -1726,13 +1726,14 @@ describe "Songs" do
     Song.create!(name: 'Coconut nut', artist: 'Smokey Mountain', premium: false, released: true) #Only song supposed to be added to Songs index
     Song.create!(name: 'Smoking hot', artist: 'Cigarettes before lunch', premium: true, released: true)
     Song.create!(name: 'Floor is lava', artist: 'Volcano', premium: true, released: false)
-    results = Song.search('', index: 'Songs')
+    sleep(2)
+    results = Song.search('', index: safe_index_name('Songs'))
     expect(results.size).to eq(1)
-    raw_results = Song.raw_search('', index: 'Songs')
+    raw_results = Song.raw_search('', index: safe_index_name('Songs'))
     expect(raw_results['hits'].size).to eq(1)
-    results = Song.search('', index: 'PrivateSongs')
+    results = Song.search('', index: safe_index_name('PrivateSongs'))
     expect(results.size).to eq(3)
-    raw_results = Song.raw_search('', index: 'PrivateSongs')
+    raw_results = Song.raw_search('', index: safe_index_name('PrivateSongs'))
     expect(raw_results['hits'].size).to eq(3)
   end
 end
