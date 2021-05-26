@@ -931,6 +931,18 @@ describe 'An imaginary store' do
   #   end
   # end
 
+  it 'should be able to reindex manually' do
+    results_before_clearing = Product.raw_search('')
+    expect(results_before_clearing['hits'].size).not_to be(0)
+    Product.clear_index!(true)
+    results = Product.raw_search('')
+    expect(results['hits'].size).to be(0)
+    Product.reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
+    results_after_reindexing = Product.raw_search('')
+    expect(results_after_reindexing['hits'].size).not_to be(0)
+    expect(results_before_clearing['hits'].size).to be(results_after_reindexing['hits'].size)
+  end
+
   describe 'basic searching' do
 
     it 'should find the iphone' do
@@ -1050,7 +1062,6 @@ describe 'An imaginary store' do
       expect(Product.search('pomme').size).to eq(Product.search('apple').size)
     end
   end
-
 end
 
 # describe 'Cities' do
@@ -1607,4 +1618,11 @@ describe 'People' do
     result = People.raw_search('Bob')
     expect(result['hits'].size).to eq(0)  
   end
+  it 'should clear index manually' do
+    results = People.raw_search('')
+    expect(results['hits'].size).not_to eq(0)  
+    People.clear_index!(true)
+    results = People.raw_search('')
+    expect(results['hits'].size).to eq(0) 
+  end 
 end
