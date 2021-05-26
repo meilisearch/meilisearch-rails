@@ -42,6 +42,13 @@ unless SEQUEL_DB.table_exists?(:sequel_books)
 end
 
 ActiveRecord::Schema.define do
+  create_table :songs do |t|
+    t.string :name
+    t.string :artist
+    t.boolean :released
+    t.boolean :premium
+  end
+
   create_table :cats do |t|
     t.string :name
   end
@@ -239,6 +246,27 @@ class Dog < ActiveRecord::Base
   end
 end
 
+class Song < ActiveRecord::Base
+
+  include MeiliSearch
+
+  PUBLIC_INDEX_NAME  = "Songs"
+  SECURED_INDEX_NAME = "PrivateSongs"
+
+  meilisearch index_name: SECURED_INDEX_NAME do
+    searchableAttributes [:name, :artist]
+  
+    add_index PUBLIC_INDEX_NAME, if: :public? do
+      searchableAttributes [:name, :artist]
+    end
+  end
+
+  private
+  def public?
+    released && !premium
+  end
+
+end
 
 class Color < ActiveRecord::Base
   include MeiliSearch
@@ -1668,5 +1696,21 @@ describe 'Animals' do
     index = client.index('animals')
     docs = index.documents()
     expect(docs.size).to eq(2)
+  end
+end
+
+describe "Songs" do
+  it 'should target multiple indices' do
+    Song.create!(name: 'Coconut nut', artist: 'Smokey Mountain', premium: false, released: true) #Only song supposed to be added to Songs index
+    Song.create!(name: 'Smoking hot', artist: 'Cigarettes before lunch', premium: true, released: true)
+    Song.create!(name: 'Floor is lava', artist: 'Volcano', premium: true, released: false)
+    results = Song.search('', index: 'Songs')
+    expect(results.size).to eq(1)
+    raw_results = Song.raw_search('', index: 'Songs')
+    expect(raw_results['hits'].size).to eq(1)
+    results = Song.search('', index: 'PrivateSongs')
+    expect(results.size).to eq(3)
+    raw_results = Song.raw_search('', index: 'PrivateSongs')
+    expect(raw_results['hits'].size).to eq(3)
   end
 end
