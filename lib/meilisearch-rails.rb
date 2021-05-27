@@ -18,23 +18,6 @@ end
 
 require 'logger'
 
-::MeiliSearch::Index.class_eval do
-  def add_documents!(documents, primary_key = nil)
-    update = add_documents(documents, primary_key)
-    wait_for_pending_update(update['updateId'])      
-  end
-
-  def delete_all_documents! 
-    update = delete_all_documents
-    wait_for_pending_update(update['updateId']) 
-  end
-
-  def delete_document!(documentId)
-    update = delete_document(documentId)
-    wait_for_pending_update(update['updateId'])
-  end
-end
-
 module MeiliSearch
 
   class NotConfigured < StandardError; end
@@ -709,7 +692,7 @@ module MeiliSearch
       end
     end
 
-    def ms_search(q, params = {}) 
+    def ms_search(q, params = {})
       if MeiliSearch.configuration[:pagination_backend]
         # kaminari and will_paginate start pagination at 1, Algolia starts at 0
         # params[:page] = (params.delete('page') || params.delete(:page)).to_i
@@ -730,13 +713,13 @@ module MeiliSearch
         params[:attributesToCrop] = meilisearch_settings.get_setting(:attributesToCrop)
         params[:cropLength] = meilisearch_settings.get_setting(:cropLength) if !meilisearch_settings.get_setting(:cropLength).nil?
       end
-      # Returns raw json hits as follows: 
+      # Returns raw json hits as follows:
       # {"hits"=>[{"id"=>"13", "href"=>"apple", "name"=>"iphone"}], "offset"=>0, "limit"=>|| 20, "nbHits"=>1, "exhaustiveNbHits"=>false, "processingTimeMs"=>0, "query"=>"iphone"}
       json = ms_raw_search(q, params)
 
       # Returns the ids of the hits: 13
-      hit_ids = json['hits'].map { |hit| hit[ms_pk(meilisearch_options).to_s] }  
-      
+      hit_ids = json['hits'].map { |hit| hit[ms_pk(meilisearch_options).to_s] }
+
       # condition_key gets the primary key of the document; looks for "id" on the options
       if defined?(::Mongoid::Document) && self.include?(::Mongoid::Document)
         condition_key = ms_primary_key_method.in
@@ -899,7 +882,7 @@ module MeiliSearch
       changed.nil? ? false : changed
     end
 
-    def ms_pk(options = nil) 
+    def ms_pk(options = nil)
       options[:primary_key] || MeiliSearch::IndexSettings::DEFAULT_PRIMARY_KEY
     end
 
