@@ -887,7 +887,7 @@ module MeiliSearch
 
     def ms_primary_key_method(options = nil)
       options ||= meilisearch_options
-      options[:id] || options[:primary_key] || :id
+      options[:primary_key] || options[:id] || :id
     end
 
     def ms_primary_key_of(o, options = nil)
@@ -1027,6 +1027,7 @@ module MeiliSearch
       true
     end
 
+    # Returns true if the _changed? method is user-defined
     def automatic_changed_method?(object, method_name)
       raise ArgumentError.new("Method #{method_name} doesn't exist on #{object.class.name}") unless object.respond_to?(method_name)
       file = object.method(method_name).source_location[0]
