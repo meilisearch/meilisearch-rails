@@ -225,13 +225,13 @@ module MeiliSearch
       end
       if !@options[:slave] && !@options[:replica]
         settings[:slaves] = additional_indexes.select { |opts, s| opts[:slave] }.map do |opts, s|
-          name = opts[:index_name]
+          name = opts[:index_uid]
           name = "#{name}_#{Rails.env.to_s}" if opts[:per_environment]
           name
         end
         settings.delete(:slaves) if settings[:slaves].empty?
         settings[:replicas] = additional_indexes.select { |opts, s| opts[:replica] }.map do |opts, s|
-          name = opts[:index_name]
+          name = opts[:index_uid]
           name = "#{name}_#{Rails.env.to_s}" if opts[:per_environment]
           name
         end
@@ -240,26 +240,26 @@ module MeiliSearch
       settings
     end
 
-    def add_index(index_name, options = {}, &block)
+    def add_index(index_uid, options = {}, &block)
       raise ArgumentError.new('Cannot specify additional index on a replica index') if @options[:slave] || @options[:replica]
       raise ArgumentError.new('No block given') if !block_given?
       raise ArgumentError.new('Options auto_index and auto_remove cannot be set on nested indexes') if options[:auto_index] || options[:auto_remove]
       @additional_indexes ||= {}
       raise MixedSlavesAndReplicas.new('Cannot mix slaves and replicas in the same configuration (add_slave is deprecated)') if (options[:slave] && @additional_indexes.any? { |opts, _| opts[:replica] }) || (options[:replica] && @additional_indexes.any? { |opts, _| opts[:slave] })
-      options[:index_name] = index_name
+      options[:index_uid] = index_uid
       @additional_indexes[options] = IndexSettings.new(options, &block)
     end
 
-    def add_replica(index_name, options = {}, &block)
+    def add_replica(index_uid, options = {}, &block)
       raise ArgumentError.new('Cannot specify additional replicas on a replica index') if @options[:slave] || @options[:replica]
       raise ArgumentError.new('No block given') if !block_given?
-      add_index(index_name, options.merge({ :replica => true, :primary_settings => self }), &block)
+      add_index(index_uid, options.merge({ :replica => true, :primary_settings => self }), &block)
     end
 
-    def add_slave(index_name, options = {}, &block)
+    def add_slave(index_uid, options = {}, &block)
       raise ArgumentError.new('Cannot specify additional slaves on a slave index') if @options[:slave] || @options[:replica]
       raise ArgumentError.new('No block given') if !block_given?
-      add_index(index_name, options.merge({ :slave => true, :primary_settings => self }), &block)
+      add_index(index_uid, options.merge({ :slave => true, :primary_settings => self }), &block)
     end
 
     def additional_indexes
@@ -355,7 +355,7 @@ module MeiliSearch
         alias_method :search_facet, :ms_search_facet unless method_defined? :search_facet
         alias_method :search_for_facet_values, :ms_search_for_facet_values unless method_defined? :search_for_facet_values
         alias_method :index, :ms_index unless method_defined? :index
-        alias_method :index_name, :ms_index_name unless method_defined? :index_name
+        alias_method :index_uid, :ms_index_uid unless method_defined? :index_uid
         alias_method :must_reindex?, :ms_must_reindex? unless method_defined? :must_reindex?
       end
 
@@ -529,15 +529,15 @@ module MeiliSearch
         master_settings.delete 'replicas'
 
         # init temporary index
-        src_index_name = ms_index_name(options)
-        tmp_index_name = "#{src_index_name}.tmp"
-        tmp_options = options.merge({ :index_name => tmp_index_name })
-        tmp_options.delete(:per_environment) # already included in the temporary index_name
+        src_index_uid = ms_index_uid(options)
+        tmp_index_uid = "#{src_index_uid}.tmp"
+        tmp_options = options.merge({ :index_uid => tmp_index_uid })
+        tmp_options.delete(:per_environment) # already included in the temporary index_uid
         tmp_settings = settings.dup
 
         if options[:check_settings] == false
-          ::MeiliSearch::copy_index!(src_index_name, tmp_index_name, %w(settings synonyms rules))
-          tmp_index = SafeIndex.new(tmp_index_name, !!options[:raise_on_failure], options)
+          ::MeiliSearch::copy_index!(src_index_uid, tmp_index_uid, %w(settings synonyms rules))
+          tmp_index = SafeIndex.new(tmp_index_uid, !!options[:raise_on_failure], options)
         else
           tmp_index = ms_ensure_init(tmp_options, tmp_settings, master_settings)
         end
@@ -551,7 +551,7 @@ module MeiliSearch
           tmp_index.add_documents(objects)
         end
 
-        move_task = SafeIndex.move_index(tmp_index.name, src_index_name)
+        move_task = SafeIndex.move_index(tmp_index.name, src_index_uid)
         master_index.wait_for_pending_update(move_task["updateId"]) if synchronous || options[:synchronous]
       end
       nil
@@ -570,7 +570,7 @@ module MeiliSearch
           final_settings = settings.to_settings
         end
 
-        index = SafeIndex.new(ms_index_name(options), true, options)
+        index = SafeIndex.new(ms_index_uid(options), true, options)
         update = index.update_settings(final_settings)
         index.wait_for_pending_update(update["updateId"]) if synchronous
       end
@@ -645,7 +645,7 @@ module MeiliSearch
     end
 
     def ms_raw_search(q, params = {})
-      index_name = params.delete(:index) ||
+      index_uid = params.delete(:index) ||
                    params.delete('index')
 
       if !meilisearch_settings.get_setting(:attributesToHighlight).nil?
@@ -656,8 +656,8 @@ module MeiliSearch
         params[:attributesToCrop] = meilisearch_settings.get_setting(:attributesToCrop)
         params[:cropLength] = meilisearch_settings.get_setting(:cropLength) if !meilisearch_settings.get_setting(:cropLength).nil?
       end
-      index = ms_index(index_name)
-      # index = ms_index(ms_index_name)
+      index = ms_index(index_uid)
+      # index = ms_index(ms_index_uid)
       # index.search(q, Hash[params.map { |k,v| [k.to_s, v.to_s] }])
       index.search(q, Hash[params.map { |k,v| [k, v] }])
     end
@@ -744,13 +744,13 @@ module MeiliSearch
     end
 
     def ms_search_for_facet_values(facet, text, params = {})
-      index_name = params.delete(:index) ||
+      index_uid = params.delete(:index) ||
                    params.delete('index') ||
                    params.delete(:slave) ||
                    params.delete('slave') ||
                    params.delete(:replica) ||
                    params.delete('replicas')
-      index = ms_index(index_name)
+      index = ms_index(index_uid)
       query = Hash[params.map { |k, v| [k.to_s, v.to_s] }]
       index.search_facet(facet, text, query)['facetHits']
     end
@@ -761,16 +761,16 @@ module MeiliSearch
     def ms_index(name = nil)
       if name
         ms_configurations.each do |o, s|
-          return ms_ensure_init(o, s) if o[:index_name].to_s == name.to_s
+          return ms_ensure_init(o, s) if o[:index_uid].to_s == name.to_s
         end
         raise ArgumentError.new("Invalid index/replica name: #{name}")
       end
       ms_ensure_init
     end
 
-    def ms_index_name(options = nil)
+    def ms_index_uid(options = nil)
       options ||= meilisearch_options
-      name = options[:index_name] || model_name.to_s.gsub('::', '_')
+      name = options[:index_uid] || model_name.to_s.gsub('::', '_')
       name = "#{name}_#{Rails.env.to_s}" if options[:per_environment]
       name
     end
@@ -816,7 +816,7 @@ module MeiliSearch
 
       return @ms_indexes[settings] if @ms_indexes[settings]
 
-      @ms_indexes[settings] = SafeIndex.new(ms_index_name(options), meilisearch_options[:raise_on_failure], meilisearch_options)
+      @ms_indexes[settings] = SafeIndex.new(ms_index_uid(options), meilisearch_options[:raise_on_failure], meilisearch_options)
 
       current_settings = @ms_indexes[settings].settings(:getVersion => 1) rescue nil # if the index doesn't exist
 
