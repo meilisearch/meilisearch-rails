@@ -99,8 +99,6 @@ ActiveRecord::Schema.define do
     t.integer :parent_id
     t.boolean :hidden
   end
-  create_table :with_slaves do |t|
-  end
   create_table :mongo_objects do |t|
     t.string :name
   end
@@ -126,15 +124,6 @@ ActiveRecord::Schema.define do
     t.string :name
   end
   create_table :encoded_strings do |t|
-  end
-  create_table :forward_to_replicas do |t|
-    t.string :name
-  end
-  create_table :forward_to_replicas_twos do |t|
-    t.string :name
-  end
-  create_table :sub_replicas do |t|
-    t.string :name
   end
   unless OLD_RAILS
     create_table :enqueued_objects do |t|
@@ -495,25 +484,6 @@ class EncodedString < ActiveRecord::Base
   meilisearch :synchronous => true, :force_utf8_encoding => true, :index_uid => safe_index_uid("EncodedString") do
     attribute :value do
       "\xC2\xA0\xE2\x80\xA2\xC2\xA0".force_encoding('ascii-8bit')
-    end
-  end
-end
-
-class SubReplicas < ActiveRecord::Base
-  include MeiliSearch
-
-  meilisearch :synchronous => true, :force_utf8_encoding => true, :index_uid => safe_index_uid("SubReplicas") do
-    searchableAttributes [:name]
-    rankingRules ['typo', 'words', 'proximity', 'attribute', 'wordsPosition', 'asc(name)']
-
-    add_index safe_index_uid("Additional_Index"), :per_environment => true do
-      searchableAttributes [:name]
-      rankingRules ['typo', 'words', 'proximity', 'attribute', 'wordsPosition', 'asc(name)']
-
-      add_replica safe_index_uid("Replica_Index"), :per_environment => true do
-        searchableAttributes [:name]
-        rankingRules ['typo', 'words', 'proximity', 'attribute', 'wordsPosition', 'desc(name)']
-      end
     end
   end
 end
