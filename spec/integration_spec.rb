@@ -585,14 +585,11 @@ describe 'Encoding' do
   before(:all) do
     EncodedString.clear_index!(true)
   end
-
-  if Object.const_defined?(:RUBY_VERSION) && RUBY_VERSION.to_f > 1.8
-    it "should convert to utf-8" do
-      EncodedString.create!
-      results = EncodedString.raw_search ''
-      expect(results['hits'].size).to eq(1)
-      expect(results['hits'].first['value']).to eq("\xC2\xA0\xE2\x80\xA2\xC2\xA0".force_encoding('utf-8'))
-    end
+  it "should convert to utf-8" do
+    EncodedString.create!
+    results = EncodedString.raw_search ''
+    expect(results['hits'].size).to eq(1)
+    expect(results['hits'].first['value']).to eq("\xC2\xA0\xE2\x80\xA2\xC2\xA0".force_encoding('utf-8'))
   end
 end
 
