@@ -747,7 +747,6 @@ module MeiliSearch
       # Loop over each index to see if a attribute used in records has changed
       ms_configurations.each do |options, settings|
         next if ms_indexing_disabled?(options)
-        next if options[:slave] || options[:replica]
         return true if ms_primary_key_changed?(object, options)
         settings.get_attribute_names(object).each do |k|
           return true if ms_attribute_changed?(object, k)
