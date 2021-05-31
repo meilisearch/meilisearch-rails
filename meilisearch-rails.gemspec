@@ -68,4 +68,3 @@ Gem::Specification.new do |s|
     s.add_dependency(%q<meilisearch>, [">= 0.15.2"])
   end
 end
-
