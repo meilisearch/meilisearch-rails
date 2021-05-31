@@ -13,7 +13,7 @@ require 'logger'
 require 'sequel'
 require 'active_model_serializers'
 
-MeiliSearch.configuration = { :application_id => ENV['MEILISEARCH_HOST'], :api_key => ENV['MEILISEARCH_API_KEY'] }
+MeiliSearch.configuration = { :meilisearch_host => ENV['MEILISEARCH_HOST'], :api_key => ENV['MEILISEARCH_API_KEY'] }
 
 FileUtils.rm( 'data.sqlite3' ) rescue nil
 ActiveRecord::Base.logger = Logger.new(STDOUT)
@@ -1099,7 +1099,7 @@ end
 describe 'Kaminari' do
   before(:all) do
     require 'kaminari'
-    MeiliSearch.configuration = { :application_id => ENV['MEILISEARCH_HOST'], :api_key => ENV['MEILISEARCH_API_KEY'], :pagination_backend => :kaminari }
+    MeiliSearch.configuration = { :meilisearch_host => ENV['MEILISEARCH_HOST'], :api_key => ENV['MEILISEARCH_API_KEY'], :pagination_backend => :kaminari }
     Restaurant.clear_index!(true)
 
 
@@ -1145,7 +1145,7 @@ end
 describe 'Will_paginate' do
   before(:all) do
     require 'will_paginate'
-    MeiliSearch.configuration = { :application_id => ENV['MEILISEARCH_HOST'], :api_key => ENV['MEILISEARCH_API_KEY'], :pagination_backend => :will_paginate }
+    MeiliSearch.configuration = { :meilisearch_host => ENV['MEILISEARCH_HOST'], :api_key => ENV['MEILISEARCH_API_KEY'], :pagination_backend => :will_paginate }
     Movies.clear_index!(true)
 
     10.times do
@@ -1190,7 +1190,7 @@ end
 
 describe "attributesToCrop" do
   before(:all) do
-    MeiliSearch.configuration = { :application_id => ENV['MEILISEARCH_HOST'], :api_key => ENV['MEILISEARCH_API_KEY']}
+    MeiliSearch.configuration = { :meilisearch_host => ENV['MEILISEARCH_HOST'], :api_key => ENV['MEILISEARCH_API_KEY']}
     10.times do
       Restaurant.create(
         name: Faker::Restaurant.name,

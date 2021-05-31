@@ -1,6 +1,6 @@
 require File.expand_path(File.join(File.dirname(__FILE__), 'spec_helper'))
 
-MeiliSearch.configuration = { :application_id => ENV['MEILISEARCH_HOST'], :api_key => ENV['MEILISEARCH_API_KEY'] }
+MeiliSearch.configuration = { :meilisearch_host => ENV['MEILISEARCH_HOST'], :api_key => ENV['MEILISEARCH_API_KEY'] }
 
 describe MeiliSearch::Utilities do
 
