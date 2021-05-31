@@ -565,7 +565,6 @@ module MeiliSearch
         next if ms_indexing_disabled?(options)
         primary_key = ms_primary_key_of(object, options)
         index = ms_ensure_init(options, settings)
-        next if options[:slave] || options[:replica]
         if ms_indexable?(object, options)
           raise ArgumentError.new("Cannot index a record with a blank objectID") if primary_key.blank?
           if synchronous || options[:synchronous]
