@@ -23,7 +23,6 @@ module MeiliSearch
   class NotConfigured < StandardError; end
   class BadConfiguration < StandardError; end
   class NoBlockGiven < StandardError; end
-  class MixedSlavesAndReplicas < StandardError; end
 
   autoload :Configuration, 'meilisearch/configuration'
   extend Configuration
