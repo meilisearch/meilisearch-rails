@@ -975,18 +975,6 @@ module MeiliSearch
       # We don't know if the attribute has changed, so conservatively assume it has
       true
     end
-
-    # Returns true if the _changed? method is user-defined
-    def automatic_changed_method?(object, method_name)
-      raise ArgumentError.new("Method #{method_name} doesn't exist on #{object.class.name}") unless object.respond_to?(method_name)
-      file = object.method(method_name).source_location[0]
-      file.end_with?("active_model/attribute_methods.rb")
-    end
-
-    def automatic_changed_method_deprecated?
-      (defined?(::ActiveRecord) && ActiveRecord::VERSION::MAJOR >= 5 && ActiveRecord::VERSION::MINOR >= 1) ||
-          (defined?(::ActiveRecord) && ActiveRecord::VERSION::MAJOR > 5)
-    end
   end
 
   # these are the instance methods included
