@@ -218,20 +218,6 @@ module MeiliSearch
         v = get_setting(k)
         settings[k] = v if !v.nil?
       end
-      if !@options[:slave] && !@options[:replica]
-        settings[:slaves] = additional_indexes.select { |opts, s| opts[:slave] }.map do |opts, s|
-          name = opts[:index_uid]
-          name = "#{name}_#{Rails.env.to_s}" if opts[:per_environment]
-          name
-        end
-        settings.delete(:slaves) if settings[:slaves].empty?
-        settings[:replicas] = additional_indexes.select { |opts, s| opts[:replica] }.map do |opts, s|
-          name = opts[:index_uid]
-          name = "#{name}_#{Rails.env.to_s}" if opts[:per_environment]
-          name
-        end
-        settings.delete(:replicas) if settings[:replicas].empty?
-      end
       settings
     end
 
