@@ -464,7 +464,6 @@ module MeiliSearch
       ms_configurations.each do |options, settings|
         next if ms_indexing_disabled?(options)
         index = ms_ensure_init(options, settings)
-        next if options[:slave] || options[:replica]
         last_update = nil
 
         ms_find_in_batches(batch_size) do |group|
@@ -540,10 +539,6 @@ module MeiliSearch
       ms_configurations.each do |options, settings|
         if options[:primary_settings] && options[:inherit]
           primary = options[:primary_settings].to_settings
-          primary.delete :slaves
-          primary.delete 'slaves'
-          primary.delete :replicas
-          primary.delete 'replicas'
           final_settings = primary.merge(settings.to_settings)
         else
           final_settings = settings.to_settings
