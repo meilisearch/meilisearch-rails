@@ -165,7 +165,7 @@ module MeiliSearch
         attributes = sanitize_attributes(attributes, sanitizer)
       end
 
-      if @options[:force_utf8_encoding] && Object.const_defined?(:RUBY_VERSION) && RUBY_VERSION.to_f > 1.8
+      if @options[:force_utf8_encoding]
         attributes = encode_attributes(attributes)
       end
 
