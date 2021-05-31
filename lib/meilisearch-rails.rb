@@ -271,11 +271,10 @@ module MeiliSearch
   if defined?(::ActiveJob::Base)
     # lazy load the ActiveJob class to ensure the
     # queue is initialized before using it
-    # see https://github.com/algolia/algoliasearch-rails/issues/69
     autoload :MSJob, 'meilisearch/ms_job'
   end
 
-  # this class wraps an Algolia::Index object ensuring all raised exceptions
+  # this class wraps an MeiliSearch::Index object ensuring all raised exceptions
   # are correctly logged or thrown depending on the `raise_on_failure` option
   class SafeIndex
     def initialize(index_uid, raise_on_failure, options)
@@ -317,13 +316,6 @@ module MeiliSearch
         end
       end
     end
-
-    # expose move as well
-    # def self.move_index(old_name, new_name)
-    #   SafeIndex.log_or_throw(:move_index, true) do
-    #     ::Algolia.move_index(old_name, new_name)
-    #   end
-    # end
 
     private
     def self.log_or_throw(method, raise_on_failure, &block)
@@ -694,9 +686,7 @@ module MeiliSearch
 
     def ms_search(q, params = {})
       if MeiliSearch.configuration[:pagination_backend]
-        # kaminari and will_paginate start pagination at 1, Algolia starts at 0
-        # params[:page] = (params.delete('page') || params.delete(:page)).to_i
-        # params[:page] -= 1 if params[:page].to_i > 0
+
         page = params[:page].nil? ? params[:page] : params[:page].to_i
         hits_per_page = params[:hitsPerPage].nil? ? params[:hitsPerPage] : params[:hitsPerPage].to_i
 
@@ -991,7 +981,6 @@ module MeiliSearch
         # If it's user-defined, we call it.
         # If it's automatic we check ActiveRecord version to see if this method is deprecated
         # and try to call +will_save_change_to_#{attr_name}?+ instead.
-        # See: https://github.com/algolia/algoliasearch-rails/pull/338
         # This feature is not compatible with Ruby 1.8
         # In this case, we always call #{attr_name}_changed?
         if Object.const_defined?(:RUBY_VERSION) && RUBY_VERSION.to_f < 1.9
