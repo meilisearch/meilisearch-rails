@@ -195,13 +195,6 @@ module MeiliSearch
       end
     end
 
-    def tags(*args, &block)
-      add_attribute :_tags do |o|
-        v = block_given? ? o.instance_eval(&block) : args
-        v.is_a?(Array) ? v : [v]
-      end
-    end
-
     def get_setting(name)
       instance_variable_get("@#{name}")
     end
