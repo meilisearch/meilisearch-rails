@@ -195,12 +195,6 @@ module MeiliSearch
       end
     end
 
-    def geoloc(lat_attr = nil, lng_attr = nil, &block)
-      add_attribute :_geoloc do |o|
-        block_given? ? o.instance_eval(&block) : { :lat => o.send(lat_attr).to_f, :lng => o.send(lng_attr).to_f }
-      end
-    end
-
     def tags(*args, &block)
       add_attribute :_tags do |o|
         v = block_given? ? o.instance_eval(&block) : args
