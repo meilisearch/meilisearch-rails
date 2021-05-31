@@ -249,7 +249,7 @@ class Song < ActiveRecord::Base
 
   meilisearch index_name: SECURED_INDEX_NAME do
     searchableAttributes [:name, :artist]
-  
+
     add_index PUBLIC_INDEX_NAME, if: :public? do
       searchableAttributes [:name, :artist]
     end
@@ -290,7 +290,7 @@ class Color < ActiveRecord::Base
     attributesToHighlight [:name]
   end
 
-  def hex_changed?
+  def will_save_change_to_hex?
     false
   end
 
@@ -656,24 +656,6 @@ describe 'Attributes change detection' do
     ebook.published_at = 12
     Ebook.ms_must_reindex?(ebook).should == false
   end
-
-  it "should know if the _changed? method is user-defined", :skip => Object.const_defined?(:RUBY_VERSION) && RUBY_VERSION.to_f < 1.9 do
-    color = Color.new :name => "dark-blue", :short_name => "blue"
-
-    expect { Color.send(:automatic_changed_method?, color, :something_that_doesnt_exist) }.to raise_error(ArgumentError)
-
-    Color.send(:automatic_changed_method?, color, :name_changed?).should == true
-    Color.send(:automatic_changed_method?, color, :hex_changed?).should == false
-
-    Color.send(:automatic_changed_method?, color, :will_save_change_to_short_name?).should == false
-
-    if Color.send(:automatic_changed_method_deprecated?)
-      Color.send(:automatic_changed_method?, color, :will_save_change_to_name?).should == true
-      Color.send(:automatic_changed_method?, color, :will_save_change_to_hex?).should == true
-    end
-
-  end
-
 end
 
 describe 'Namespaced::Model' do
@@ -1122,9 +1104,9 @@ describe 'Kaminari' do
     require 'kaminari'
     MeiliSearch.configuration = { :application_id => ENV['MEILISEARCH_HOST'], :api_key => ENV['MEILISEARCH_API_KEY'], :pagination_backend => :kaminari }
     Restaurant.clear_index!(true)
-  
 
-    10.times do 
+
+    10.times do
       Restaurant.create(
         name: Faker::Restaurant.name,
         kind: Faker::Restaurant.type,
@@ -1135,7 +1117,7 @@ describe 'Kaminari' do
     Restaurant.reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
     sleep 5
   end
-  
+
 
   it "should paginate" do
     hits = Restaurant.search ''
@@ -1152,7 +1134,7 @@ describe 'Kaminari' do
     p2.total_count.should eq(Restaurant.raw_search('')['hits'].count)
   end
 
-  it "should not return error if pagination params are strings" do 
+  it "should not return error if pagination params are strings" do
     p1 = Restaurant.search '', :page => '1', :hitsPerPage => '1'
     p1.size.should eq(1)
     p1.total_count.should eq(Restaurant.raw_search('')['hits'].count)
@@ -1169,7 +1151,7 @@ describe 'Will_paginate' do
     MeiliSearch.configuration = { :application_id => ENV['MEILISEARCH_HOST'], :api_key => ENV['MEILISEARCH_API_KEY'], :pagination_backend => :will_paginate }
     Movies.clear_index!(true)
 
-    10.times do 
+    10.times do
       Movies.create(
         title: Faker::Movie.title,
       )
@@ -1195,7 +1177,7 @@ describe 'Will_paginate' do
     raw_hits = Movies.raw_search ''
     hits[0]['id'].should eq(raw_hits['hits'][2]['id'].to_i)
   end
-  
+
   it "should not return error if pagination params are strings" do
     hits = Movies.search '', :hitsPerPage => '5'
     hits.per_page.should eq(5)
@@ -1212,7 +1194,7 @@ end
 describe "attributesToCrop" do
   before(:all) do
     MeiliSearch.configuration = { :application_id => ENV['MEILISEARCH_HOST'], :api_key => ENV['MEILISEARCH_API_KEY']}
-    10.times do 
+    10.times do
       Restaurant.create(
         name: Faker::Restaurant.name,
         kind: Faker::Restaurant.type,
@@ -1232,7 +1214,7 @@ describe "attributesToCrop" do
     expect(results.first.formatted['description']).to eq(raw_search_results['hits'].first['_formatted']['description'])
     expect(results.first.formatted['description']).not_to eq(results.first['description'])
   end
-  
+
 
 end
 
@@ -1326,23 +1308,23 @@ describe 'People' do
     joanna = People.search('Joanna')[0]
     joanna.destroy
     result = People.raw_search('Joanna')
-    expect(result['hits'].size).to eq(1)  
+    expect(result['hits'].size).to eq(1)
   end
   it 'should be able to remove manually' do
     bob = People.create(:first_name => 'Bob', :last_name => 'Sponge', :card_number => 75801889)
     result = People.raw_search('Bob')
-    expect(result['hits'].size).to eq(1)  
+    expect(result['hits'].size).to eq(1)
     bob.remove_from_index!
     result = People.raw_search('Bob')
-    expect(result['hits'].size).to eq(0)  
+    expect(result['hits'].size).to eq(0)
   end
   it 'should clear index manually' do
     results = People.raw_search('')
-    expect(results['hits'].size).not_to eq(0)  
+    expect(results['hits'].size).not_to eq(0)
     People.clear_index!(true)
     results = People.raw_search('')
-    expect(results['hits'].size).to eq(0) 
-  end 
+    expect(results['hits'].size).to eq(0)
+  end
 end
 
 describe 'Animals' do
