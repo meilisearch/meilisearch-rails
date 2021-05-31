@@ -608,7 +608,6 @@ module MeiliSearch
       ms_configurations.each do |options, settings|
         next if ms_indexing_disabled?(options)
         index = ms_ensure_init(options, settings)
-        next if options[:slave] || options[:replica]
         synchronous || options[:synchronous] ? index.delete_all_documents! : index.delete_all_documents
         @ms_indexes[settings] = nil
       end
