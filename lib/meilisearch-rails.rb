@@ -715,11 +715,7 @@ module MeiliSearch
 
     def ms_search_for_facet_values(facet, text, params = {})
       index_uid = params.delete(:index) ||
-                   params.delete('index') ||
-                   params.delete(:slave) ||
-                   params.delete('slave') ||
-                   params.delete(:replica) ||
-                   params.delete('replicas')
+                   params.delete('index')
       index = ms_index(index_uid)
       query = Hash[params.map { |k, v| [k.to_s, v.to_s] }]
       index.search_facet(facet, text, query)['facetHits']
