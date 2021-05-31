@@ -76,7 +76,6 @@ module MeiliSearch
 
     def attribute(*names, &block)
       raise ArgumentError.new('Cannot pass multiple attribute names if block given') if block_given? and names.length > 1
-      raise ArgumentError.new('Cannot specify additional attributes on a replica index') if @options[:slave] || @options[:replica]
       @attributes ||= {}
       names.flatten.each do |name|
         @attributes[name.to_s] = block_given? ? Proc.new { |o| o.instance_eval(&block) } : Proc.new { |o| o.send(name) }
@@ -86,7 +85,6 @@ module MeiliSearch
 
     def add_attribute(*names, &block)
       raise ArgumentError.new('Cannot pass multiple attribute names if block given') if block_given? and names.length > 1
-      raise ArgumentError.new('Cannot specify additional attributes on a replica index') if @options[:slave] || @options[:replica]
       @additional_attributes ||= {}
       names.each do |name|
         @additional_attributes[name.to_s] = block_given? ? Proc.new { |o| o.instance_eval(&block) } : Proc.new { |o| o.send(name) }
@@ -198,14 +196,12 @@ module MeiliSearch
     end
 
     def geoloc(lat_attr = nil, lng_attr = nil, &block)
-      raise ArgumentError.new('Cannot specify additional attributes on a replica index') if @options[:slave] || @options[:replica]
       add_attribute :_geoloc do |o|
         block_given? ? o.instance_eval(&block) : { :lat => o.send(lat_attr).to_f, :lng => o.send(lng_attr).to_f }
       end
     end
 
     def tags(*args, &block)
-      raise ArgumentError.new('Cannot specify additional attributes on a replica index') if @options[:slave] || @options[:replica]
       add_attribute :_tags do |o|
         v = block_given? ? o.instance_eval(&block) : args
         v.is_a?(Array) ? v : [v]
@@ -240,11 +236,9 @@ module MeiliSearch
     end
 
     def add_index(index_uid, options = {}, &block)
-      raise ArgumentError.new('Cannot specify additional index on a replica index') if @options[:slave] || @options[:replica]
       raise ArgumentError.new('No block given') if !block_given?
       raise ArgumentError.new('Options auto_index and auto_remove cannot be set on nested indexes') if options[:auto_index] || options[:auto_remove]
       @additional_indexes ||= {}
-      raise MixedSlavesAndReplicas.new('Cannot mix slaves and replicas in the same configuration (add_slave is deprecated)') if (options[:slave] && @additional_indexes.any? { |opts, _| opts[:replica] }) || (options[:replica] && @additional_indexes.any? { |opts, _| opts[:slave] })
       options[:index_uid] = index_uid
       @additional_indexes[options] = IndexSettings.new(options, &block)
     end
