@@ -1237,7 +1237,7 @@ end
 describe 'Misconfigured Block' do
   it "should force the meilisearch block" do
     expect {
-      MisconfiguredBlock.reindex
+      MisconfiguredBlock.reindex!
     }.to raise_error(ArgumentError)
   end
 end
