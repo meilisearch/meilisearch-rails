@@ -99,7 +99,7 @@ ActiveRecord::Schema.define do
     t.integer :parent_id
     t.boolean :hidden
   end
-  create_table :mongo_objects do |t|
+  create_table :mongo_documents do |t|
     t.string :name
   end
   create_table :books do |t|
@@ -126,10 +126,10 @@ ActiveRecord::Schema.define do
   create_table :encoded_strings do |t|
   end
   unless OLD_RAILS
-    create_table :enqueued_objects do |t|
+    create_table :enqueued_documents do |t|
       t.string :name
     end
-    create_table :disabled_enqueued_objects do |t|
+    create_table :disabled_enqueued_documents do |t|
       t.string :name
     end
   end
@@ -137,7 +137,7 @@ ActiveRecord::Schema.define do
     t.string :name
   end
   if defined?(ActiveModel::Serializer)
-    create_table :serialized_objects do |t|
+    create_table :serialized_documents do |t|
       t.string :name
       t.string :skip
     end
@@ -423,10 +423,10 @@ describe 'SequelBook' do
 
 end
 
-class MongoObject < ActiveRecord::Base
+class MongoDocument < ActiveRecord::Base
   include MeiliSearch
 
-  meilisearch :index_uid => safe_index_uid("MongoObject") do
+  meilisearch :index_uid => safe_index_uid("MongoDocument") do
   end
 
   def self.reindex!
@@ -486,7 +486,7 @@ class EncodedString < ActiveRecord::Base
 end
 
 unless OLD_RAILS
-  class EnqueuedObject < ActiveRecord::Base
+  class EnqueuedDocument < ActiveRecord::Base
     include MeiliSearch
 
     include GlobalID::Identification
@@ -496,20 +496,20 @@ unless OLD_RAILS
     end
 
     def self.find(id)
-      EnqueuedObject.first
+      EnqueuedDocument.first
     end
 
     meilisearch :enqueue => Proc.new { |record| raise "enqueued #{record.id}" },
-      :index_uid => safe_index_uid('EnqueuedObject') do
+      :index_uid => safe_index_uid('EnqueuedDocument') do
       attributes [:name]
     end
   end
 
-  class DisabledEnqueuedObject < ActiveRecord::Base
+  class DisabledEnqueuedDocument < ActiveRecord::Base
     include MeiliSearch
 
     meilisearch(:enqueue => Proc.new { |record| raise "enqueued" },
-      :index_uid => safe_index_uid('EnqueuedObject'),
+      :index_uid => safe_index_uid('EnqueuedDocument'),
       :disable_indexing => true) do
       attributes [:name]
     end
@@ -521,28 +521,28 @@ class MisconfiguredBlock < ActiveRecord::Base
 end
 
 if defined?(ActiveModel::Serializer)
-  class SerializedObjectSerializer < ActiveModel::Serializer
+  class SerializedDocumentSerializer < ActiveModel::Serializer
     attributes :name
   end
 
-  class SerializedObject < ActiveRecord::Base
+  class SerializedDocument < ActiveRecord::Base
     include MeiliSearch
 
-    meilisearch :index_uid => safe_index_uid('SerializedObject') do
-      use_serializer SerializedObjectSerializer
+    meilisearch :index_uid => safe_index_uid('SerializedDocument') do
+      use_serializer SerializedDocumentSerializer
     end
   end
 end
 
 if defined?(ActiveModel::Serializer)
-  describe 'SerializedObject' do
+  describe 'SerializedDocument' do
     before(:all) do
-      SerializedObject.clear_index!(true)
+      SerializedDocument.clear_index!(true)
     end
 
     it "should push the name but not the other attribute" do
-      o = SerializedObject.new :name => 'test', :skip => 'skip me'
-      attributes = SerializedObject.meilisearch_settings.get_attributes(o)
+      o = SerializedDocument.new :name => 'test', :skip => 'skip me'
+      attributes = SerializedDocument.meilisearch_settings.get_attributes(o)
       expect(attributes).to eq({:name => 'test'})
     end
   end
@@ -786,13 +786,13 @@ describe 'Colors' do
     expect(results[0].formatted).to_not be_nil
   end
 
-  it "should index an array of objects" do
+  it "should index an array of documents" do
     json = Color.raw_search('')
-    Color.index_objects Color.limit(1), true # reindex last color, `limit` is incompatible with the reindex! method
+    Color.index_documents Color.limit(1), true # reindex last color, `limit` is incompatible with the reindex! method
     json['hits'].count.should eq(Color.raw_search('')['hits'].count)
   end
 
-  it "should not index non-saved object" do
+  it "should not index non-saved document" do
     expect { Color.new(:name => 'purple').index!(true) }.to raise_error(ArgumentError)
     expect { Color.new(:name => 'purple').remove_from_index!(true) }.to raise_error(ArgumentError)
   end
@@ -977,12 +977,12 @@ describe 'An imaginary store' do
   end
 end
 
-describe 'MongoObject' do
+describe 'MongoDocument' do
   it "should not have method conflicts" do
-    expect { MongoObject.reindex! }.to raise_error(NameError)
-    expect { MongoObject.new.index! }.to raise_error(NameError)
-    MongoObject.ms_reindex!
-    MongoObject.create(:name => 'mongo').ms_index!
+    expect { MongoDocument.reindex! }.to raise_error(NameError)
+    expect { MongoDocument.new.index! }.to raise_error(NameError)
+    MongoDocument.ms_reindex!
+    MongoDocument.create(:name => 'mongo').ms_index!
   end
 end
 
@@ -1206,26 +1206,26 @@ describe 'Disabled' do
 end
 
 unless OLD_RAILS
-  describe 'EnqueuedObject' do
+  describe 'EnqueuedDocument' do
     it "should enqueue a job" do
       expect {
-        EnqueuedObject.create! :name => 'test'
+        EnqueuedDocument.create! :name => 'test'
       }.to raise_error("enqueued 1")
     end
 
     it "should not enqueue a job inside no index block" do
       expect {
-        EnqueuedObject.without_auto_index do
-          EnqueuedObject.create! :name => 'test'
+        EnqueuedDocument.without_auto_index do
+          EnqueuedDocument.create! :name => 'test'
         end
       }.not_to raise_error
     end
   end
 
-  describe 'DisabledEnqueuedObject' do
+  describe 'DisabledEnqueuedDocument' do
     it "should not try to enqueue a job" do
       expect {
-        DisabledEnqueuedObject.create! :name => 'test'
+        DisabledEnqueuedDocument.create! :name => 'test'
       }.not_to raise_error
     end
   end

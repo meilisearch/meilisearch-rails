@@ -92,65 +92,65 @@ module MeiliSearch
     end
     alias :add_attributes :add_attribute
 
-    def is_mongoid?(object)
-      defined?(::Mongoid::Document) && object.class.include?(::Mongoid::Document)
+    def is_mongoid?(document)
+      defined?(::Mongoid::Document) && document.class.include?(::Mongoid::Document)
     end
 
-    def is_sequel?(object)
-      defined?(::Sequel) && object.class < ::Sequel::Model
+    def is_sequel?(document)
+      defined?(::Sequel) && document.class < ::Sequel::Model
     end
 
-    def is_active_record?(object)
-      !is_mongoid?(object) && !is_sequel?(object)
+    def is_active_record?(document)
+      !is_mongoid?(document) && !is_sequel?(document)
     end
 
-    def get_default_attributes(object)
-      if is_mongoid?(object)
+    def get_default_attributes(document)
+      if is_mongoid?(document)
         # work-around mongoid 2.4's unscoped method, not accepting a block
-        object.attributes
-      elsif is_sequel?(object)
-        object.to_hash
+        document.attributes
+      elsif is_sequel?(document)
+        document.to_hash
       else
-        object.class.unscoped do
-          object.attributes
+        document.class.unscoped do
+          document.attributes
         end
       end
     end
 
-    def get_attribute_names(object)
-      get_attributes(object).keys
+    def get_attribute_names(document)
+      get_attributes(document).keys
     end
 
-    def attributes_to_hash(attributes, object)
+    def attributes_to_hash(attributes, document)
       if attributes
-        Hash[attributes.map { |name, value| [name.to_s, value.call(object) ] }]
+        Hash[attributes.map { |name, value| [name.to_s, value.call(document) ] }]
       else
         {}
       end
     end
 
-    def get_attributes(object)
+    def get_attributes(document)
       # If a serializer is set, we ignore attributes
       # everything should be done via the serializer
       if not @serializer.nil?
-        attributes = @serializer.new(object).attributes
+        attributes = @serializer.new(document).attributes
       else
         if @attributes.nil? || @attributes.length == 0
           # no `attribute ...` have been configured, use the default attributes of the model
-          attributes = get_default_attributes(object)
+          attributes = get_default_attributes(document)
         else
           # at least 1 `attribute ...` has been configured, therefore use ONLY the one configured
-          if is_active_record?(object)
-            object.class.unscoped do
-              attributes = attributes_to_hash(@attributes, object)
+          if is_active_record?(document)
+            document.class.unscoped do
+              attributes = attributes_to_hash(@attributes, document)
             end
           else
-            attributes = attributes_to_hash(@attributes, object)
+            attributes = attributes_to_hash(@attributes, document)
           end
         end
       end
 
-      attributes.merge!(attributes_to_hash(@additional_attributes, object)) if @additional_attributes
+      attributes.merge!(attributes_to_hash(@additional_attributes, document)) if @additional_attributes
 
       if @options[:sanitize]
         sanitizer = begin
@@ -228,7 +228,7 @@ module MeiliSearch
     autoload :MSJob, 'meilisearch/ms_job'
   end
 
-  # this class wraps an MeiliSearch::Index object ensuring all raised exceptions
+  # this class wraps an MeiliSearch::Index document ensuring all raised exceptions
   # are correctly logged or thrown depending on the `raise_on_failure` option
   class SafeIndex
     def initialize(index_uid, raise_on_failure, options)
@@ -299,7 +299,7 @@ module MeiliSearch
       class <<base
         alias_method :without_auto_index, :ms_without_auto_index unless method_defined? :without_auto_index
         alias_method :reindex!, :ms_reindex! unless method_defined? :reindex!
-        alias_method :index_objects, :ms_index_objects unless method_defined? :index_objects
+        alias_method :index_documents, :ms_index_documents unless method_defined? :index_documents
         alias_method :index!, :ms_index! unless method_defined? :index!
         alias_method :remove_from_index!, :ms_remove_from_index! unless method_defined? :remove_from_index!
         alias_method :clear_index!, :ms_clear_index! unless method_defined? :clear_index!
@@ -442,20 +442,20 @@ module MeiliSearch
 
         ms_find_in_batches(batch_size) do |group|
           if ms_conditional_index?(options)
-            # delete non-indexable objects
+            # delete non-indexable documents
             ids = group.select { |o| !ms_indexable?(o, options) }.map { |o| ms_primary_key_of(o, options) }
             index.delete_documents(ids.select { |id| !id.blank? })
-            # select only indexable objects
+            # select only indexable documents
             group = group.select { |o| ms_indexable?(o, options) }
           end
-          objects = group.map do |o|
+          documents = group.map do |o|
             attributes = settings.get_attributes(o)
             unless attributes.class == Hash
               attributes = attributes.to_hash
             end
              attributes.merge ms_pk(options) => ms_primary_key_of(o, options)
           end
-          last_update= index.add_documents(objects)
+          last_update= index.add_documents(documents)
         end
         index.wait_for_pending_update(last_update["updateId"]) if last_update and (synchronous || options[:synchronous])
       end
@@ -477,34 +477,34 @@ module MeiliSearch
       end
     end
 
-    def ms_index_objects(objects, synchronous = false)
+    def ms_index_documents(documents, synchronous = false)
       ms_configurations.each do |options, settings|
         next if ms_indexing_disabled?(options)
         index = ms_ensure_init(options, settings)
-        update = index.add_documents(objects.map { |o| settings.get_attributes(o).merge ms_pk(options) => ms_primary_key_of(o, options) })
+        update = index.add_documents(documents.map { |o| settings.get_attributes(o).merge ms_pk(options) => ms_primary_key_of(o, options) })
         index.wait_for_pending_update(update["updateId"]) if synchronous || options[:synchronous]
       end
     end
 
-    def ms_index!(object, synchronous = false)
+    def ms_index!(document, synchronous = false)
       return if ms_without_auto_index_scope
       ms_configurations.each do |options, settings|
         next if ms_indexing_disabled?(options)
-        primary_key = ms_primary_key_of(object, options)
+        primary_key = ms_primary_key_of(document, options)
         index = ms_ensure_init(options, settings)
-        if ms_indexable?(object, options)
-          raise ArgumentError.new("Cannot index a record with a blank objectID") if primary_key.blank?
+        if ms_indexable?(document, options)
+          raise ArgumentError.new("Cannot index a record without a primary key") if primary_key.blank?
           if synchronous || options[:synchronous]
-            doc = settings.get_attributes(object)
+            doc = settings.get_attributes(document)
             doc = doc.merge ms_pk(options) => primary_key
             index.add_documents!(doc)
           else
-            doc = settings.get_attributes(object)
+            doc = settings.get_attributes(document)
             doc = doc.merge ms_pk(options) => primary_key
             index.add_documents(doc)
           end
         elsif ms_conditional_index?(options) && !primary_key.blank?
-          # remove non-indexable objects
+          # remove non-indexable documents
           if synchronous || options[:synchronous]
             index.delete_document!(primary_key)
           else
@@ -515,10 +515,10 @@ module MeiliSearch
       nil
     end
 
-    def ms_remove_from_index!(object, synchronous = false)
+    def ms_remove_from_index!(document, synchronous = false)
       return if ms_without_auto_index_scope
-      primary_key = ms_primary_key_of(object)
-      raise ArgumentError.new("Cannot index a record with a blank objectID") if primary_key.blank?
+      primary_key = ms_primary_key_of(document)
+      raise ArgumentError.new("Cannot index a record without a primary key") if primary_key.blank?
       ms_configurations.each do |options, settings|
         next if ms_indexing_disabled?(options)
         index = ms_ensure_init(options, settings)
@@ -668,22 +668,22 @@ module MeiliSearch
       name
     end
 
-    def ms_must_reindex?(object)
+    def ms_must_reindex?(document)
       # use +ms_dirty?+ method if implemented
-      return object.send(:ms_dirty?) if (object.respond_to?(:ms_dirty?))
+      return document.send(:ms_dirty?) if (document.respond_to?(:ms_dirty?))
       # Loop over each index to see if a attribute used in records has changed
       ms_configurations.each do |options, settings|
         next if ms_indexing_disabled?(options)
-        return true if ms_primary_key_changed?(object, options)
-        settings.get_attribute_names(object).each do |k|
-          return true if ms_attribute_changed?(object, k)
-          # return true if !object.respond_to?(changed_method) || object.send(changed_method)
+        return true if ms_primary_key_changed?(document, options)
+        settings.get_attribute_names(document).each do |k|
+          return true if ms_attribute_changed?(document, k)
+          # return true if !document.respond_to?(changed_method) || document.send(changed_method)
         end
         [options[:if], options[:unless]].each do |condition|
           case condition
           when nil
           when String, Symbol
-            return true if ms_attribute_changed?(object, condition)
+            return true if ms_attribute_changed?(document, condition)
           else
             # if the :if, :unless condition is a anything else,
             # we have no idea whether we should reindex or not
@@ -793,25 +793,25 @@ module MeiliSearch
       options[:if].present? || options[:unless].present?
     end
 
-    def ms_indexable?(object, options = nil)
+    def ms_indexable?(document, options = nil)
       options ||= meilisearch_options
-      if_passes = options[:if].blank? || ms_constraint_passes?(object, options[:if])
-      unless_passes = options[:unless].blank? || !ms_constraint_passes?(object, options[:unless])
+      if_passes = options[:if].blank? || ms_constraint_passes?(document, options[:if])
+      unless_passes = options[:unless].blank? || !ms_constraint_passes?(document, options[:unless])
       if_passes && unless_passes
     end
 
-    def ms_constraint_passes?(object, constraint)
+    def ms_constraint_passes?(document, constraint)
       case constraint
       when Symbol
-        object.send(constraint)
+        document.send(constraint)
       when String
-        object.send(constraint.to_sym)
+        document.send(constraint.to_sym)
       when Enumerable
         # All constraints must pass
-        constraint.all? { |inner_constraint| ms_constraint_passes?(object, inner_constraint) }
+        constraint.all? { |inner_constraint| ms_constraint_passes?(document, inner_constraint) }
       else
         if constraint.respond_to?(:call) # Proc
-          constraint.call(object)
+          constraint.call(document)
         else
           raise ArgumentError, "Unknown constraint type: #{constraint} (#{constraint.class})"
         end
@@ -853,9 +853,9 @@ module MeiliSearch
       end
     end
 
-    def ms_attribute_changed?(object, attr_name)
-      if object.respond_to?("will_save_change_to_#{attr_name}?")
-        return object.send("will_save_change_to_#{attr_name}?")
+    def ms_attribute_changed?(document, attr_name)
+      if document.respond_to?("will_save_change_to_#{attr_name}?")
+        return document.send("will_save_change_to_#{attr_name}?")
       end
 
       # We don't know if the attribute has changed, so conservatively assume it has
