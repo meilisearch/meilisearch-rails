@@ -229,18 +229,6 @@ module MeiliSearch
       @additional_indexes[options] = IndexSettings.new(options, &block)
     end
 
-    def add_replica(index_uid, options = {}, &block)
-      raise ArgumentError.new('Cannot specify additional replicas on a replica index') if @options[:slave] || @options[:replica]
-      raise ArgumentError.new('No block given') if !block_given?
-      add_index(index_uid, options.merge({ :replica => true, :primary_settings => self }), &block)
-    end
-
-    def add_slave(index_uid, options = {}, &block)
-      raise ArgumentError.new('Cannot specify additional slaves on a slave index') if @options[:slave] || @options[:replica]
-      raise ArgumentError.new('No block given') if !block_given?
-      add_index(index_uid, options.merge({ :slave => true, :primary_settings => self }), &block)
-    end
-
     def additional_indexes
       @additional_indexes || {}
     end
