@@ -554,7 +554,6 @@ module MeiliSearch
       ms_configurations.each do |options, settings|
         next if ms_indexing_disabled?(options)
         index = ms_ensure_init(options, settings)
-        next if options[:slave] || options[:replica]
         update = index.add_documents(objects.map { |o| settings.get_attributes(o).merge ms_pk(options) => ms_primary_key_of(o, options) })
         index.wait_for_pending_update(update["updateId"]) if synchronous || options[:synchronous]
       end
