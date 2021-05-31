@@ -443,9 +443,6 @@ class Book < ActiveRecord::Base
 
   meilisearch :synchronous => true, :index_uid => safe_index_uid("SecuredBook"), :per_environment => true, :sanitize => true do
     searchableAttributes [:name]
-    tags do
-      [premium ? 'premium' : 'standard', released ? 'public' : 'private']
-    end
 
     add_index safe_index_uid('BookAuthor'), :per_environment => true do
       searchableAttributes [:author]
