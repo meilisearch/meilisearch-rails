@@ -669,7 +669,7 @@ module MeiliSearch
         ms_configurations.each do |o, s|
           return ms_ensure_init(o, s) if o[:index_uid].to_s == name.to_s
         end
-        raise ArgumentError.new("Invalid index/replica name: #{name}")
+        raise ArgumentError.new("Invalid index name: #{name}")
       end
       ms_ensure_init
     end
