@@ -791,12 +791,6 @@ module MeiliSearch
       options[:check_settings] = true if options[:check_settings].nil?
 
       if !ms_indexing_disabled?(options) && options[:check_settings] && meilisearch_settings_changed?(current_settings, index_settings)
-        used_slaves = !current_settings.nil? && !current_settings['slaves'].nil?
-        replicas = index_settings.delete(:replicas) ||
-                   index_settings.delete('replicas') ||
-                   index_settings.delete(:slaves) ||
-                   index_settings.delete('slaves')
-        index_settings[used_slaves ? :slaves : :replicas] = replicas unless replicas.nil? || options[:inherit]
         @ms_indexes[settings].update_settings(index_settings)
       end
 
