@@ -312,7 +312,6 @@ module MeiliSearch
       class <<base
         alias_method :without_auto_index, :ms_without_auto_index unless method_defined? :without_auto_index
         alias_method :reindex!, :ms_reindex! unless method_defined? :reindex!
-        alias_method :reindex, :ms_reindex unless method_defined? :reindex
         alias_method :index_objects, :ms_index_objects unless method_defined? :index_objects
         alias_method :index!, :ms_index! unless method_defined? :index!
         alias_method :remove_from_index!, :ms_remove_from_index! unless method_defined? :remove_from_index!
@@ -472,53 +471,6 @@ module MeiliSearch
           last_update= index.add_documents(objects)
         end
         index.wait_for_pending_update(last_update["updateId"]) if last_update and (synchronous || options[:synchronous])
-      end
-      nil
-    end
-
-    # reindex whole database using a extra temporary index + move operation
-    def ms_reindex(batch_size = MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, synchronous = false)
-      return if ms_without_auto_index_scope
-      ms_configurations.each do |options, settings|
-        next if ms_indexing_disabled?(options)
-        next if options[:slave] || options[:replica]
-
-        # fetch the master settings
-        master_index = ms_ensure_init(options, settings)
-        master_settings = master_index.settings rescue {} # if master doesn't exist yet
-        master_settings.merge!(JSON.parse(settings.to_settings.to_json)) # convert symbols to strings
-
-        # remove the replicas of the temporary index
-        master_settings.delete :slaves
-        master_settings.delete 'slaves'
-        master_settings.delete :replicas
-        master_settings.delete 'replicas'
-
-        # init temporary index
-        src_index_uid = ms_index_uid(options)
-        tmp_index_uid = "#{src_index_uid}.tmp"
-        tmp_options = options.merge({ :index_uid => tmp_index_uid })
-        tmp_options.delete(:per_environment) # already included in the temporary index_uid
-        tmp_settings = settings.dup
-
-        if options[:check_settings] == false
-          ::MeiliSearch::copy_index!(src_index_uid, tmp_index_uid, %w(settings synonyms rules))
-          tmp_index = SafeIndex.new(tmp_index_uid, !!options[:raise_on_failure], options)
-        else
-          tmp_index = ms_ensure_init(tmp_options, tmp_settings, master_settings)
-        end
-
-          ms_find_in_batches(batch_size) do |group|
-          if ms_conditional_index?(options)
-            # select only indexable objects
-            group = group.select { |o| ms_indexable?(o, tmp_options) }
-          end
-          objects = group.map { |o| tmp_settings.get_attributes(o).merge ms_pk(options) => ms_primary_key_of(o, tmp_options) }
-          tmp_index.add_documents(objects)
-        end
-
-        move_task = SafeIndex.move_index(tmp_index.name, src_index_uid)
-        master_index.wait_for_pending_update(move_task["updateId"]) if synchronous || options[:synchronous]
       end
       nil
     end
