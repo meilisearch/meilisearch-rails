@@ -893,7 +893,7 @@ module MeiliSearch
     def ms_full_const_get(name)
       list = name.split('::')
       list.shift if list.first.blank?
-      obj = Object.const_defined?(:RUBY_VERSION) && RUBY_VERSION.to_f < 1.9 ? Object : self
+      obj = self
       list.each do |x|
         # This is required because const_get tries to look for constants in the
         # ancestor chain, but we only want constants that are HERE
