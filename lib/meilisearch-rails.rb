@@ -305,8 +305,6 @@ module MeiliSearch
         alias_method :clear_index!, :ms_clear_index! unless method_defined? :clear_index!
         alias_method :search, :ms_search unless method_defined? :search
         alias_method :raw_search, :ms_raw_search unless method_defined? :raw_search
-        alias_method :search_facet, :ms_search_facet unless method_defined? :search_facet
-        alias_method :search_for_facet_values, :ms_search_for_facet_values unless method_defined? :search_for_facet_values
         alias_method :index, :ms_index unless method_defined? :index
         alias_method :index_uid, :ms_index_uid unless method_defined? :index_uid
         alias_method :must_reindex?, :ms_must_reindex? unless method_defined? :must_reindex?
@@ -639,17 +637,6 @@ module MeiliSearch
       res.send(:ms_init_raw_answer, json)
       res
     end
-
-    def ms_search_for_facet_values(facet, text, params = {})
-      index_uid = params.delete(:index) ||
-                   params.delete('index')
-      index = ms_index(index_uid)
-      query = Hash[params.map { |k, v| [k.to_s, v.to_s] }]
-      index.search_facet(facet, text, query)['facetHits']
-    end
-
-    # deprecated (renaming)
-    alias :ms_search_facet :ms_search_for_facet_values
 
     def ms_index(name = nil)
       if name
