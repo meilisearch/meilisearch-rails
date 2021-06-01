@@ -78,7 +78,7 @@ module MeiliSearch
       raise ArgumentError.new('Cannot pass multiple attribute names if block given') if block_given? and names.length > 1
       @attributes ||= {}
       names.flatten.each do |name|
-        @attributes[name.to_s] = block_given? ? Proc.new { |o| o.instance_eval(&block) } : Proc.new { |o| o.send(name) }
+        @attributes[name.to_s] = block_given? ? Proc.new { |d| d.instance_eval(&block) } : Proc.new { |d| d.send(name) }
       end
     end
     alias :attributes :attribute
@@ -87,7 +87,7 @@ module MeiliSearch
       raise ArgumentError.new('Cannot pass multiple attribute names if block given') if block_given? and names.length > 1
       @additional_attributes ||= {}
       names.each do |name|
-        @additional_attributes[name.to_s] = block_given? ? Proc.new { |o| o.instance_eval(&block) } : Proc.new { |o| o.send(name) }
+        @additional_attributes[name.to_s] = block_given? ? Proc.new { |d| d.instance_eval(&block) } : Proc.new { |d| d.send(name) }
       end
     end
     alias :add_attributes :add_attribute
@@ -441,17 +441,17 @@ module MeiliSearch
         ms_find_in_batches(batch_size) do |group|
           if ms_conditional_index?(options)
             # delete non-indexable documents
-            ids = group.select { |o| !ms_indexable?(o, options) }.map { |o| ms_primary_key_of(o, options) }
+            ids = group.select { |d| !ms_indexable?(d, options) }.map { |d| ms_primary_key_of(d, options) }
             index.delete_documents(ids.select { |id| !id.blank? })
             # select only indexable documents
-            group = group.select { |o| ms_indexable?(o, options) }
+            group = group.select { |d| ms_indexable?(d, options) }
           end
-          documents = group.map do |o|
-            attributes = settings.get_attributes(o)
+          documents = group.map do |d|
+            attributes = settings.get_attributes(d)
             unless attributes.class == Hash
               attributes = attributes.to_hash
             end
-             attributes.merge ms_pk(options) => ms_primary_key_of(o, options)
+             attributes.merge ms_pk(options) => ms_primary_key_of(d, options)
           end
           last_update= index.add_documents(documents)
         end
@@ -479,7 +479,7 @@ module MeiliSearch
       ms_configurations.each do |options, settings|
         next if ms_indexing_disabled?(options)
         index = ms_ensure_init(options, settings)
-        update = index.add_documents(documents.map { |o| settings.get_attributes(o).merge ms_pk(options) => ms_primary_key_of(o, options) })
+        update = index.add_documents(documents.map { |d| settings.get_attributes(d).merge ms_pk(options) => ms_primary_key_of(d, options) })
         index.wait_for_pending_update(update["updateId"]) if synchronous || options[:synchronous]
       end
     end
@@ -736,12 +736,12 @@ module MeiliSearch
       options[:primary_key] || options[:id] || :id
     end
 
-    def ms_primary_key_of(o, options = nil)
-      o.send(ms_primary_key_method(options)).to_s
+    def ms_primary_key_of(doc, options = nil)
+      doc.send(ms_primary_key_method(options)).to_s
     end
 
-    def ms_primary_key_changed?(o, options = nil)
-      changed = ms_attribute_changed?(o, ms_primary_key_method(options))
+    def ms_primary_key_changed?(doc, options = nil)
+      changed = ms_attribute_changed?(doc, ms_primary_key_method(options))
       changed.nil? ? false : changed
     end
 
