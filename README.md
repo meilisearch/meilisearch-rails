@@ -29,10 +29,32 @@
 
 - [📖 Documentation](#-documentation)
 - [🔧 Installation](#-installation)
-- [🚀 Getting Started](#-getting-started)
-- [⚙️ Settings](#-settings)
+- [🔩 Settings](#-settings)
 - [🔍 Custom search](#-custom-search)
 - [🪛 Options](#-options)
+  - [MeiliSearch configuration & environment](#meilisearch-configuration-&-environment)
+    - [Custom index_uid](#custom-index_uid)
+    - [Per-environment index_uid](#per-environment-index_uid)
+  - [Index configuration](#index-configuration)
+    - [Custom attribute definition](#custom-attribute-definition)
+    - [Custom primary key](#custom-primary-key)
+    - [Conditional indexing](#conditional-indexing)
+      - [Target multiple indices](#target-multiple-indices)
+    - [Share a single index](#share-a-single-index)
+    - [Queues & background jobs](#queues-&-background-jobs)
+    - [Sanitize attributes](#sanitize-attributes)
+    - [UTF-8 encoding](#utf-8-encoding)
+  - [Manual operations](#manual-operations)
+    - [Indexing & deletion](#indexing-&-deletion)
+    - [Access the underlying index object](#access-the-underlying-index-object)
+  - [Best practices](#best-practices)
+    - [Exceptions](#exceptions)
+    - [Testing](#testing)
+      - [Synchronous testing](#synchronous-testing)
+      - [Disable auto-indexing & auto-removal](#disable-auto-indexing-&-auto-removal)
+- [🤖 Compatibility with MeiliSearch](#-compatibility-with-meilisearch)
+- [⚙️ Development Workflow and Contributing](#️-development-workflow-and-contributing)
+- [👏 Credits](#-credits)
 
 ## 📖 Documentation
 
@@ -93,6 +115,7 @@ class Book < ActiveRecord::Base
   include MeiliSearch
 
   meilisearch do
+    attribute :title, :author # only the attributes 'title', and 'author' will be sent to MeiliSearch
     # all attributes will be sent to MeiliSearch if block is left empty
   end
 end
@@ -195,3 +218,279 @@ Book.search('Harry', { filters: 'author = J. K. Rowling' })
 
 
 ## 🪛 Options
+
+### MeiliSearch configuration & environment
+
+#### Custom index_uid
+
+By default, the **index_uid** will be the class name, e.g. `Book`. You can customize the index_uid by using the `index_uid` option
+
+```ruby
+class Book < ActiveRecord::Base
+  include MeiliSearch
+  meilisearch :index_uid => 'MyCustomUID' do
+  end
+end
+```
+
+#### Per-environment index_uid
+
+You can suffix the index_uid with the current Rails environment using the following option:
+
+```ruby
+class Book < ActiveRecord::Base
+  include MeiliSearch
+  meilisearch per_environment: true do # index name will be "Book_#{Rails.env}"
+  end
+end
+```
+
+### Index configuration
+
+#### Custom attribute definition
+
+You can add a custom attribute by using the `add_attribute` option or by using a block.
+
+⚠️ When using custom attributes, the gem is not able to detect changes on them. Your record will be pushed to the API even if the custom attribute didn't change. To prevent this behavior, you can create a `will_save_change_to_#{attr_name}?` method.
+
+```ruby
+class Author < ApplicationRecord
+    include MeiliSearch
+
+    meilisearch do
+      attribute :first_name, :last_name
+      attribute :full_name do
+        '#{first_name} #{last_name}'
+      end
+      add_attribute :full_name_reversed
+    end
+
+    def full_name_reversed
+      '#{last_name} #{first_name}'
+    end
+
+    def will_save_change_to_full_name?
+      will_save_change_to_first_name? || will_save_change_to_last_name?
+    end
+
+    def will_save_change_to_full_name_reversed?
+      will_save_change_to_first_name? || will_save_change_to_last_name?
+    end
+end
+```
+
+#### Custom primary key
+By default, the `primary key` is based on your record's id. You can change this behavior specifying the `:primary_key` option.
+
+Note that the primary key must have a **unique value**.
+
+```ruby
+class Book < ActiveRecord::Base
+  include MeiliSearch
+  meilisearch :primary_key => 'ISBN' do
+  end
+end
+```
+#### Conditional indexing
+
+You can control if a record must be indexed by using the :if or :unless options
+As soon as you use those constraints, add_documents and delete_dpcuments calls will be performed in order to keep the index synced with the DB. To prevent this behavior, you can create a `will_save_change_to_#{attr_name}?` method.
+
+```ruby
+class Book < ActiveRecord::Base
+  include MeiliSearch
+  meilisearch :if published? :unless premium? do
+  end
+
+  def published?
+    # [...]
+  end
+
+  def premium?
+    # [...]
+  end
+
+  def will_save_change_to_published?
+  # return true only if you know that the 'published' state changed
+  end
+end
+```
+  ##### Target multiple indices
+  You can index a record in several indexes using the `add_index` option:
+  ```ruby
+  class Book < ActiveRecord::Base
+
+  include MeiliSearch
+
+  PUBLIC_INDEX_UID = 'Books'
+  SECURED_INDEX_UID = 'PrivateBooks'
+
+  # store all books in index 'SECURED_INDEX_UID'
+  meilisearch index_uid: SECURED_INDEX_UID do
+    searchableAttributes [:title, :author]
+
+    # store all 'public' (released and not premium) books in index 'PUBLIC_INDEX_UID'
+    add_index PUBLIC_INDEX_UID, if: :public? do
+      searchableAttributes [:title, :author]
+    end
+  end
+
+  private
+  def public?
+    released && !premium
+  end
+
+end
+  ```
+#### Share a single index
+You may want to share an index between several models. You'll need to ensure you don't have any conflict with the primary_key of the models involved.
+
+```ruby
+class Cat < ActiveRecord::Base
+  include MeiliSearch
+
+  meilisearch :index_name =>  'Animals', primary_key: :ms_id do
+  end
+
+  private
+  def ms_id
+    "cat_#{primary_key}" # ensure the cats & dogs primary_keys are not conflicting
+  end
+end
+
+class Dog < ActiveRecord::Base
+  include MeiliSearch
+
+  meilisearch :index_name => 'Animals', primary_key: :ms_id do
+  end
+
+  private
+  def ms_id
+    "dog_#{primary_key}" # ensure the cats & dogs primary_keys are not conflicting
+  end
+end
+```
+#### Queues & background jobs
+
+You can configure the auto-indexing & auto-removal process to use a queue to perform those operations in background. ActiveJob queues are used by default but you can define your own queuing mechanism:
+
+```ruby
+class Book < ActiveRecord::Base
+  include MeiliSearch
+
+  meilisearch enqueue: true do # ActiveJob will be triggered using a `meilisearch` queue
+end
+```
+
+#### Nested objects/relations
+#### Sanitize attributes
+
+You can strip all HTML tags from your attributes with the `sanitize` option.
+
+```ruby
+class Book < ActiveRecord::Base
+  include MeiliSearch
+
+  meilisearch :sanitize => true do
+end
+```
+#### UTF-8 encoding
+
+You can force the UTF-8 encoding of all your attributes using the `force_utf8_encoding` option.
+
+```ruby
+class Book < ActiveRecord::Base
+  include MeiliSearch
+
+  meilisearch :force_utf8_encoding => true do
+end
+```
+
+### Manual operations
+
+#### Manual indexing & deleting
+
+You can manually index a record by using the `index!` instance method and remove it by using the `remove_from_index!` instance method
+
+```ruby
+  book = Book.create!(title: 'The Little Prince', author: 'Antoine de Saint-Exupéry')
+  book.index!
+  book.remove_from_index!
+  book.destroy!
+```
+
+To reindex all your records, use the `reindex!` class method:
+
+```ruby
+  Book.reindex!
+
+  # You can also index a subset of your records
+  Book.where('updated_at > ?', 10.minutes.ago).reindex!
+```
+
+To delete all your records, use the `clear_index!` class method
+
+```ruby
+  Book.clear_index!
+```
+
+#### Access the underlying index object
+
+To access the index object and use the meilisearch-ruby index methods, call the `ìndex` class method:
+
+```ruby
+  index = Book.index
+  # index.get_settings, index.number_of_documents
+```
+
+### Best practices / Code samples
+#### Exceptions
+
+You can disable exceptions that could be raised while trying to reach MeiliSearch's API by using the `raise_on_failure` option:
+
+```ruby
+class Book < ActiveRecord::Base
+  include MeiliSearch
+
+  # only raise exceptions in development environment
+  meilisearch :raise_on_failure => Rails.env.development? do
+end
+```
+
+#### Testing
+  ##### Synchronous testing
+  You can force indexing and removing to be synchronous by setting the following option:
+
+  ```ruby
+  class Book < ActiveRecord::Base
+    include MeiliSearch
+
+    meilisearch synchronous: true do
+  end
+  ```
+  🚨 This is only recommended for testing purposes, the gem will call the `wait_for_pending_update` method that will stop your code execution until the asynchronous task has been processed by MeilSearch.
+
+  ##### Disable auto-indexing & auto-removal
+
+  You can disable auto-indexing and auto-removing setting the following options:
+
+  ```ruby
+  class Book < ActiveRecord::Base
+    include MeiliSearch
+
+    meilisearch auto_index: false, auto_remove: false do
+  end
+  ```
+
+  You can temporarily disable auto-indexing using the without_auto_index scope:
+
+  ```ruby
+  Book.without_auto_index do
+    1.upto(10000) { Book.create! attributes } # inside this block, auto indexing task will not run.
+  end
+  ```
+
+
+## Compatibility with MeiliSearch
+## Development workflow & contributing
+## Credits
