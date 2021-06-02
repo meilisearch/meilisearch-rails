@@ -145,7 +145,7 @@ end
 <%= will_paginate @hits %> # if using will_paginate
 ```
 
-The **number of hits per page defaults to 20**, you can customize by adding the `hitsPerPage` parameter to your search:
+The **number of hits per page defaults to 20**, you can customize it by adding the `hitsPerPage` parameter to your search:
 
 ```ruby
 Book.search('harry potter', hitsPerPage: 10)
