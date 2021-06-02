@@ -191,7 +191,7 @@ All the supported options are described in the [search parameters](https://docs.
 ```ruby
 Book.search('Harry', { filters: 'author = J. K. Rowling' })
 ```
-👉 Don't forget that `attributesToHighlight`, `attributesToCrop`, `cropLength` can be set up as settings in the MeiliSearch block of your model.
+👉 Don't forget that `attributesToHighlight`, `attributesToCrop` and `cropLength` can be set up as settings in the MeiliSearch block of your model.
 
 
 ## 🪛 Options
