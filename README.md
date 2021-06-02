@@ -135,10 +135,10 @@ Then, as soon as you use the `search` method, the returning results will be pagi
 
 
 # views
-@hits.each do |hit|
+ <% @hits.each do |hit| %>
   <%= hit.title %>
   <%= hit.author %>
-end
+<% end %>
 
 <%= paginate @hits %> # if using kaminari
 
