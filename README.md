@@ -153,7 +153,7 @@ Book.search('harry potter', hitsPerPage: 10)
 
 ##  ⚙️ Settings
 
-You can configure the index settings by adding them inside the meilisearch block as shown bellow:
+You can configure the index settings by adding them inside the meilisearch block as shown below:
 
 ```ruby
 class Book < ApplicationRecord
