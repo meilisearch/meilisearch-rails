@@ -1,7 +1,7 @@
 source "http://rubygems.org"
 
 gem 'json', '~> 1.8', '>= 1.8.6'
-gem 'meilisearch', '~> 0.15.2'
+gem 'meilisearch', '~> 0.15.3'
 
 if defined?(RUBY_ENGINE) && RUBY_ENGINE == 'rbx'
   gem 'rubysl', '~> 2.0', :platform => :rbx
