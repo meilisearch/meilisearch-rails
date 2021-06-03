@@ -11,23 +11,6 @@ group :test do
   rails_version = ENV["RAILS_VERSION"] || '5.2'
   gem 'rails', "~> #{rails_version}"
   gem 'active_model_serializers'
-  if defined?(RUBY_VERSION) && RUBY_VERSION == "1.8.7"
-    gem 'i18n', '< 0.7'
-    gem 'highline', '< 1.7'
-    gem 'addressable', '<= 2.2.7'
-    gem 'rack-cache', '< 1.3'
-    gem 'mime-types', '< 2.6'
-    gem 'net-http-persistent', '< 3.0'
-    gem 'faraday', '< 0.10'
-  elsif defined?(RUBY_VERSION) && RUBY_VERSION == "1.9.3"
-    gem 'rack', '< 2'
-    gem 'rack-cache', '<= 1.7.1'
-    if Gem::Version.new(ENV['RAILS_VERSION'] || '3.2.0') >= Gem::Version.new('4.0')
-      gem 'mime-types', '~> 2.6'
-    else
-      gem 'mime-types', '< 3'
-    end
-  end
   if defined?(RUBY_VERSION) &&
      defined?(RUBY_ENGINE) &&
      RUBY_ENGINE == 'ruby' &&
