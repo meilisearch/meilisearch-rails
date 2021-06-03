@@ -11,12 +11,6 @@ group :test do
   rails_version = ENV["RAILS_VERSION"] || '5.2'
   gem 'rails', "~> #{rails_version}"
   gem 'active_model_serializers'
-  if defined?(RUBY_VERSION) &&
-     defined?(RUBY_ENGINE) &&
-     RUBY_ENGINE == 'ruby' &&
-     Gem::Version.new(RUBY_VERSION) < Gem::Version.new('2.1')
-    gem 'net-http-persistent', '< 3.0'
-  end
   if Gem::Version.new(rails_version) >= Gem::Version.new('6.0')
     gem 'sqlite3', '~> 1.4.0', :platform => [:rbx, :ruby]
   else
@@ -42,9 +36,9 @@ end
 group :test, :development do
   gem 'will_paginate', '>= 2.3.15'
   if defined?(RUBY_VERSION) &&
-     defined?(RUBY_ENGINE) &&
-     RUBY_ENGINE == 'ruby' &&
-     Gem::Version.new(RUBY_VERSION) < Gem::Version.new('2')
+    defined?(RUBY_ENGINE) &&
+    RUBY_ENGINE == 'ruby' &&
+    Gem::Version.new(RUBY_VERSION) < Gem::Version.new('2')
     gem 'kaminari', '< 1'
   else
     gem 'kaminari'
