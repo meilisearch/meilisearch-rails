@@ -47,24 +47,6 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
   s.rubygems_version = "2.1.11"
   s.summary = "MeiliSearch integration for Ruby on Rails."
-
-  if s.respond_to? :specification_version then
-    s.specification_version = 4
-
-    if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
-      s.add_runtime_dependency(%q<json>, [">= 1.5.1"])
-      s.add_runtime_dependency(%q<meilisearch>, [">= 0.15.3"])
-      s.add_development_dependency(%q<will_paginate>, [">= 2.3.15"])
-      s.add_development_dependency(%q<kaminari>, [">= 0"])
-      s.add_development_dependency "travis"
-      s.add_development_dependency "rake"
-      s.add_development_dependency "rdoc"
-    else
-      s.add_dependency(%q<json>, [">= 1.5.1"])
-      s.add_dependency(%q<meilisearch>, [">= 0.15.3"])
-    end
-  else
-    s.add_dependency(%q<json>, [">= 1.5.1"])
-    s.add_dependency(%q<meilisearch>, [">= 0.15.3"])
-  end
+  s.add_dependency(%q<json>, [">= 1.5.1"])
+  s.add_dependency(%q<meilisearch>, [">= 0.15.3"])
 end
