@@ -39,7 +39,7 @@
     - [Custom attribute definition](#custom-attribute-definition)
     - [Custom primary key](#custom-primary-key)
     - [Conditional indexing](#conditional-indexing)
-      - [Target multiple indices](#target-multiple-indices)
+      - [Target multiple indexes](#target-multiple-indexes)
     - [Share a single index](#share-a-single-index)
     - [Queues & background jobs](#queues-&-background-jobs)
     - [Relations](#relations)
@@ -181,25 +181,25 @@ You can configure the index settings by adding them inside the meilisearch block
 
 ```ruby
 class Book < ApplicationRecord
-    include MeiliSearch
+  include MeiliSearch
 
-    meilisearch do
-        searchableAttributes ['title', 'author', 'publisher', 'description']
-        attributesForFaceting ['genre']
-        rankingRules [
-            "proximity",
-            "typo",
-            "words",
-            "attribute",
-            "wordsPosition",
-            "exactness",
-            "desc(publication_year)"
-        ]
-        attributesToHighlight ['*']
-        attributesToCrop ['description']
-        cropLength 10
-        synonyms got: ['game of thrones']
-    end
+  meilisearch do
+    searchableAttributes ['title', 'author', 'publisher', 'description']
+    attributesForFaceting ['genre']
+    rankingRules [
+        "proximity",
+        "typo",
+        "words",
+        "attribute",
+        "wordsPosition",
+        "exactness",
+        "desc(publication_year)"
+    ]
+    attributesToHighlight ['*']
+    attributesToCrop ['description']
+    cropLength 10
+    synonyms got: ['game of thrones']
+  end
 end
 ```
 
@@ -256,27 +256,27 @@ You can add a custom attribute by using the `add_attribute` option or by using a
 
 ```ruby
 class Author < ApplicationRecord
-    include MeiliSearch
+  include MeiliSearch
 
-    meilisearch do
-      attribute :first_name, :last_name
-      attribute :full_name do
-        '#{first_name} #{last_name}'
-      end
-      add_attribute :full_name_reversed
+  meilisearch do
+    attribute :first_name, :last_name
+    attribute :full_name do
+      '#{first_name} #{last_name}'
     end
+    add_attribute :full_name_reversed
+  end
 
-    def full_name_reversed
-      '#{last_name} #{first_name}'
-    end
+  def full_name_reversed
+    '#{last_name} #{first_name}'
+  end
 
-    def will_save_change_to_full_name?
-      will_save_change_to_first_name? || will_save_change_to_last_name?
-    end
+  def will_save_change_to_full_name?
+    will_save_change_to_first_name? || will_save_change_to_last_name?
+  end
 
-    def will_save_change_to_full_name_reversed?
-      will_save_change_to_first_name? || will_save_change_to_last_name?
-    end
+  def will_save_change_to_full_name_reversed?
+    will_save_change_to_first_name? || will_save_change_to_last_name?
+  end
 end
 ```
 
@@ -300,7 +300,8 @@ As soon as you use those constraints, add_documents and delete_dpcuments calls w
 ```ruby
 class Book < ActiveRecord::Base
   include MeiliSearch
-  meilisearch :if published? :unless premium? do
+
+  meilisearch :if published?, :unless premium? do
   end
 
   def published?
@@ -316,7 +317,7 @@ class Book < ActiveRecord::Base
   end
 end
 ```
-  ##### Target multiple indices
+  ##### Target multiple indexes
   You can index a record in several indexes using the `add_index` option:
   ```ruby
   class Book < ActiveRecord::Base
@@ -350,7 +351,7 @@ You may want to share an index between several models. You'll need to ensure you
 class Cat < ActiveRecord::Base
   include MeiliSearch
 
-  meilisearch :index_name =>  'Animals', primary_key: :ms_id do
+  meilisearch index_uid: 'Animals', primary_key: :ms_id do
   end
 
   private
@@ -362,7 +363,7 @@ end
 class Dog < ActiveRecord::Base
   include MeiliSearch
 
-  meilisearch :index_name => 'Animals', primary_key: :ms_id do
+  meilisearch index_uid: 'Animals', primary_key: :ms_id do
   end
 
   private
@@ -384,9 +385,9 @@ class Book < ActiveRecord::Base
 end
 ```
 
-🤔 If you are performing updates & deletions in the background then a record deletion can be committed to your database prior to the job actually executing. Thus if you were to load the record to remove it from the database then your ActiveRecord#find will fail with a RecordNotFound.
+🤔 If you are performing updates and deletions in the background, a record deletion can be committed to your database prior to the job actually executing. Thus if you were to load the record to remove it from the database then your ActiveRecord#find will fail with a RecordNotFound.
 
-In this case you can bypass loading the record from **ActiveRecord** and just communicate with the index directly:
+In this case you can bypass loading the record from **ActiveRecord** and just communicate with the index directly.
 
 ```ruby
 class MyActiveJob < ApplicationJob
@@ -411,7 +412,7 @@ With [**Sidekiq**](https://github.com/mperham/sidekiq)
 class Book < ActiveRecord::Base
   include MeiliSearch
 
-  algoliasearch enqueue: :trigger_sidekiq_worker do
+  meilisearch enqueue: :trigger_sidekiq_worker do
     attribute :title, :author, :description
   end
 
@@ -442,7 +443,7 @@ With [**DelayedJob**](https://github.com/collectiveidea/delayed_job)
 class Book < ActiveRecord::Base
   include MeiliSearch
 
-  algoliasearch enqueue: :trigger_delayed_job do
+  meilisearch enqueue: :trigger_delayed_job do
     attribute :title, :author, :description
   end
 
@@ -542,6 +543,7 @@ class Book < ActiveRecord::Base
   include MeiliSearch
 
   meilisearch :sanitize => true do
+  end
 end
 ```
 #### UTF-8 encoding
@@ -553,12 +555,13 @@ class Book < ActiveRecord::Base
   include MeiliSearch
 
   meilisearch :force_utf8_encoding => true do
+  end
 end
 ```
 
 ### Manual operations
 
-#### Manual indexing & deleting
+#### Indexing & deletion
 
 You can manually index a record by using the `index!` instance method and remove it by using the `remove_from_index!` instance method
 
@@ -593,7 +596,7 @@ To access the index object and use the meilisearch-ruby index methods, call the 
   # index.get_settings, index.number_of_documents
 ```
 
-### Best practices / Code samples
+### Best practices
 #### Exceptions
 
 You can disable exceptions that could be raised while trying to reach MeiliSearch's API by using the `raise_on_failure` option:
@@ -604,6 +607,7 @@ class Book < ActiveRecord::Base
 
   # only raise exceptions in development environment
   meilisearch :raise_on_failure => Rails.env.development? do
+  end
 end
 ```
 
@@ -616,6 +620,7 @@ end
     include MeiliSearch
 
     meilisearch synchronous: true do
+    end
   end
   ```
   🚨 This is only recommended for testing purposes, the gem will call the `wait_for_pending_update` method that will stop your code execution until the asynchronous task has been processed by MeilSearch.
@@ -629,6 +634,7 @@ end
     include MeiliSearch
 
     meilisearch auto_index: false, auto_remove: false do
+    end
   end
   ```
 
@@ -640,7 +646,20 @@ end
   end
   ```
 
+## 🤖 Compatibility with MeiliSearch
 
-## Compatibility with MeiliSearch
-## Development workflow & contributing
-## Credits
+This package only guarantees the compatibility with the [version v0.20.0 of MeiliSearch](https://github.com/meilisearch/MeiliSearch/releases/tag/v0.20.0).
+
+## ⚙️ Development workflow & contributing
+
+Any new contribution is more than welcome in this project!
+
+If you want to know more about the development workflow or want to contribute, please visit our [contributing guidelines](/CONTRIBUTING.md) for detailed instructions!
+
+## 👏  Credits
+
+The provided features and the code base is inspired by [algoliasearch-rails](https://github.com/algolia/algoliasearch-rails/)
+
+<hr>
+
+**MeiliSearch** provides and maintains many **SDKs and Integration tools** like this one. We want to provide everyone with an **amazing search experience for any kind of project**. If you want to contribute, make suggestions, or just know what's going on right now, visit us in the [integration-guides](https://github.com/meilisearch/integration-guides) repository.
