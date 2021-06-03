@@ -42,6 +42,7 @@
       - [Target multiple indices](#target-multiple-indices)
     - [Share a single index](#share-a-single-index)
     - [Queues & background jobs](#queues-&-background-jobs)
+    - [Relations](#relations)
     - [Sanitize attributes](#sanitize-attributes)
     - [UTF-8 encoding](#utf-8-encoding)
   - [Manual operations](#manual-operations)
@@ -379,10 +380,159 @@ class Book < ActiveRecord::Base
   include MeiliSearch
 
   meilisearch enqueue: true do # ActiveJob will be triggered using a `meilisearch` queue
+  end
 end
 ```
 
-#### Nested objects/relations
+🤔 If you are performing updates & deletions in the background then a record deletion can be committed to your database prior to the job actually executing. Thus if you were to load the record to remove it from the database then your ActiveRecord#find will fail with a RecordNotFound.
+
+In this case you can bypass loading the record from **ActiveRecord** and just communicate with the index directly:
+
+```ruby
+class MyActiveJob < ApplicationJob
+  def perform(id, remove)
+    if remove
+      # the record has likely already been removed from your database so we cannot
+      # use ActiveRecord#find to load it
+      # We access the underlying MeiliSearch index object
+      Book.index.delete_document(id)
+    else
+      # the record should be present
+      c = Book.find(id)
+      c.index!
+    end
+  end
+end
+```
+
+With [**Sidekiq**](https://github.com/mperham/sidekiq)
+
+```ruby
+class Book < ActiveRecord::Base
+  include MeiliSearch
+
+  algoliasearch enqueue: :trigger_sidekiq_worker do
+    attribute :title, :author, :description
+  end
+
+  def self.trigger_sidekiq_worker(record, remove)
+    MySidekiqWorker.perform_async(record.id, remove)
+  end
+end
+
+class MySidekiqWorker
+  def perform(id, remove)
+    if remove
+      # the record has likely already been removed from your database so we cannot
+      # use ActiveRecord#find to load it
+       # We access the underlying MeiliSearch index object
+      index = Book.index.delete_document(id)
+    else
+      # the record should be present
+      c = Contact.find(id)
+      c.index!
+    end
+  end
+end
+```
+
+With [**DelayedJob**](https://github.com/collectiveidea/delayed_job)
+
+```ruby
+class Book < ActiveRecord::Base
+  include MeiliSearch
+
+  algoliasearch enqueue: :trigger_delayed_job do
+    attribute :title, :author, :description
+  end
+
+
+  def self.trigger_delayed_job(record, remove)
+    if remove
+      record.delay.remove_from_index!
+    else
+      record.delay.index!
+    end
+  end
+end
+```
+
+#### Relations
+
+Extend a change to a related record
+
+**With Active Record**, you'll need to use `touch` and `after_touch`.
+
+```ruby
+class Author < ActiveRecord::Base
+  include MeiliSearch
+
+  has_many :books
+  # If your association uses belongs_to
+  # - use `touch: true`
+  # - do not define an `after_save` hook
+  after_save { books.each(&:touch) }
+end
+
+class Book < ActiveRecord::Base
+  include MeiliSearch
+
+  belongs_to :author
+  after_touch :index!
+
+  meilisearch do
+    attribute :title, :description, :publisher
+    attribute :author do
+      author.name
+    end
+  end
+end
+
+```
+
+With **Sequel**, you can use the `touch plugin` to propagate changes.
+
+```ruby
+# app/models/author.rb
+class Author < Sequel::Model
+  include MeiliSearch
+
+  one_to_many :books
+
+  plugin :timestamps
+  # Can't use the associations since it won't trigger the after_save
+  plugin :touch
+
+  # Define the associations that need to be touched here
+  # Less performant, but allows for the after_save hook to be triggered
+  def touch_associations
+    apps.map(&:touch)
+  end
+
+  def touch
+    super
+    touch_associations
+  end
+end
+
+# app/models/book.rb
+class Book < Sequel::Model
+  include MeiliSearch
+
+  many_to_one :author
+  after_touch :index!
+
+  plugin :timestamps
+  plugin :touch
+
+  meilisearch do
+    attribute :title, :description, :publisher
+    attribute :author do
+      author.name
+    end
+  end
+end
+```
 #### Sanitize attributes
 
 You can strip all HTML tags from your attributes with the `sanitize` option.
