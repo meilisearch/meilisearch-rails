@@ -19,10 +19,7 @@ Gem::Specification.new do |s|
     "README.md"
   ]
   s.files = [
-    ".document",
     ".rspec",
-    ".travis.yml",
-    "CHANGELOG.MD",
     "Gemfile",
     "Gemfile.lock",
     "LICENSE",
