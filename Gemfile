@@ -1,6 +1,6 @@
 source "http://rubygems.org"
 
-gem 'json', '~> 1.8', '>= 1.8.6'
+gem 'json', '~> 2.5', '>= 2.5.1'
 gem 'meilisearch', '~> 0.15.3'
 
 if defined?(RUBY_ENGINE) && RUBY_ENGINE == 'rbx'
@@ -25,12 +25,6 @@ group :test do
   sequel_version = ENV['SEQUEL_VERSION'] ? "~> #{ENV['SEQUEL_VERSION']}" : '>= 4.0'
   gem 'sequel', sequel_version
   gem 'faker', '~> 2.17'
-end
-
-group :development do
-  gem 'travis'
-  gem 'rake', '~> 10.1.0'
-  gem 'rdoc'
 end
 
 group :test, :development do
