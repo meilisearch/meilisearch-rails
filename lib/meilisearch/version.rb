@@ -1,3 +1,3 @@
 module MeiliSearch
-  VERSION = '1.25.0'
+  VERSION = '0.1.0'
 end

@@ -23,7 +23,6 @@ module MeiliSearch
   class NotConfigured < StandardError; end
   class BadConfiguration < StandardError; end
   class NoBlockGiven < StandardError; end
-  class MixedSlavesAndReplicas < StandardError; end
 
   autoload :Configuration, 'meilisearch/configuration'
   extend Configuration
@@ -77,83 +76,81 @@ module MeiliSearch
 
     def attribute(*names, &block)
       raise ArgumentError.new('Cannot pass multiple attribute names if block given') if block_given? and names.length > 1
-      raise ArgumentError.new('Cannot specify additional attributes on a replica index') if @options[:slave] || @options[:replica]
       @attributes ||= {}
       names.flatten.each do |name|
-        @attributes[name.to_s] = block_given? ? Proc.new { |o| o.instance_eval(&block) } : Proc.new { |o| o.send(name) }
+        @attributes[name.to_s] = block_given? ? Proc.new { |d| d.instance_eval(&block) } : Proc.new { |d| d.send(name) }
       end
     end
     alias :attributes :attribute
 
     def add_attribute(*names, &block)
       raise ArgumentError.new('Cannot pass multiple attribute names if block given') if block_given? and names.length > 1
-      raise ArgumentError.new('Cannot specify additional attributes on a replica index') if @options[:slave] || @options[:replica]
       @additional_attributes ||= {}
       names.each do |name|
-        @additional_attributes[name.to_s] = block_given? ? Proc.new { |o| o.instance_eval(&block) } : Proc.new { |o| o.send(name) }
+        @additional_attributes[name.to_s] = block_given? ? Proc.new { |d| d.instance_eval(&block) } : Proc.new { |d| d.send(name) }
       end
     end
     alias :add_attributes :add_attribute
 
-    def is_mongoid?(object)
-      defined?(::Mongoid::Document) && object.class.include?(::Mongoid::Document)
+    def is_mongoid?(document)
+      defined?(::Mongoid::Document) && document.class.include?(::Mongoid::Document)
     end
 
-    def is_sequel?(object)
-      defined?(::Sequel) && object.class < ::Sequel::Model
+    def is_sequel?(document)
+      defined?(::Sequel) && document.class < ::Sequel::Model
     end
 
-    def is_active_record?(object)
-      !is_mongoid?(object) && !is_sequel?(object)
+    def is_active_record?(document)
+      !is_mongoid?(document) && !is_sequel?(document)
     end
 
-    def get_default_attributes(object)
-      if is_mongoid?(object)
+    def get_default_attributes(document)
+      if is_mongoid?(document)
         # work-around mongoid 2.4's unscoped method, not accepting a block
-        object.attributes
-      elsif is_sequel?(object)
-        object.to_hash
+        document.attributes
+      elsif is_sequel?(document)
+        document.to_hash
       else
-        object.class.unscoped do
-          object.attributes
+        document.class.unscoped do
+          document.attributes
         end
       end
     end
 
-    def get_attribute_names(object)
-      get_attributes(object).keys
+    def get_attribute_names(document)
+      get_attributes(document).keys
     end
 
-    def attributes_to_hash(attributes, object)
+    def attributes_to_hash(attributes, document)
       if attributes
-        Hash[attributes.map { |name, value| [name.to_s, value.call(object) ] }]
+        Hash[attributes.map { |name, value| [name.to_s, value.call(document) ] }]
       else
         {}
       end
     end
 
-    def get_attributes(object)
+    def get_attributes(document)
       # If a serializer is set, we ignore attributes
       # everything should be done via the serializer
       if not @serializer.nil?
-        attributes = @serializer.new(object).attributes
+        attributes = @serializer.new(document).attributes
       else
         if @attributes.nil? || @attributes.length == 0
           # no `attribute ...` have been configured, use the default attributes of the model
-          attributes = get_default_attributes(object)
+          attributes = get_default_attributes(document)
         else
           # at least 1 `attribute ...` has been configured, therefore use ONLY the one configured
-          if is_active_record?(object)
-            object.class.unscoped do
-              attributes = attributes_to_hash(@attributes, object)
+          if is_active_record?(document)
+            document.class.unscoped do
+              attributes = attributes_to_hash(@attributes, document)
             end
           else
-            attributes = attributes_to_hash(@attributes, object)
+            attributes = attributes_to_hash(@attributes, document)
           end
         end
       end
 
-      attributes.merge!(attributes_to_hash(@additional_attributes, object)) if @additional_attributes
+      attributes.merge!(attributes_to_hash(@additional_attributes, document)) if @additional_attributes
 
       if @options[:sanitize]
         sanitizer = begin
@@ -165,7 +162,7 @@ module MeiliSearch
         attributes = sanitize_attributes(attributes, sanitizer)
       end
 
-      if @options[:force_utf8_encoding] && Object.const_defined?(:RUBY_VERSION) && RUBY_VERSION.to_f > 1.8
+      if @options[:force_utf8_encoding]
         attributes = encode_attributes(attributes)
       end
 
@@ -198,21 +195,6 @@ module MeiliSearch
       end
     end
 
-    def geoloc(lat_attr = nil, lng_attr = nil, &block)
-      raise ArgumentError.new('Cannot specify additional attributes on a replica index') if @options[:slave] || @options[:replica]
-      add_attribute :_geoloc do |o|
-        block_given? ? o.instance_eval(&block) : { :lat => o.send(lat_attr).to_f, :lng => o.send(lng_attr).to_f }
-      end
-    end
-
-    def tags(*args, &block)
-      raise ArgumentError.new('Cannot specify additional attributes on a replica index') if @options[:slave] || @options[:replica]
-      add_attribute :_tags do |o|
-        v = block_given? ? o.instance_eval(&block) : args
-        v.is_a?(Array) ? v : [v]
-      end
-    end
-
     def get_setting(name)
       instance_variable_get("@#{name}")
     end
@@ -223,43 +205,15 @@ module MeiliSearch
         v = get_setting(k)
         settings[k] = v if !v.nil?
       end
-      if !@options[:slave] && !@options[:replica]
-        settings[:slaves] = additional_indexes.select { |opts, s| opts[:slave] }.map do |opts, s|
-          name = opts[:index_name]
-          name = "#{name}_#{Rails.env.to_s}" if opts[:per_environment]
-          name
-        end
-        settings.delete(:slaves) if settings[:slaves].empty?
-        settings[:replicas] = additional_indexes.select { |opts, s| opts[:replica] }.map do |opts, s|
-          name = opts[:index_name]
-          name = "#{name}_#{Rails.env.to_s}" if opts[:per_environment]
-          name
-        end
-        settings.delete(:replicas) if settings[:replicas].empty?
-      end
       settings
     end
 
-    def add_index(index_name, options = {}, &block)
-      raise ArgumentError.new('Cannot specify additional index on a replica index') if @options[:slave] || @options[:replica]
+    def add_index(index_uid, options = {}, &block)
       raise ArgumentError.new('No block given') if !block_given?
       raise ArgumentError.new('Options auto_index and auto_remove cannot be set on nested indexes') if options[:auto_index] || options[:auto_remove]
       @additional_indexes ||= {}
-      raise MixedSlavesAndReplicas.new('Cannot mix slaves and replicas in the same configuration (add_slave is deprecated)') if (options[:slave] && @additional_indexes.any? { |opts, _| opts[:replica] }) || (options[:replica] && @additional_indexes.any? { |opts, _| opts[:slave] })
-      options[:index_name] = index_name
+      options[:index_uid] = index_uid
       @additional_indexes[options] = IndexSettings.new(options, &block)
-    end
-
-    def add_replica(index_name, options = {}, &block)
-      raise ArgumentError.new('Cannot specify additional replicas on a replica index') if @options[:slave] || @options[:replica]
-      raise ArgumentError.new('No block given') if !block_given?
-      add_index(index_name, options.merge({ :replica => true, :primary_settings => self }), &block)
-    end
-
-    def add_slave(index_name, options = {}, &block)
-      raise ArgumentError.new('Cannot specify additional slaves on a slave index') if @options[:slave] || @options[:replica]
-      raise ArgumentError.new('No block given') if !block_given?
-      add_index(index_name, options.merge({ :slave => true, :primary_settings => self }), &block)
     end
 
     def additional_indexes
@@ -271,11 +225,10 @@ module MeiliSearch
   if defined?(::ActiveJob::Base)
     # lazy load the ActiveJob class to ensure the
     # queue is initialized before using it
-    # see https://github.com/algolia/algoliasearch-rails/issues/69
     autoload :MSJob, 'meilisearch/ms_job'
   end
 
-  # this class wraps an Algolia::Index object ensuring all raised exceptions
+  # this class wraps an MeiliSearch::Index document ensuring all raised exceptions
   # are correctly logged or thrown depending on the `raise_on_failure` option
   class SafeIndex
     def initialize(index_uid, raise_on_failure, options)
@@ -318,13 +271,6 @@ module MeiliSearch
       end
     end
 
-    # expose move as well
-    # def self.move_index(old_name, new_name)
-    #   SafeIndex.log_or_throw(:move_index, true) do
-    #     ::Algolia.move_index(old_name, new_name)
-    #   end
-    # end
-
     private
     def self.log_or_throw(method, raise_on_failure, &block)
       begin
@@ -353,17 +299,14 @@ module MeiliSearch
       class <<base
         alias_method :without_auto_index, :ms_without_auto_index unless method_defined? :without_auto_index
         alias_method :reindex!, :ms_reindex! unless method_defined? :reindex!
-        alias_method :reindex, :ms_reindex unless method_defined? :reindex
-        alias_method :index_objects, :ms_index_objects unless method_defined? :index_objects
+        alias_method :index_documents, :ms_index_documents unless method_defined? :index_documents
         alias_method :index!, :ms_index! unless method_defined? :index!
         alias_method :remove_from_index!, :ms_remove_from_index! unless method_defined? :remove_from_index!
         alias_method :clear_index!, :ms_clear_index! unless method_defined? :clear_index!
         alias_method :search, :ms_search unless method_defined? :search
         alias_method :raw_search, :ms_raw_search unless method_defined? :raw_search
-        alias_method :search_facet, :ms_search_facet unless method_defined? :search_facet
-        alias_method :search_for_facet_values, :ms_search_for_facet_values unless method_defined? :search_for_facet_values
         alias_method :index, :ms_index unless method_defined? :index
-        alias_method :index_name, :ms_index_name unless method_defined? :index_name
+        alias_method :index_uid, :ms_index_uid unless method_defined? :index_uid
         alias_method :must_reindex?, :ms_must_reindex? unless method_defined? :must_reindex?
       end
 
@@ -493,74 +436,26 @@ module MeiliSearch
       ms_configurations.each do |options, settings|
         next if ms_indexing_disabled?(options)
         index = ms_ensure_init(options, settings)
-        next if options[:slave] || options[:replica]
         last_update = nil
 
         ms_find_in_batches(batch_size) do |group|
           if ms_conditional_index?(options)
-            # delete non-indexable objects
-            ids = group.select { |o| !ms_indexable?(o, options) }.map { |o| ms_primary_key_of(o, options) }
+            # delete non-indexable documents
+            ids = group.select { |d| !ms_indexable?(d, options) }.map { |d| ms_primary_key_of(d, options) }
             index.delete_documents(ids.select { |id| !id.blank? })
-            # select only indexable objects
-            group = group.select { |o| ms_indexable?(o, options) }
+            # select only indexable documents
+            group = group.select { |d| ms_indexable?(d, options) }
           end
-          objects = group.map do |o|
-            attributes = settings.get_attributes(o)
+          documents = group.map do |d|
+            attributes = settings.get_attributes(d)
             unless attributes.class == Hash
               attributes = attributes.to_hash
             end
-             attributes.merge ms_pk(options) => ms_primary_key_of(o, options)
+             attributes.merge ms_pk(options) => ms_primary_key_of(d, options)
           end
-          last_update= index.add_documents(objects)
+          last_update= index.add_documents(documents)
         end
         index.wait_for_pending_update(last_update["updateId"]) if last_update and (synchronous || options[:synchronous])
-      end
-      nil
-    end
-
-    # reindex whole database using a extra temporary index + move operation
-    def ms_reindex(batch_size = MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, synchronous = false)
-      return if ms_without_auto_index_scope
-      ms_configurations.each do |options, settings|
-        next if ms_indexing_disabled?(options)
-        next if options[:slave] || options[:replica]
-
-        # fetch the master settings
-        master_index = ms_ensure_init(options, settings)
-        master_settings = master_index.settings rescue {} # if master doesn't exist yet
-        master_settings.merge!(JSON.parse(settings.to_settings.to_json)) # convert symbols to strings
-
-        # remove the replicas of the temporary index
-        master_settings.delete :slaves
-        master_settings.delete 'slaves'
-        master_settings.delete :replicas
-        master_settings.delete 'replicas'
-
-        # init temporary index
-        src_index_name = ms_index_name(options)
-        tmp_index_name = "#{src_index_name}.tmp"
-        tmp_options = options.merge({ :index_name => tmp_index_name })
-        tmp_options.delete(:per_environment) # already included in the temporary index_name
-        tmp_settings = settings.dup
-
-        if options[:check_settings] == false
-          ::MeiliSearch::copy_index!(src_index_name, tmp_index_name, %w(settings synonyms rules))
-          tmp_index = SafeIndex.new(tmp_index_name, !!options[:raise_on_failure], options)
-        else
-          tmp_index = ms_ensure_init(tmp_options, tmp_settings, master_settings)
-        end
-
-          ms_find_in_batches(batch_size) do |group|
-          if ms_conditional_index?(options)
-            # select only indexable objects
-            group = group.select { |o| ms_indexable?(o, tmp_options) }
-          end
-          objects = group.map { |o| tmp_settings.get_attributes(o).merge ms_pk(options) => ms_primary_key_of(o, tmp_options) }
-          tmp_index.add_documents(objects)
-        end
-
-        move_task = SafeIndex.move_index(tmp_index.name, src_index_name)
-        master_index.wait_for_pending_update(move_task["updateId"]) if synchronous || options[:synchronous]
       end
       nil
     end
@@ -569,51 +464,45 @@ module MeiliSearch
       ms_configurations.each do |options, settings|
         if options[:primary_settings] && options[:inherit]
           primary = options[:primary_settings].to_settings
-          primary.delete :slaves
-          primary.delete 'slaves'
-          primary.delete :replicas
-          primary.delete 'replicas'
           final_settings = primary.merge(settings.to_settings)
         else
           final_settings = settings.to_settings
         end
 
-        index = SafeIndex.new(ms_index_name(options), true, options)
+        index = SafeIndex.new(ms_index_uid(options), true, options)
         update = index.update_settings(final_settings)
         index.wait_for_pending_update(update["updateId"]) if synchronous
       end
     end
 
-    def ms_index_objects(objects, synchronous = false)
+    def ms_index_documents(documents, synchronous = false)
       ms_configurations.each do |options, settings|
         next if ms_indexing_disabled?(options)
         index = ms_ensure_init(options, settings)
-        next if options[:slave] || options[:replica]
-        update = index.add_documents(objects.map { |o| settings.get_attributes(o).merge ms_pk(options) => ms_primary_key_of(o, options) })
+        update = index.add_documents(documents.map { |d| settings.get_attributes(d).merge ms_pk(options) => ms_primary_key_of(d, options) })
         index.wait_for_pending_update(update["updateId"]) if synchronous || options[:synchronous]
       end
     end
 
-    def ms_index!(object, synchronous = false)
+    def ms_index!(document, synchronous = false)
       return if ms_without_auto_index_scope
       ms_configurations.each do |options, settings|
         next if ms_indexing_disabled?(options)
-        primary_key = ms_primary_key_of(object, options)
+        primary_key = ms_primary_key_of(document, options)
         index = ms_ensure_init(options, settings)
-        next if options[:slave] || options[:replica]
-        if ms_indexable?(object, options)
-          raise ArgumentError.new("Cannot index a record with a blank objectID") if primary_key.blank?
+        if ms_indexable?(document, options)
+          raise ArgumentError.new("Cannot index a record without a primary key") if primary_key.blank?
           if synchronous || options[:synchronous]
-            doc = settings.get_attributes(object)
+            doc = settings.get_attributes(document)
             doc = doc.merge ms_pk(options) => primary_key
             index.add_documents!(doc)
           else
-            doc = settings.get_attributes(object)
+            doc = settings.get_attributes(document)
             doc = doc.merge ms_pk(options) => primary_key
             index.add_documents(doc)
           end
         elsif ms_conditional_index?(options) && !primary_key.blank?
-          # remove non-indexable objects
+          # remove non-indexable documents
           if synchronous || options[:synchronous]
             index.delete_document!(primary_key)
           else
@@ -624,14 +513,13 @@ module MeiliSearch
       nil
     end
 
-    def ms_remove_from_index!(object, synchronous = false)
+    def ms_remove_from_index!(document, synchronous = false)
       return if ms_without_auto_index_scope
-      primary_key = ms_primary_key_of(object)
-      raise ArgumentError.new("Cannot index a record with a blank objectID") if primary_key.blank?
+      primary_key = ms_primary_key_of(document)
+      raise ArgumentError.new("Cannot index a record without a primary key") if primary_key.blank?
       ms_configurations.each do |options, settings|
         next if ms_indexing_disabled?(options)
         index = ms_ensure_init(options, settings)
-        next if options[:slave] || options[:replica]
         if synchronous || options[:synchronous]
           index.delete_document!(primary_key)
         else
@@ -645,7 +533,6 @@ module MeiliSearch
       ms_configurations.each do |options, settings|
         next if ms_indexing_disabled?(options)
         index = ms_ensure_init(options, settings)
-        next if options[:slave] || options[:replica]
         synchronous || options[:synchronous] ? index.delete_all_documents! : index.delete_all_documents
         @ms_indexes[settings] = nil
       end
@@ -653,7 +540,7 @@ module MeiliSearch
     end
 
     def ms_raw_search(q, params = {})
-      index_name = params.delete(:index) ||
+      index_uid = params.delete(:index) ||
                    params.delete('index')
 
       if !meilisearch_settings.get_setting(:attributesToHighlight).nil?
@@ -664,8 +551,8 @@ module MeiliSearch
         params[:attributesToCrop] = meilisearch_settings.get_setting(:attributesToCrop)
         params[:cropLength] = meilisearch_settings.get_setting(:cropLength) if !meilisearch_settings.get_setting(:cropLength).nil?
       end
-      index = ms_index(index_name)
-      # index = ms_index(ms_index_name)
+      index = ms_index(index_uid)
+      # index = ms_index(ms_index_uid)
       # index.search(q, Hash[params.map { |k,v| [k.to_s, v.to_s] }])
       index.search(q, Hash[params.map { |k,v| [k, v] }])
     end
@@ -694,9 +581,7 @@ module MeiliSearch
 
     def ms_search(q, params = {})
       if MeiliSearch.configuration[:pagination_backend]
-        # kaminari and will_paginate start pagination at 1, Algolia starts at 0
-        # params[:page] = (params.delete('page') || params.delete(:page)).to_i
-        # params[:page] -= 1 if params[:page].to_i > 0
+
         page = params[:page].nil? ? params[:page] : params[:page].to_i
         hits_per_page = params[:hitsPerPage].nil? ? params[:hitsPerPage] : params[:hitsPerPage].to_i
 
@@ -753,55 +638,39 @@ module MeiliSearch
       res
     end
 
-    def ms_search_for_facet_values(facet, text, params = {})
-      index_name = params.delete(:index) ||
-                   params.delete('index') ||
-                   params.delete(:slave) ||
-                   params.delete('slave') ||
-                   params.delete(:replica) ||
-                   params.delete('replicas')
-      index = ms_index(index_name)
-      query = Hash[params.map { |k, v| [k.to_s, v.to_s] }]
-      index.search_facet(facet, text, query)['facetHits']
-    end
-
-    # deprecated (renaming)
-    alias :ms_search_facet :ms_search_for_facet_values
-
     def ms_index(name = nil)
       if name
         ms_configurations.each do |o, s|
-          return ms_ensure_init(o, s) if o[:index_name].to_s == name.to_s
+          return ms_ensure_init(o, s) if o[:index_uid].to_s == name.to_s
         end
-        raise ArgumentError.new("Invalid index/replica name: #{name}")
+        raise ArgumentError.new("Invalid index name: #{name}")
       end
       ms_ensure_init
     end
 
-    def ms_index_name(options = nil)
+    def ms_index_uid(options = nil)
       options ||= meilisearch_options
-      name = options[:index_name] || model_name.to_s.gsub('::', '_')
+      name = options[:index_uid] || model_name.to_s.gsub('::', '_')
       name = "#{name}_#{Rails.env.to_s}" if options[:per_environment]
       name
     end
 
-    def ms_must_reindex?(object)
+    def ms_must_reindex?(document)
       # use +ms_dirty?+ method if implemented
-      return object.send(:ms_dirty?) if (object.respond_to?(:ms_dirty?))
+      return document.send(:ms_dirty?) if (document.respond_to?(:ms_dirty?))
       # Loop over each index to see if a attribute used in records has changed
       ms_configurations.each do |options, settings|
         next if ms_indexing_disabled?(options)
-        next if options[:slave] || options[:replica]
-        return true if ms_primary_key_changed?(object, options)
-        settings.get_attribute_names(object).each do |k|
-          return true if ms_attribute_changed?(object, k)
-          # return true if !object.respond_to?(changed_method) || object.send(changed_method)
+        return true if ms_primary_key_changed?(document, options)
+        settings.get_attribute_names(document).each do |k|
+          return true if ms_attribute_changed?(document, k)
+          # return true if !document.respond_to?(changed_method) || document.send(changed_method)
         end
         [options[:if], options[:unless]].each do |condition|
           case condition
           when nil
           when String, Symbol
-            return true if ms_attribute_changed?(object, condition)
+            return true if ms_attribute_changed?(document, condition)
           else
             # if the :if, :unless condition is a anything else,
             # we have no idea whether we should reindex or not
@@ -826,7 +695,7 @@ module MeiliSearch
 
       return @ms_indexes[settings] if @ms_indexes[settings]
 
-      @ms_indexes[settings] = SafeIndex.new(ms_index_name(options), meilisearch_options[:raise_on_failure], meilisearch_options)
+      @ms_indexes[settings] = SafeIndex.new(ms_index_uid(options), meilisearch_options[:raise_on_failure], meilisearch_options)
 
       current_settings = @ms_indexes[settings].settings(:getVersion => 1) rescue nil # if the index doesn't exist
 
@@ -836,12 +705,6 @@ module MeiliSearch
       options[:check_settings] = true if options[:check_settings].nil?
 
       if !ms_indexing_disabled?(options) && options[:check_settings] && meilisearch_settings_changed?(current_settings, index_settings)
-        used_slaves = !current_settings.nil? && !current_settings['slaves'].nil?
-        replicas = index_settings.delete(:replicas) ||
-                   index_settings.delete('replicas') ||
-                   index_settings.delete(:slaves) ||
-                   index_settings.delete('slaves')
-        index_settings[used_slaves ? :slaves : :replicas] = replicas unless replicas.nil? || options[:inherit]
         @ms_indexes[settings].update_settings(index_settings)
       end
 
@@ -873,12 +736,12 @@ module MeiliSearch
       options[:primary_key] || options[:id] || :id
     end
 
-    def ms_primary_key_of(o, options = nil)
-      o.send(ms_primary_key_method(options)).to_s
+    def ms_primary_key_of(doc, options = nil)
+      doc.send(ms_primary_key_method(options)).to_s
     end
 
-    def ms_primary_key_changed?(o, options = nil)
-      changed = ms_attribute_changed?(o, ms_primary_key_method(options))
+    def ms_primary_key_changed?(doc, options = nil)
+      changed = ms_attribute_changed?(doc, ms_primary_key_method(options))
       changed.nil? ? false : changed
     end
 
@@ -903,7 +766,7 @@ module MeiliSearch
     def ms_full_const_get(name)
       list = name.split('::')
       list.shift if list.first.blank?
-      obj = Object.const_defined?(:RUBY_VERSION) && RUBY_VERSION.to_f < 1.9 ? Object : self
+      obj = self
       list.each do |x|
         # This is required because const_get tries to look for constants in the
         # ancestor chain, but we only want constants that are HERE
@@ -917,25 +780,25 @@ module MeiliSearch
       options[:if].present? || options[:unless].present?
     end
 
-    def ms_indexable?(object, options = nil)
+    def ms_indexable?(document, options = nil)
       options ||= meilisearch_options
-      if_passes = options[:if].blank? || ms_constraint_passes?(object, options[:if])
-      unless_passes = options[:unless].blank? || !ms_constraint_passes?(object, options[:unless])
+      if_passes = options[:if].blank? || ms_constraint_passes?(document, options[:if])
+      unless_passes = options[:unless].blank? || !ms_constraint_passes?(document, options[:unless])
       if_passes && unless_passes
     end
 
-    def ms_constraint_passes?(object, constraint)
+    def ms_constraint_passes?(document, constraint)
       case constraint
       when Symbol
-        object.send(constraint)
+        document.send(constraint)
       when String
-        object.send(constraint.to_sym)
+        document.send(constraint.to_sym)
       when Enumerable
         # All constraints must pass
-        constraint.all? { |inner_constraint| ms_constraint_passes?(object, inner_constraint) }
+        constraint.all? { |inner_constraint| ms_constraint_passes?(document, inner_constraint) }
       else
         if constraint.respond_to?(:call) # Proc
-          constraint.call(object)
+          constraint.call(document)
         else
           raise ArgumentError, "Unknown constraint type: #{constraint} (#{constraint.class})"
         end
@@ -977,49 +840,13 @@ module MeiliSearch
       end
     end
 
-    def ms_attribute_changed?(object, attr_name)
-      # if one of two method is implemented, we return its result
-      # true/false means whether it has changed or not
-      # +#{attr_name}_changed?+ always defined for automatic attributes but deprecated after Rails 5.2
-      # +will_save_change_to_#{attr_name}?+ should be use instead for Rails 5.2+, also defined for automatic attributes.
-      # If none of the method are defined, it's a dynamic attribute
-
-      method_name = "#{attr_name}_changed?"
-      if object.respond_to?(method_name)
-        # If +#{attr_name}_changed?+ respond we want to see if the method is user defined or if it's automatically
-        # defined by Rails.
-        # If it's user-defined, we call it.
-        # If it's automatic we check ActiveRecord version to see if this method is deprecated
-        # and try to call +will_save_change_to_#{attr_name}?+ instead.
-        # See: https://github.com/algolia/algoliasearch-rails/pull/338
-        # This feature is not compatible with Ruby 1.8
-        # In this case, we always call #{attr_name}_changed?
-        if Object.const_defined?(:RUBY_VERSION) && RUBY_VERSION.to_f < 1.9
-          return object.send(method_name)
-        end
-        unless automatic_changed_method?(object, method_name) && automatic_changed_method_deprecated?
-          return object.send(method_name)
-        end
-      end
-
-      if object.respond_to?("will_save_change_to_#{attr_name}?")
-        return object.send("will_save_change_to_#{attr_name}?")
+    def ms_attribute_changed?(document, attr_name)
+      if document.respond_to?("will_save_change_to_#{attr_name}?")
+        return document.send("will_save_change_to_#{attr_name}?")
       end
 
       # We don't know if the attribute has changed, so conservatively assume it has
       true
-    end
-
-    # Returns true if the _changed? method is user-defined
-    def automatic_changed_method?(object, method_name)
-      raise ArgumentError.new("Method #{method_name} doesn't exist on #{object.class.name}") unless object.respond_to?(method_name)
-      file = object.method(method_name).source_location[0]
-      file.end_with?("active_model/attribute_methods.rb")
-    end
-
-    def automatic_changed_method_deprecated?
-      (defined?(::ActiveRecord) && ActiveRecord::VERSION::MAJOR >= 5 && ActiveRecord::VERSION::MINOR >= 1) ||
-          (defined?(::ActiveRecord) && ActiveRecord::VERSION::MAJOR > 5)
     end
   end
 

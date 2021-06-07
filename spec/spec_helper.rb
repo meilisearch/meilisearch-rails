@@ -40,7 +40,7 @@ end
 SAFE_INDEX_PREFIX = "rails_#{SecureRandom.hex(8)}".freeze
 
 # avoid concurrent access to the same index in local or CI
-def safe_index_name(name)
+def safe_index_uid(name)
   "#{SAFE_INDEX_PREFIX}_#{name}"
 end
 
