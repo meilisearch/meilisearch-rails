@@ -141,13 +141,13 @@ end
 
 We support both [kaminari](https://github.com/amatsuda/kaminari) and [will_paginate](https://github.com/mislav/will_paginate).
 
-To use `:kaminari`, specify the `:pagination_backend` in the configuration file:
+Specify the `:pagination_backend` in the configuration file:
 
 ```ruby
 MeiliSearch.configuration = {
     meilisearch_host: 'YourMeiliSearchHost',
     meilisearch_api_key: 'YourMeiliSearchAPIKey',
-    pagination_backend: :kaminari
+    pagination_backend: :kaminari #:will_paginate
 }
 ```
 
@@ -159,7 +159,7 @@ Then, as soon as you use the `search` method, the returning results will be pagi
 
 
 # views
- <% @hits.each do |hit| %>
+<% @hits.each do |hit| %>
   <%= hit.title %>
   <%= hit.author %>
 <% end %>
