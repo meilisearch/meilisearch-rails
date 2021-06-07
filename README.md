@@ -48,7 +48,7 @@
   - [Manual operations](#manual-operations)
     - [Indexing & deletion](#indexing-&-deletion)
     - [Access the underlying index object](#access-the-underlying-index-object)
-  - [Best practices](#best-practices)
+  - [Development & testing](#development-&-testing)
     - [Exceptions](#exceptions)
     - [Testing](#testing)
       - [Synchronous testing](#synchronous-testing)
@@ -294,8 +294,8 @@ end
 ```
 #### Conditional indexing
 
-You can control if a record must be indexed by using the :if or :unless options
-As soon as you use those constraints, add_documents and delete_dpcuments calls will be performed in order to keep the index synced with the DB. To prevent this behavior, you can create a `will_save_change_to_#{attr_name}?` method.
+You can control if a record must be indexed by using the `:if` or `:unless` options
+As soon as you use those constraints, add_documents and delete_documents calls will be performed in order to keep the index synced with the DB. To prevent this behavior, you can create a `will_save_change_to_#{attr_name}?` method.
 
 ```ruby
 class Book < ActiveRecord::Base
@@ -385,7 +385,7 @@ class Book < ActiveRecord::Base
 end
 ```
 
-🤔 If you are performing updates and deletions in the background, a record deletion can be committed to your database prior to the job actually executing. Thus if you were to load the record to remove it from the database then your ActiveRecord#find will fail with a RecordNotFound.
+🤔 If you are performing updates and deletions in the background, a record deletion can be committed to your database prior to the job actually executing. Thus if you were to load the record to remove it from the database then your `ActiveRecord#find` will fail with a `RecordNotFound`.
 
 In this case you can bypass loading the record from **ActiveRecord** and just communicate with the index directly.
 
@@ -426,7 +426,7 @@ class MySidekiqWorker
     if remove
       # the record has likely already been removed from your database so we cannot
       # use ActiveRecord#find to load it
-       # We access the underlying MeiliSearch index object
+      # We access the underlying MeiliSearch index object
       index = Book.index.delete_document(id)
     else
       # the record should be present
@@ -589,14 +589,14 @@ To delete all your records, use the `clear_index!` class method
 
 #### Access the underlying index object
 
-To access the index object and use the meilisearch-ruby index methods, call the `ìndex` class method:
+To access the index object and use the meilisearch-ruby index methods, call the `index` class method:
 
 ```ruby
   index = Book.index
   # index.get_settings, index.number_of_documents
 ```
 
-### Best practices
+### Development & testing
 #### Exceptions
 
 You can disable exceptions that could be raised while trying to reach MeiliSearch's API by using the `raise_on_failure` option:
