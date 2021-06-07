@@ -161,10 +161,6 @@ class Product < ActiveRecord::Base
 
   end
 
-  # def tags=(names)
-  #   @tags = names.join(",")
-  # end
-
   def published?
     release_date.blank? || release_date <= Time.now
   end
@@ -286,10 +282,6 @@ class Color < ActiveRecord::Base
   def will_save_change_to_short_name?
     false
   end
-
-  def will_save_change_to__tags?
-    false
-  end
 end
 
 class DisabledBoolean < ActiveRecord::Base
@@ -333,7 +325,6 @@ class Namespaced::Model < ActiveRecord::Base
       id
     end
     searchableAttributes ['customAttr']
-    # tags ['static_tag1', 'static_tag2']
   end
 end
 
