@@ -14,20 +14,18 @@ Gem::Specification.new do |s|
   s.description = "MeiliSearch integration for Ruby on Rails. See https://github.com/meilisearch/MeiliSearch"
   s.email = "bonjour@meilisearch.com"
   s.extra_rdoc_files = [
-    "CHANGELOG.MD",
     "LICENSE",
     "README.md"
   ]
   s.files = [
     ".rspec",
     "Gemfile",
-    "Gemfile.lock",
     "LICENSE",
     "README.md",
     "Rakefile",
     "meilisearch-rails.gemspec",
     "lib/meilisearch-rails.rb",
-    "lib/meilisearch/meili_job.rb",
+    "lib/meilisearch/ms_job.rb",
     "lib/meilisearch/configuration.rb",
     "lib/meilisearch/pagination.rb",
     "lib/meilisearch/pagination/kaminari.rb",
@@ -42,7 +40,6 @@ Gem::Specification.new do |s|
   s.homepage = "http://github.com/meilisearch/meilisearch-rails"
   s.licenses = ["MIT"]
   s.require_paths = ["lib"]
-  s.rubygems_version = "2.1.11"
   s.summary = "MeiliSearch integration for Ruby on Rails."
   s.add_dependency(%q<json>, [">= 1.5.1"])
   s.add_dependency(%q<meilisearch>, [">= 0.15.3"])
