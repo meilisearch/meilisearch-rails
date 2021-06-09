@@ -15,10 +15,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        rails-version: [5.2, 6.0, 6.1]
+        rails-version: [5.2, 6.1]
     env:
       RAILS_VERSION: ${{ matrix.rails-version }}
-    name: integration-tests (Rails ${{ matrix.rails-version }}
+      MEILISEARCH_HOST: http://localhost:7700
+      MEILISEARCH_API_KEY: masterKey
+    name: integration-tests (Rails ${{ matrix.rails-version }})
     steps:
     - uses: actions/checkout@v2
     - name: Set up Ruby
@@ -29,10 +31,5 @@ jobs:
       run: bundle install
     - name: MeiliSearch (latest) setup with Docker
       run: docker run -d -p 7700:7700 getmeili/meilisearch:latest ./meilisearch --master-key=masterKey --no-analytics=true
-    - name: Rails version
-      run: bundle exec rails --version
     - name: Run tests
       run: bundle exec rspec
-    env:
-      MEILISEARCH_HOST: http://localhost:7700
-      MEILISEARCH_API_KEY: masterKey
