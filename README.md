@@ -318,10 +318,12 @@ class Book < ActiveRecord::Base
   end
 end
 ```
-  ##### Target multiple indexes
-  You can index a record in several indexes using the `add_index` option:
-  ```ruby
-  class Book < ActiveRecord::Base
+##### Target multiple indexes
+
+You can index a record in several indexes using the `add_index` option:
+
+```ruby
+class Book < ActiveRecord::Base
 
   include MeiliSearch
 
@@ -342,9 +344,8 @@ end
   def public?
     released && !premium
   end
-
 end
-  ```
+```
 
 #### Share a single index
 
