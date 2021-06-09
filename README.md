@@ -28,6 +28,7 @@
 ## Table of Contents <!-- omit in toc -->
 
 - [📖 Documentation](#-documentation)
+- [🤖 Compatibility with MeiliSearch](#-compatibility-with-meilisearch)
 - [🔧 Installation](#-installation)
 - [🔩 Settings](#-settings)
 - [🔍 Custom search](#-custom-search)
@@ -53,13 +54,19 @@
     - [Testing](#testing)
       - [Synchronous testing](#synchronous-testing)
       - [Disable auto-indexing & auto-removal](#disable-auto-indexing-&-auto-removal)
-- [🤖 Compatibility with MeiliSearch](#-compatibility-with-meilisearch)
 - [⚙️ Development Workflow and Contributing](#️-development-workflow-and-contributing)
 - [👏 Credits](#-credits)
 
 ## 📖 Documentation
 
-See our [Documentation](https://docs.meilisearch.com/learn/tutorials/getting_started.html) or our [API References](https://docs.meilisearch.com/reference/api/).
+The whole usage of this gem is detailed in this README.
+
+To learn more about MeiliSearch, check out our [Documentation](https://docs.meilisearch.com/learn/tutorials/getting_started.html) or our [API References](https://docs.meilisearch.com/reference/api/).
+
+
+## 🤖 Compatibility with MeiliSearch
+
+This package only guarantees the compatibility with the [version v0.20.0 of MeiliSearch](https://github.com/meilisearch/MeiliSearch/releases/tag/v0.20.0).
 
 ## 🔧 Installation
 
@@ -97,7 +104,6 @@ NB: you can also download MeiliSearch from **Homebrew** or **APT**.
 Create a new file `config/initializers/meilisearch.rb` to setup your `MEILISEARCH_HOST` and `MEILISEARCH_API_KEY`
 
 ```ruby
-
 MeiliSearch.configuration = {
     meilisearch_host: 'YourMeiliSearchHost',
     meilisearch_api_key: 'YourMeiliSearchAPIKey',
@@ -109,7 +115,7 @@ The gem is compatible with [ActiveRecord](https://github.com/rails/rails/tree/ma
 
 #### Add documents <!-- omit in toc -->
 
-The following code will create a `Book` index and add search capabilities to your `Book` model
+The following code will create a `Book` index and add search capabilities to your `Book` model.
 
 ```ruby
 class Book < ActiveRecord::Base
@@ -124,7 +130,7 @@ end
 
 #### Basic Backend Search <!-- omit in toc -->
 
-We **strongly recommend the use of front-end search** through our [Javascript API Client](https://github.com/meilisearch/meilisearch-js/) or [Instant Meilisearch plugin](https://github.com/meilisearch/instant-meilisearch)
+We **strongly recommend the use of front-end search** through our [JavaScript API Client](https://github.com/meilisearch/meilisearch-js/) or [Instant Meilisearch plugin](https://github.com/meilisearch/instant-meilisearch)
 
 Search returns ORM-compliant objects reloaded from your database.
 
@@ -156,7 +162,6 @@ Then, as soon as you use the `search` method, the returning results will be pagi
 ```ruby
 # controller
 @hits = Book.search('harry potter')
-
 
 # views
 <% @hits.each do |hit| %>
@@ -566,25 +571,25 @@ end
 You can manually index a record by using the `index!` instance method and remove it by using the `remove_from_index!` instance method
 
 ```ruby
-  book = Book.create!(title: 'The Little Prince', author: 'Antoine de Saint-Exupéry')
-  book.index!
-  book.remove_from_index!
-  book.destroy!
+book = Book.create!(title: 'The Little Prince', author: 'Antoine de Saint-Exupéry')
+book.index!
+book.remove_from_index!
+book.destroy!
 ```
 
 To reindex all your records, use the `reindex!` class method:
 
 ```ruby
-  Book.reindex!
+Book.reindex!
 
-  # You can also index a subset of your records
-  Book.where('updated_at > ?', 10.minutes.ago).reindex!
+# You can also index a subset of your records
+Book.where('updated_at > ?', 10.minutes.ago).reindex!
 ```
 
 To delete all your records, use the `clear_index!` class method
 
 ```ruby
-  Book.clear_index!
+Book.clear_index!
 ```
 
 #### Access the underlying index object
@@ -592,11 +597,12 @@ To delete all your records, use the `clear_index!` class method
 To access the index object and use the meilisearch-ruby index methods, call the `index` class method:
 
 ```ruby
-  index = Book.index
-  # index.get_settings, index.number_of_documents
+index = Book.index
+# index.get_settings, index.number_of_documents
 ```
 
 ### Development & testing
+
 #### Exceptions
 
 You can disable exceptions that could be raised while trying to reach MeiliSearch's API by using the `raise_on_failure` option:
@@ -612,43 +618,39 @@ end
 ```
 
 #### Testing
-  ##### Synchronous testing
-  You can force indexing and removing to be synchronous by setting the following option:
+##### Synchronous testing
+You can force indexing and removing to be synchronous by setting the following option:
 
-  ```ruby
-  class Book < ActiveRecord::Base
-    include MeiliSearch
+```ruby
+class Book < ActiveRecord::Base
+  include MeiliSearch
 
-    meilisearch synchronous: true do
-    end
+  meilisearch synchronous: true do
   end
-  ```
-  🚨 This is only recommended for testing purposes, the gem will call the `wait_for_pending_update` method that will stop your code execution until the asynchronous task has been processed by MeilSearch.
+end
+```
+🚨 This is only recommended for testing purposes, the gem will call the `wait_for_pending_update` method that will stop your code execution until the asynchronous task has been processed by MeilSearch.
 
-  ##### Disable auto-indexing & auto-removal
+##### Disable auto-indexing & auto-removal
 
-  You can disable auto-indexing and auto-removing setting the following options:
+You can disable auto-indexing and auto-removing setting the following options:
 
-  ```ruby
-  class Book < ActiveRecord::Base
-    include MeiliSearch
+```ruby
+class Book < ActiveRecord::Base
+  include MeiliSearch
 
-    meilisearch auto_index: false, auto_remove: false do
-    end
+  meilisearch auto_index: false, auto_remove: false do
   end
-  ```
+end
+```
 
-  You can temporarily disable auto-indexing using the without_auto_index scope:
+You can temporarily disable auto-indexing using the without_auto_index scope:
 
-  ```ruby
-  Book.without_auto_index do
-    1.upto(10000) { Book.create! attributes } # inside this block, auto indexing task will not run.
-  end
-  ```
-
-## 🤖 Compatibility with MeiliSearch
-
-This package only guarantees the compatibility with the [version v0.20.0 of MeiliSearch](https://github.com/meilisearch/MeiliSearch/releases/tag/v0.20.0).
+```ruby
+Book.without_auto_index do
+  1.upto(10000) { Book.create! attributes } # inside this block, auto indexing task will not run.
+end
+```
 
 ## ⚙️ Development workflow & contributing
 
@@ -658,7 +660,7 @@ If you want to know more about the development workflow or want to contribute, p
 
 ## 👏  Credits
 
-The provided features and the code base is inspired by [algoliasearch-rails](https://github.com/algolia/algoliasearch-rails/)
+The provided features and the code base is inspired by [algoliasearch-rails](https://github.com/algolia/algoliasearch-rails/).
 
 <hr>
 
