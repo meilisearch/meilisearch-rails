@@ -63,7 +63,6 @@ The whole usage of this gem is detailed in this README.
 
 To learn more about MeiliSearch, check out our [Documentation](https://docs.meilisearch.com/learn/tutorials/getting_started.html) or our [API References](https://docs.meilisearch.com/reference/api/).
 
-
 ## 🤖 Compatibility with MeiliSearch
 
 This package only guarantees the compatibility with the [version v0.20.0 of MeiliSearch](https://github.com/meilisearch/MeiliSearch/releases/tag/v0.20.0).
@@ -111,7 +110,6 @@ MeiliSearch.configuration = {
 ```
 
 The gem is compatible with [ActiveRecord](https://github.com/rails/rails/tree/master/activerecord), [Mongoid](https://github.com/mongoid/mongoid) and [Sequel](https://github.com/jeremyevans/sequel).
-
 
 #### Add documents <!-- omit in toc -->
 
@@ -182,7 +180,7 @@ Book.search('harry potter', hitsPerPage: 10)
 
 ##  ⚙️ Settings
 
-You can configure the index settings by adding them inside the meilisearch block as shown below:
+You can configure the index settings by adding them inside the `meilisearch` block as shown below:
 
 ```ruby
 class Book < ApplicationRecord
@@ -200,18 +198,16 @@ class Book < ApplicationRecord
         "exactness",
         "desc(publication_year)"
     ]
+    synonyms nyc: ['new york']
+    // The following parameters are applied when calling the search() method:
     attributesToHighlight ['*']
     attributesToCrop ['description']
     cropLength 10
-    synonyms got: ['game of thrones']
   end
 end
 ```
 
 Check the dedicated section of the documentation, for more information on the [settings](https://docs.meilisearch.com/reference/features/settings.html).
-
-🎁  We have added the possibility to use the following search parameters `attributesToHighlight`, `attributesToCrop`, `cropLength` as settings (see example above).
-
 
 ## 🔍 Custom search
 
@@ -220,8 +216,7 @@ All the supported options are described in the [search parameters](https://docs.
 ```ruby
 Book.search('Harry', { filters: 'author = J. K. Rowling' })
 ```
-👉 Don't forget that `attributesToHighlight`, `attributesToCrop` and `cropLength` can be set up as settings in the MeiliSearch block of your model.
-
+👉 Don't forget that `attributesToHighlight`, `attributesToCrop`, and `cropLength` can be set up in the `meilisearch` block of your model.
 
 ## 🪛 Options
 
@@ -229,7 +224,7 @@ Book.search('Harry', { filters: 'author = J. K. Rowling' })
 
 #### Custom index_uid
 
-By default, the **index_uid** will be the class name, e.g. `Book`. You can customize the index_uid by using the `index_uid` option
+By default, the **index_uid** will be the class name, e.g. `Book`. You can customize the index_uid by using the `index_uid` option.
 
 ```ruby
 class Book < ActiveRecord::Base
@@ -239,14 +234,14 @@ class Book < ActiveRecord::Base
 end
 ```
 
-#### Per-environment index_uid
+#### Index UID according to the environment
 
-You can suffix the index_uid with the current Rails environment using the following option:
+You can suffix the index UID with the current Rails environment using the following option:
 
 ```ruby
 class Book < ActiveRecord::Base
   include MeiliSearch
-  meilisearch per_environment: true do # index name will be "Book_#{Rails.env}"
+  meilisearch per_environment: true do # The index UID will be "Book_#{Rails.env}"
   end
 end
 ```
@@ -286,6 +281,7 @@ end
 ```
 
 #### Custom primary key
+
 By default, the `primary key` is based on your record's id. You can change this behavior specifying the `:primary_key` option.
 
 Note that the primary key must have a **unique value**.
@@ -299,8 +295,8 @@ end
 ```
 #### Conditional indexing
 
-You can control if a record must be indexed by using the `:if` or `:unless` options
-As soon as you use those constraints, add_documents and delete_documents calls will be performed in order to keep the index synced with the DB. To prevent this behavior, you can create a `will_save_change_to_#{attr_name}?` method.
+You can control if a record must be indexed by using the `:if` or `:unless` options.<br>
+As soon as you use those constraints, `add_documents` and `delete_documents` calls will be performed in order to keep the index synced with the DB. To prevent this behavior, you can create a `will_save_change_to_#{attr_name}?` method.
 
 ```ruby
 class Book < ActiveRecord::Base
@@ -349,8 +345,10 @@ end
 
 end
   ```
+
 #### Share a single index
-You may want to share an index between several models. You'll need to ensure you don't have any conflict with the primary_key of the models involved.
+
+You may want to share an index between several models. You'll need to ensure you don't have any conflict with the `primary_key` of the models involved.
 
 ```ruby
 class Cat < ActiveRecord::Base
@@ -377,6 +375,7 @@ class Dog < ActiveRecord::Base
   end
 end
 ```
+
 #### Queues & background jobs
 
 You can configure the auto-indexing & auto-removal process to use a queue to perform those operations in background. ActiveJob queues are used by default but you can define your own queuing mechanism:
@@ -411,7 +410,7 @@ class MyActiveJob < ApplicationJob
 end
 ```
 
-With [**Sidekiq**](https://github.com/mperham/sidekiq)
+With [**Sidekiq**](https://github.com/mperham/sidekiq):
 
 ```ruby
 class Book < ActiveRecord::Base
@@ -442,7 +441,7 @@ class MySidekiqWorker
 end
 ```
 
-With [**DelayedJob**](https://github.com/collectiveidea/delayed_job)
+With [**DelayedJob**](https://github.com/collectiveidea/delayed_job):
 
 ```ruby
 class Book < ActiveRecord::Base
@@ -451,7 +450,6 @@ class Book < ActiveRecord::Base
   meilisearch enqueue: :trigger_delayed_job do
     attribute :title, :author, :description
   end
-
 
   def self.trigger_delayed_job(record, remove)
     if remove
@@ -465,7 +463,7 @@ end
 
 #### Relations
 
-Extend a change to a related record
+Extend a change to a related record.
 
 **With Active Record**, you'll need to use `touch` and `after_touch`.
 
@@ -493,10 +491,9 @@ class Book < ActiveRecord::Base
     end
   end
 end
-
 ```
 
-With **Sequel**, you can use the `touch plugin` to propagate changes.
+With **Sequel**, you can use the `touch` plugin to propagate changes.
 
 ```ruby
 # app/models/author.rb
@@ -539,6 +536,7 @@ class Book < Sequel::Model
   end
 end
 ```
+
 #### Sanitize attributes
 
 You can strip all HTML tags from your attributes with the `sanitize` option.
@@ -551,6 +549,7 @@ class Book < ActiveRecord::Base
   end
 end
 ```
+
 #### UTF-8 encoding
 
 You can force the UTF-8 encoding of all your attributes using the `force_utf8_encoding` option.
@@ -586,7 +585,7 @@ Book.reindex!
 Book.where('updated_at > ?', 10.minutes.ago).reindex!
 ```
 
-To delete all your records, use the `clear_index!` class method
+To delete all your records, use the `clear_index!` class method:
 
 ```ruby
 Book.clear_index!
@@ -594,7 +593,7 @@ Book.clear_index!
 
 #### Access the underlying index object
 
-To access the index object and use the meilisearch-ruby index methods, call the `index` class method:
+To access the index object and use the [Ruby SDK](https://github.com/meilisearch/meilisearch-ruby) methods for an index, call the `index` class method:
 
 ```ruby
 index = Book.index
@@ -602,6 +601,7 @@ index = Book.index
 ```
 
 ### Development & testing
+
 
 #### Exceptions
 
