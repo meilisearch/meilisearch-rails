@@ -315,7 +315,7 @@ module MeiliSearch
 
     def meilisearch(options = {}, &block)
       self.meilisearch_settings = IndexSettings.new(options, &block)
-      self.meilisearch_options = { :type => ms_full_const_get(model_name.to_s), :per_page => meilisearch_settings.get_setting(:hitsPerPage) || 20, :page => 1 }.merge(options)
+      self.meilisearch_options = { type: ms_full_const_get(model_name.to_s), per_page: meilisearch_settings.get_setting(:hitsPerPage) || 20, page: 1 }.merge(options)
 
       attr_accessor :formatted
 
@@ -632,7 +632,7 @@ module MeiliSearch
       hits_per_page ||= 20
       page ||= 1
 
-      res = MeiliSearch::Pagination.create(results, total_hits, meilisearch_options.merge({ :page =>  page , :per_page => hits_per_page }))
+      res = MeiliSearch::Pagination.create(results, total_hits, meilisearch_options.merge({ page:  page , per_page: hits_per_page }))
       res.extend(AdditionalMethods)
       res.send(:ms_init_raw_answer, json)
       res
@@ -823,7 +823,7 @@ module MeiliSearch
 
     def ms_find_in_batches(batch_size, &block)
       if (defined?(::ActiveRecord) && ancestors.include?(::ActiveRecord::Base)) || respond_to?(:find_in_batches)
-        find_in_batches(:batch_size => batch_size, &block)
+        find_in_batches(batch_size: batch_size, &block)
       elsif defined?(::Sequel) && self < Sequel::Model
         dataset.extension(:pagination).each_page(batch_size, &block)
       else

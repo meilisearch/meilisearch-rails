@@ -231,7 +231,7 @@ By default, the **index_uid** will be the class name, e.g. `Book`. You can custo
 ```ruby
 class Book < ActiveRecord::Base
   include MeiliSearch
-  meilisearch :index_uid => 'MyCustomUID' do
+  meilisearch index_uid: 'MyCustomUID' do
   end
 end
 ```
@@ -291,7 +291,7 @@ Note that the primary key must have a **unique value**.
 ```ruby
 class Book < ActiveRecord::Base
   include MeiliSearch
-  meilisearch :primary_key => 'ISBN' do
+  meilisearch primary_key: 'ISBN' do
   end
 end
 ```
@@ -548,7 +548,7 @@ You can strip all HTML tags from your attributes with the `sanitize` option.
 class Book < ActiveRecord::Base
   include MeiliSearch
 
-  meilisearch :sanitize => true do
+  meilisearch sanitize: true do
   end
 end
 ```
@@ -561,7 +561,7 @@ You can force the UTF-8 encoding of all your attributes using the `force_utf8_en
 class Book < ActiveRecord::Base
   include MeiliSearch
 
-  meilisearch :force_utf8_encoding => true do
+  meilisearch force_utf8_encoding: true do
   end
 end
 ```
@@ -615,7 +615,7 @@ class Book < ActiveRecord::Base
   include MeiliSearch
 
   # only raise exceptions in development environment
-  meilisearch :raise_on_failure => Rails.env.development? do
+  meilisearch raise_on_failure: Rails.env.development? do
   end
 end
 ```
