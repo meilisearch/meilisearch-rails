@@ -126,6 +126,8 @@ class Book < ActiveRecord::Base
 end
 ```
 
+⚠️ Note that even if you want to use all the default options, you must declare an empty `meilisearch` block in your model.
+
 #### Basic Backend Search <!-- omit in toc -->
 
 We **strongly recommend the use of front-end search** through our [JavaScript API Client](https://github.com/meilisearch/meilisearch-js/) or [Instant Meilisearch plugin](https://github.com/meilisearch/instant-meilisearch)
