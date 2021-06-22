@@ -154,9 +154,9 @@ Specify the `:pagination_backend` in the configuration file:
 
 ```ruby
 MeiliSearch.configuration = {
-    meilisearch_host: 'YourMeiliSearchHost',
-    meilisearch_api_key: 'YourMeiliSearchAPIKey',
-    pagination_backend: :kaminari #:will_paginate
+  meilisearch_host: 'YourMeiliSearchHost',
+  meilisearch_api_key: 'YourMeiliSearchAPIKey',
+  pagination_backend: :kaminari #:will_paginate
 }
 ```
 
@@ -192,21 +192,22 @@ class Book < ApplicationRecord
   include MeiliSearch
 
   meilisearch do
-    searchableAttributes ['title', 'author', 'publisher', 'description']
-    attributesForFaceting ['genre']
+    searchableAttributes [:title, :author, :publisher, :description]
+    attributesForFaceting [:genre]
     rankingRules [
-        "proximity",
-        "typo",
-        "words",
-        "attribute",
-        "wordsPosition",
-        "exactness",
-        "desc(publication_year)"
+      "proximity",
+      "typo",
+      "words",
+      "attribute",
+      "wordsPosition",
+      "exactness",
+      "desc(publication_year)"
     ]
-    synonyms nyc: ['new york']
-    // The following parameters are applied when calling the search() method:
-    attributesToHighlight ['*']
-    attributesToCrop ['description']
+    synonyms nyc: ["new york"]
+
+    # The following parameters are applied when calling the search() method:
+    attributesToHighlight ["*"]
+    attributesToCrop [:description]
     cropLength 10
   end
 end
@@ -219,7 +220,7 @@ Check the dedicated section of the documentation, for more information on the [s
 All the supported options are described in the [search parameters](https://docs.meilisearch.com/reference/features/search_parameters.html) section of the documentation.
 
 ```ruby
-Book.search('Harry', { filters: 'author = J. K. Rowling' })
+Book.search('Harry', filters: 'author = J. K. Rowling')
 ```
 👉 Don't forget that `attributesToHighlight`, `attributesToCrop`, and `cropLength` can be set up in the `meilisearch` block of your model.
 
@@ -229,11 +230,12 @@ Book.search('Harry', { filters: 'author = J. K. Rowling' })
 
 #### Custom index_uid
 
-By default, the **index_uid** will be the class name, e.g. `Book`. You can customize the index_uid by using the `index_uid` option.
+By default, the **index_uid** will be the class name, e.g. `Book`. You can customize the index_uid by using the `index_uid:` option.
 
 ```ruby
 class Book < ActiveRecord::Base
   include MeiliSearch
+
   meilisearch index_uid: 'MyCustomUID' do
   end
 end
@@ -246,6 +248,7 @@ You can suffix the index UID with the current Rails environment using the follow
 ```ruby
 class Book < ActiveRecord::Base
   include MeiliSearch
+
   meilisearch per_environment: true do # The index UID will be "Book_#{Rails.env}"
   end
 end
@@ -257,7 +260,7 @@ end
 
 You can add a custom attribute by using the `add_attribute` option or by using a block.
 
-⚠️ When using custom attributes, the gem is not able to detect changes on them. Your record will be pushed to the API even if the custom attribute didn't change. To prevent this behavior, you can create a `will_save_change_to_#{attr_name}?` method.
+⚠️ When using custom attributes, the gem is not able to detect changes on them. Your record will be pushed to the API even if the custom attribute didn’t change. To prevent this behavior, you can create a `will_save_change_to_#{attr_name}?` method.
 
 ```ruby
 class Author < ApplicationRecord
@@ -287,27 +290,28 @@ end
 
 #### Custom primary key
 
-By default, the `primary key` is based on your record's id. You can change this behavior specifying the `:primary_key` option.
+By default, the primary key is based on your record’s id. You can change this behavior specifying the `primary_key:` option.
 
 Note that the primary key must have a **unique value**.
 
 ```ruby
 class Book < ActiveRecord::Base
   include MeiliSearch
+
   meilisearch primary_key: 'ISBN' do
   end
 end
 ```
 #### Conditional indexing
 
-You can control if a record must be indexed by using the `:if` or `:unless` options.<br>
+You can control if a record must be indexed by using the `if:` or `unless:` options.<br>
 As soon as you use those constraints, `add_documents` and `delete_documents` calls will be performed in order to keep the index synced with the DB. To prevent this behavior, you can create a `will_save_change_to_#{attr_name}?` method.
 
 ```ruby
 class Book < ActiveRecord::Base
   include MeiliSearch
 
-  meilisearch :if published?, :unless premium? do
+  meilisearch if: :published?, unless: :premium? do
   end
 
   def published?
@@ -319,7 +323,7 @@ class Book < ActiveRecord::Base
   end
 
   def will_save_change_to_published?
-  # return true only if you know that the 'published' state changed
+    # return true only if you know that the 'published' state changed
   end
 end
 ```
@@ -329,7 +333,6 @@ You can index a record in several indexes using the `add_index` option:
 
 ```ruby
 class Book < ActiveRecord::Base
-
   include MeiliSearch
 
   PUBLIC_INDEX_UID = 'Books'
@@ -347,14 +350,14 @@ class Book < ActiveRecord::Base
 
   private
   def public?
-    released && !premium
+    released? && !premium?
   end
 end
 ```
 
 #### Share a single index
 
-You may want to share an index between several models. You'll need to ensure you don't have any conflict with the `primary_key` of the models involved.
+You may want to share an index between several models. You’ll need to ensure you don’t have any conflict with the `primary_key` of the models involved.
 
 ```ruby
 class Cat < ActiveRecord::Base
@@ -399,18 +402,31 @@ end
 
 In this case you can bypass loading the record from **ActiveRecord** and just communicate with the index directly.
 
+With **ActiveJob**:
+
 ```ruby
+class Book < ActiveRecord::Base
+  include MeiliSearch
+
+  meilisearch enqueue: :trigger_job do
+    attribute :title, :author, :description
+  end
+
+  def self.trigger_job(record, remove)
+    MyActiveJob.perform_later(record.id, remove)
+  end
+end
+
 class MyActiveJob < ApplicationJob
   def perform(id, remove)
     if remove
-      # the record has likely already been removed from your database so we cannot
-      # use ActiveRecord#find to load it
-      # We access the underlying MeiliSearch index object
+      # The record has likely already been removed from your database so we cannot
+      # use ActiveRecord#find to load it.
+      # We access the underlying MeiliSearch index object.
       Book.index.delete_document(id)
     else
-      # the record should be present
-      c = Book.find(id)
-      c.index!
+      # The record should be present.
+      Book.find(id).index!
     end
   end
 end
@@ -434,14 +450,13 @@ end
 class MySidekiqWorker
   def perform(id, remove)
     if remove
-      # the record has likely already been removed from your database so we cannot
-      # use ActiveRecord#find to load it
-      # We access the underlying MeiliSearch index object
-      index = Book.index.delete_document(id)
+      # The record has likely already been removed from your database so we cannot
+      # use ActiveRecord#find to load it.
+      # We access the underlying MeiliSearch index object.
+      Book.index.delete_document(id)
     else
-      # the record should be present
-      c = Contact.find(id)
-      c.index!
+      # The record should be present.
+      Book.find(id).index!
     end
   end
 end
@@ -471,7 +486,7 @@ end
 
 Extend a change to a related record.
 
-**With Active Record**, you'll need to use `touch` and `after_touch`.
+**With ActiveRecord**, you'll need to use `touch` and `after_touch`.
 
 ```ruby
 class Author < ActiveRecord::Base
@@ -573,7 +588,7 @@ end
 
 #### Indexing & deletion
 
-You can manually index a record by using the `index!` instance method and remove it by using the `remove_from_index!` instance method
+You can manually index a record by using the `index!` instance method and remove it by using the `remove_from_index!` instance method.
 
 ```ruby
 book = Book.create!(title: 'The Little Prince', author: 'Antoine de Saint-Exupéry')
@@ -608,7 +623,6 @@ index = Book.index
 
 ### Development & testing
 
-
 #### Exceptions
 
 You can disable exceptions that could be raised while trying to reach MeiliSearch's API by using the `raise_on_failure` option:
@@ -617,14 +631,16 @@ You can disable exceptions that could be raised while trying to reach MeiliSearc
 class Book < ActiveRecord::Base
   include MeiliSearch
 
-  # only raise exceptions in development environment
+  # Only raise exceptions in development environment.
   meilisearch raise_on_failure: Rails.env.development? do
   end
 end
 ```
 
 #### Testing
+
 ##### Synchronous testing
+
 You can force indexing and removing to be synchronous by setting the following option:
 
 ```ruby
@@ -654,7 +670,8 @@ You can temporarily disable auto-indexing using the without_auto_index scope:
 
 ```ruby
 Book.without_auto_index do
-  1.upto(10000) { Book.create! attributes } # inside this block, auto indexing task will not run.
+  # Inside this block, auto indexing task will not run.
+  1.upto(10000) { Book.create! attributes }
 end
 ```
 
