@@ -145,7 +145,10 @@ end
 
 #### Backend Pagination <!-- omit in toc -->
 
-We support both [kaminari](https://github.com/amatsuda/kaminari) and [will_paginate](https://github.com/mislav/will_paginate).
+This gem supports:
+- [kaminari](https://github.com/amatsuda/kaminari)
+- [pagy](https://github.com/ddnexus/pagy)
+- [will_paginate](https://github.com/mislav/will_paginate).
 
 Specify the `:pagination_backend` in the configuration file:
 
