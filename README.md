@@ -357,7 +357,7 @@ end
 
 #### Share a single index
 
-You may want to share an index between several models. You’ll need to ensure you don’t have any conflict with the `primary_key` of the models involved.
+You may want to share an index between several models. You'll need to ensure you don't have any conflict with the `primary_key` of the models involved.
 
 ```ruby
 class Cat < ActiveRecord::Base
