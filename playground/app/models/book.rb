@@ -6,13 +6,13 @@ class Book < ApplicationRecord
     searchable_attributes [:title, :author, :publisher, :description]
     attributes_for_faceting [:genre]
     ranking_rules [
-      "proximity",
-      "typo",
-      "words",
-      "attribute",
-      "wordsPosition",
-      "exactness",
-      "desc(publication_year)",
+      'proximity',
+      'typo',
+      'words',
+      'attribute',
+      'wordsPosition',
+      'exactness',
+      'desc(publication_year)',
     ]
     attributes_to_highlight ['*']
     attributes_to_crop [:description]

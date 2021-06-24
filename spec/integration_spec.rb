@@ -1154,7 +1154,7 @@ describe 'Will_paginate' do
   end
 end
 
-describe "attributes_to_crop" do
+describe 'attributes_to_crop' do
   before(:all) do
     MeiliSearch.configuration = { meilisearch_host: ENV['MEILISEARCH_HOST'], meilisearch_api_key: ENV['MEILISEARCH_API_KEY']}
     10.times do
