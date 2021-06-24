@@ -260,7 +260,7 @@ end
 
 You can add a custom attribute by using the `add_attribute` option or by using a block.
 
-⚠️ When using custom attributes, the gem is not able to detect changes on them. Your record will be pushed to the API even if the custom attribute didn’t change. To prevent this behavior, you can create a `will_save_change_to_#{attr_name}?` method.
+⚠️ When using custom attributes, the gem is not able to detect changes on them. Your record will be pushed to the API even if the custom attribute didn't change. To prevent this behavior, you can create a `will_save_change_to_#{attr_name}?` method.
 
 ```ruby
 class Author < ApplicationRecord
