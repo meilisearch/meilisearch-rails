@@ -12,6 +12,7 @@ require 'sqlite3' if !defined?(JRUBY_VERSION)
 require 'logger'
 require 'sequel'
 require 'active_model_serializers'
+require 'byebug'
 
 MeiliSearch.configuration = { meilisearch_host: ENV['MEILISEARCH_HOST'], meilisearch_api_key: ENV['MEILISEARCH_API_KEY'] }
 
@@ -172,8 +173,8 @@ end
 class Restaurant < ActiveRecord::Base
   include MeiliSearch
   meilisearch index_uid: safe_index_uid("Restaurant")do
-    attributesToCrop [:description]
-    cropLength 10
+    attributes_to_crop [:description]
+    crop_length 10
   end
 end
 
@@ -233,10 +234,10 @@ class Song < ActiveRecord::Base
   SECURED_INDEX_UID = safe_index_uid('PrivateSongs')
 
   meilisearch index_uid: SECURED_INDEX_UID do
-    searchableAttributes [:name, :artist]
+    searchable_attributes [:name, :artist]
 
     add_index PUBLIC_INDEX_UID, if: :public? do
-      searchableAttributes [:name, :artist]
+      searchable_attributes [:name, :artist]
     end
   end
 
@@ -269,10 +270,18 @@ class Color < ActiveRecord::Base
   attr_accessor :not_indexed
 
   meilisearch synchronous: true, index_uid: safe_index_uid("Color"), per_environment: true do
-    searchableAttributes [:name]
-    attributesForFaceting ['short_name']
-    rankingRules ['typo', 'words', 'proximity', 'attribute', 'wordsPosition', 'exactness','asc(hex)']
-    attributesToHighlight [:name]
+    searchable_attributes [:name]
+    attributes_for_faceting ['short_name']
+    ranking_rules [
+      'typo',
+      'words',
+      'proximity',
+      'attribute',
+      'wordsPosition',
+      'exactness',
+      'asc(hex)',
+    ]
+    attributes_to_highlight [:name]
   end
 
   def will_save_change_to_hex?
@@ -324,7 +333,7 @@ class Namespaced::Model < ActiveRecord::Base
     attribute :myid do
       id
     end
-    searchableAttributes ['customAttr']
+    searchable_attributes ['customAttr']
   end
 end
 
@@ -373,7 +382,7 @@ class SequelBook < Sequel::Model(SEQUEL_DB)
     add_attribute :test
     add_attribute :test2
 
-    searchableAttributes [:name]
+    searchable_attributes [:name]
   end
 
   def after_create
@@ -433,14 +442,14 @@ class Book < ActiveRecord::Base
   include MeiliSearch
 
   meilisearch synchronous: true, index_uid: safe_index_uid("SecuredBook"), per_environment: true, sanitize: true do
-    searchableAttributes [:name]
+    searchable_attributes [:name]
 
     add_index safe_index_uid('BookAuthor'), per_environment: true do
-      searchableAttributes [:author]
+      searchable_attributes [:author]
     end
 
     add_index safe_index_uid('Book'), per_environment: true, if: :public? do
-      searchableAttributes [:name]
+      searchable_attributes [:name]
     end
   end
 
@@ -455,7 +464,7 @@ class Ebook < ActiveRecord::Base
   attr_accessor :current_time, :published_at
 
   meilisearch synchronous: true, index_uid: safe_index_uid("eBooks")do
-    searchableAttributes [:name]
+    searchable_attributes [:name]
   end
 
   def ms_dirty?
@@ -1146,7 +1155,7 @@ describe 'Will_paginate' do
   end
 end
 
-describe "attributesToCrop" do
+describe 'attributes_to_crop' do
   before(:all) do
     MeiliSearch.configuration = { meilisearch_host: ENV['MEILISEARCH_HOST'], meilisearch_api_key: ENV['MEILISEARCH_API_KEY']}
     10.times do
@@ -1166,6 +1175,7 @@ describe "attributesToCrop" do
     raw_search_results = Restaurant.raw_search('')
     expect(results[0].formatted).to_not be_nil
     expect(results[0].formatted).to eq(raw_search_results['hits'].first['_formatted'])
+    expect(results.first.formatted['description'].length).to be < results.first['description'].length
     expect(results.first.formatted['description']).to eq(raw_search_results['hits'].first['_formatted']['description'])
     expect(results.first.formatted['description']).not_to eq(results.first['description'])
   end
@@ -1323,4 +1333,3 @@ describe "Raise on failure" do
     end.not_to raise_error
   end
 end
-
