@@ -290,7 +290,7 @@ end
 
 #### Custom primary key
 
-By default, the primary key is based on your record’s id. You can change this behavior specifying the `primary_key:` option.
+By default, the primary key is based on your record's id. You can change this behavior by specifying the `primary_key:` option.
 
 Note that the primary key must have a **unique value**.
 
