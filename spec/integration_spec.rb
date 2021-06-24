@@ -12,6 +12,7 @@ require 'sqlite3' if !defined?(JRUBY_VERSION)
 require 'logger'
 require 'sequel'
 require 'active_model_serializers'
+require 'byebug'
 
 MeiliSearch.configuration = { meilisearch_host: ENV['MEILISEARCH_HOST'], meilisearch_api_key: ENV['MEILISEARCH_API_KEY'] }
 
@@ -1166,6 +1167,7 @@ describe "attributesToCrop" do
     raw_search_results = Restaurant.raw_search('')
     expect(results[0].formatted).to_not be_nil
     expect(results[0].formatted).to eq(raw_search_results['hits'].first['_formatted'])
+    expect(results.first.formatted['description'].length).to be < results.first['description'].length
     expect(results.first.formatted['description']).to eq(raw_search_results['hits'].first['_formatted']['description'])
     expect(results.first.formatted['description']).not_to eq(results.first['description'])
   end

@@ -27,4 +27,5 @@ group :test do
   gem 'will_paginate', '>= 2.3.15'
   gem 'kaminari'
   gem 'dotenv', '~> 2.7', '>= 2.7.6'
+  gem 'byebug'
 end
