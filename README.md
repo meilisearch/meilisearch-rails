@@ -195,13 +195,13 @@ class Book < ApplicationRecord
     searchableAttributes [:title, :author, :publisher, :description]
     attributesForFaceting [:genre]
     rankingRules [
-      "proximity",
-      "typo",
-      "words",
-      "attribute",
-      "wordsPosition",
-      "exactness",
-      "desc(publication_year)"
+      'proximity',
+      'typo',
+      'words',
+      'attribute',
+      'wordsPosition',
+      'exactness',
+      'desc(publication_year)'
     ]
     synonyms nyc: ["new york"]
 
