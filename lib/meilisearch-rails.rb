@@ -52,16 +52,25 @@ module MeiliSearch
 
     # MeiliSearch settings
     OPTIONS = [
-      :searchableAttributes, :attributesForFaceting, :displayedAttributes, :distinctAttribute,
-      :synonyms, :stopWords, :rankingRules,
+      :searchableAttributes,
+      :attributesForFaceting,
+      :displayedAttributes,
+      :distinctAttribute,
+      :synonyms,
+      :stopWords,
+      :rankingRules,
       :attributesToHighlight,
-      :attributesToCrop, :cropLength
+      :attributesToCrop,
+      :cropLength,
     ]
 
-    OPTIONS.each do |k|
-      define_method k do |v|
-        instance_variable_set("@#{k}", v)
+    OPTIONS.each do |option|
+      define_method option do |value|
+        instance_variable_set("@#{option}", value)
       end
+
+      underscored_name = option.to_s.gsub(/(.)([A-Z])/, '\1_\2').downcase
+      alias_method underscored_name, option if underscored_name != option
     end
 
     def initialize(options, &block)

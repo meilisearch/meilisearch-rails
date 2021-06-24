@@ -192,9 +192,9 @@ class Book < ApplicationRecord
   include MeiliSearch
 
   meilisearch do
-    searchableAttributes [:title, :author, :publisher, :description]
-    attributesForFaceting [:genre]
-    rankingRules [
+    searchable_attributes [:title, :author, :publisher, :description]
+    attributes_for_faceting [:genre]
+    ranking_rules [
       'proximity',
       'typo',
       'words',
@@ -206,9 +206,9 @@ class Book < ApplicationRecord
     synonyms nyc: ['new york']
 
     # The following parameters are applied when calling the search() method:
-    attributesToHighlight ['*']
-    attributesToCrop [:description]
-    cropLength 10
+    attributes_to_highlight ['*']
+    attributes_to_crop [:description]
+    crop_length 10
   end
 end
 ```
@@ -222,7 +222,8 @@ All the supported options are described in the [search parameters](https://docs.
 ```ruby
 Book.search('Harry', filters: 'author = J. K. Rowling')
 ```
-👉 Don't forget that `attributesToHighlight`, `attributesToCrop`, and `cropLength` can be set up in the `meilisearch` block of your model.
+👉 Don't forget that `attributes_to_highlight`, `attributes_to_crop`, and
+`crop_length` can be set up in the `meilisearch` block of your model.
 
 ## 🪛 Options
 
@@ -340,11 +341,11 @@ class Book < ActiveRecord::Base
 
   # store all books in index 'SECURED_INDEX_UID'
   meilisearch index_uid: SECURED_INDEX_UID do
-    searchableAttributes [:title, :author]
+    searchable_attributes [:title, :author]
 
     # store all 'public' (released and not premium) books in index 'PUBLIC_INDEX_UID'
     add_index PUBLIC_INDEX_UID, if: :public? do
-      searchableAttributes [:title, :author]
+      searchable_attributes [:title, :author]
     end
   end
 
