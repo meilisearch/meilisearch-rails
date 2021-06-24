@@ -561,8 +561,6 @@ module MeiliSearch
         params[:cropLength] = meilisearch_settings.get_setting(:cropLength) if !meilisearch_settings.get_setting(:cropLength).nil?
       end
       index = ms_index(index_uid)
-      # index = ms_index(ms_index_uid)
-      # index.search(q, Hash[params.map { |k,v| [k.to_s, v.to_s] }])
       index.search(q, Hash[params.map { |k,v| [k, v] }])
     end
 
@@ -599,14 +597,6 @@ module MeiliSearch
         params[:limit] = 200
       end
 
-      if !meilisearch_settings.get_setting(:attributesToHighlight).nil?
-        params[:attributesToHighlight] = meilisearch_settings.get_setting(:attributesToHighlight)
-      end
-
-      if !meilisearch_settings.get_setting(:attributesToCrop).nil?
-        params[:attributesToCrop] = meilisearch_settings.get_setting(:attributesToCrop)
-        params[:cropLength] = meilisearch_settings.get_setting(:cropLength) if !meilisearch_settings.get_setting(:cropLength).nil?
-      end
       # Returns raw json hits as follows:
       # {"hits"=>[{"id"=>"13", "href"=>"apple", "name"=>"iphone"}], "offset"=>0, "limit"=>|| 20, "nbHits"=>1, "exhaustiveNbHits"=>false, "processingTimeMs"=>0, "query"=>"iphone"}
       json = ms_raw_search(q, params)
