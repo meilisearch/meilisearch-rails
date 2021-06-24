@@ -206,7 +206,7 @@ class Book < ApplicationRecord
     synonyms nyc: ['new york']
 
     # The following parameters are applied when calling the search() method:
-    attributesToHighlight ["*"]
+    attributesToHighlight ['*']
     attributesToCrop [:description]
     cropLength 10
   end
