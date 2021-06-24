@@ -203,7 +203,7 @@ class Book < ApplicationRecord
       'exactness',
       'desc(publication_year)'
     ]
-    synonyms nyc: ["new york"]
+    synonyms nyc: ['new york']
 
     # The following parameters are applied when calling the search() method:
     attributesToHighlight ["*"]
