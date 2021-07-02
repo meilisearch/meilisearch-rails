@@ -9,7 +9,11 @@ module MeiliSearch
     end
 
     def client
-      ::MeiliSearch::Client.new(@@configuration[:meilisearch_host], @@configuration[:meilisearch_api_key])
+      ::MeiliSearch::Client.new(
+        configuration[:meilisearch_host],
+        configuration[:meilisearch_api_key],
+        **configuration.slice(:timeout, :max_retries)
+      )
     end
   end
 end

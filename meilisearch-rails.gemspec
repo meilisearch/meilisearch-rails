@@ -41,6 +41,6 @@ Gem::Specification.new do |s|
   s.licenses = ["MIT"]
   s.require_paths = ["lib"]
   s.summary = "MeiliSearch integration for Ruby on Rails."
-  s.add_dependency(%q<json>, [">= 1.5.1"])
-  s.add_dependency(%q<meilisearch>, [">= 0.15.3"])
+  s.add_dependency("json", [">= 1.5.1"])
+  s.add_dependency("meilisearch", [">= 0.15.4"])
 end
