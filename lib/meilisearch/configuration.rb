@@ -12,7 +12,7 @@ module MeiliSearch
       ::MeiliSearch::Client.new(
         configuration[:meilisearch_host],
         configuration[:meilisearch_api_key],
-        **configuration.slice(:timeout, :max_retries)
+        configuration.slice(:timeout, :max_retries)
       )
     end
   end

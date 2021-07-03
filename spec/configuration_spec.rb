@@ -29,7 +29,7 @@ describe MeiliSearch::Configuration do
 
       expect(MeiliSearch::Client)
         .to have_received(:new)
-        .with("http://localhost:7700", "s3cr3tap1k3y")
+        .with("http://localhost:7700", "s3cr3tap1k3y", {})
     end
 
     context "with timeout and max retries" do
