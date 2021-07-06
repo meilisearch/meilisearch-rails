@@ -26,7 +26,7 @@ module MeiliSearch
         klasses.each do |klass|
           puts klass
           puts "Reindexing #{klass.count} records..."
-          klass.ms_reindex
+          klass.ms_reindex!
         end
       end
 
