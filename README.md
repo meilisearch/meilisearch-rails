@@ -104,8 +104,8 @@ Create a new file `config/initializers/meilisearch.rb` to setup your `MEILISEARC
 
 ```ruby
 MeiliSearch.configuration = {
-    meilisearch_host: 'YourMeiliSearchHost',
-    meilisearch_api_key: 'YourMeiliSearchAPIKey',
+  meilisearch_host: 'YourMeiliSearchHost',
+  meilisearch_api_key: 'YourMeiliSearchAPIKey',
 }
 ```
 
@@ -183,7 +183,21 @@ The **number of hits per page defaults to 20**, you can customize it by adding t
 Book.search('harry potter', hitsPerPage: 10)
 ```
 
-##  ⚙️ Settings
+#### Extra Configuration <!-- omit in toc -->
+
+Requests made to MeiliSearch may timeout and retry. To adapt the behavior to
+your needs, you can change the parameters during configuration:
+
+```ruby
+MeiliSearch.configuration = {
+  meilisearch_host: 'YourMeiliSearchHost',
+  meilisearch_api_key: 'YourMeiliSearchAPIKey',
+  timeout: 2,
+  max_retries: 1,
+}
+```
+
+## ⚙️ Settings
 
 You can configure the index settings by adding them inside the `meilisearch` block as shown below:
 
