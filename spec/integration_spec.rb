@@ -271,13 +271,12 @@ class Color < ActiveRecord::Base
 
   meilisearch synchronous: true, index_uid: safe_index_uid("Color"), per_environment: true do
     searchable_attributes [:name]
-    attributes_for_faceting ['short_name']
+    filterable_attributes ['short_name']
     ranking_rules [
       'typo',
       'words',
       'proximity',
       'attribute',
-      'wordsPosition',
       'exactness',
       'asc(hex)',
     ]
@@ -795,15 +794,6 @@ describe 'Colors' do
   it "should not index non-saved document" do
     expect { Color.new(name: 'purple').index!(true) }.to raise_error(ArgumentError)
     expect { Color.new(name: 'purple').remove_from_index!(true) }.to raise_error(ArgumentError)
-  end
-
-  it "should search inside facets" do
-    @blue = Color.create!(name: "blue", short_name: "blu", hex: 0x0000FF)
-    @black = Color.create!(name: "black", short_name: "bla", hex: 0x000000)
-    @green = Color.create!(name: "green", short_name: "gre", hex: 0x00FF00)
-    facets = Color.search('bl', {facetFilters: ['short_name:bla']})
-    expect(facets.size).to eq(1)
-    expect(facets).to include(@black)
   end
 end
 
@@ -1324,12 +1314,12 @@ end
 describe "Raise on failure" do
   it 'should raise on failure' do
     expect do
-      Fruit.search('', { filters: 'title = Nightshift' })
+      Fruit.search('', { filter: 'title = Nightshift' })
     end.to raise_error(MeiliSearch::ApiError)
   end
   it 'should not raise on failure' do
     expect do
-      Vegetable.search('', { filters: 'title = Kale' })
+      Vegetable.search('', { filter: 'title = Kale' })
     end.not_to raise_error
   end
 end
