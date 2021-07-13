@@ -207,7 +207,7 @@ class Book < ApplicationRecord
 
   meilisearch do
     searchable_attributes [:title, :author, :publisher, :description]
-    attributes_for_faceting [:genre]
+    filterable_attributes [:genre]
     ranking_rules [
       'proximity',
       'typo',
@@ -234,7 +234,7 @@ Check the dedicated section of the documentation, for more information on the [s
 All the supported options are described in the [search parameters](https://docs.meilisearch.com/reference/features/search_parameters.html) section of the documentation.
 
 ```ruby
-Book.search('Harry', filters: 'author = J. K. Rowling')
+Book.search('Harry', attributesToHighlight: ['*'])
 ```
 👉 Don't forget that `attributes_to_highlight`, `attributes_to_crop`, and
 `crop_length` can be set up in the `meilisearch` block of your model.
@@ -284,13 +284,13 @@ class Author < ApplicationRecord
   meilisearch do
     attribute :first_name, :last_name
     attribute :full_name do
-      '#{first_name} #{last_name}'
+      "#{first_name} #{last_name}"
     end
     add_attribute :full_name_reversed
   end
 
   def full_name_reversed
-    '#{last_name} #{first_name}'
+    "#{last_name} #{first_name}"
   end
 
   def will_save_change_to_full_name?
