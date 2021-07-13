@@ -150,7 +150,7 @@ class Product < ActiveRecord::Base
 
   meilisearch auto_index: false,
     if: :published?, unless: lambda { |o| o.href.blank? },
-    index_uid: safe_index_uid("my_products_index") do
+    index_uid: safe_index_uid('my_products_index') do
 
     attribute :href, :name
 
@@ -172,7 +172,7 @@ end
 
 class Restaurant < ActiveRecord::Base
   include MeiliSearch
-  meilisearch index_uid: safe_index_uid("Restaurant")do
+  meilisearch index_uid: safe_index_uid('Restaurant')do
     attributes_to_crop [:description]
     crop_length 10
   end
@@ -180,14 +180,14 @@ end
 
 class Movies < ActiveRecord::Base
   include MeiliSearch
-  meilisearch index_uid: safe_index_uid("Movies")do
+  meilisearch index_uid: safe_index_uid('Movies')do
   end
 end
 
 class People < ActiveRecord::Base
   include MeiliSearch
 
-  meilisearch synchronous: true, index_uid: safe_index_uid("MyCustomPeople"), primary_key: :card_number, auto_remove: false do
+  meilisearch synchronous: true, index_uid: safe_index_uid('MyCustomPeople'), primary_key: :card_number, auto_remove: false do
     add_attribute :full_name
   end
 
@@ -269,7 +269,7 @@ class Color < ActiveRecord::Base
   include MeiliSearch
   attr_accessor :not_indexed
 
-  meilisearch synchronous: true, index_uid: safe_index_uid("Color"), per_environment: true do
+  meilisearch synchronous: true, index_uid: safe_index_uid('Color'), per_environment: true do
     searchable_attributes [:name]
     filterable_attributes ['short_name']
     ranking_rules [
@@ -295,21 +295,21 @@ end
 class DisabledBoolean < ActiveRecord::Base
   include MeiliSearch
 
-  meilisearch synchronous: true, disable_indexing: true, index_uid: safe_index_uid("DisabledBoolean") do
+  meilisearch synchronous: true, disable_indexing: true, index_uid: safe_index_uid('DisabledBoolean') do
   end
 end
 
 class DisabledProc < ActiveRecord::Base
   include MeiliSearch
 
-  meilisearch synchronous: true, disable_indexing: Proc.new { true }, index_uid: safe_index_uid("DisabledProc") do
+  meilisearch synchronous: true, disable_indexing: Proc.new { true }, index_uid: safe_index_uid('DisabledProc') do
   end
 end
 
 class DisabledSymbol < ActiveRecord::Base
   include MeiliSearch
 
-  meilisearch synchronous: true, disable_indexing: :truth, index_uid: safe_index_uid("DisabledSymbol") do
+  meilisearch synchronous: true, disable_indexing: :truth, index_uid: safe_index_uid('DisabledSymbol') do
   end
 
   def self.truth
@@ -339,14 +339,14 @@ end
 class UniqUser < ActiveRecord::Base
   include MeiliSearch
 
-  meilisearch synchronous: true, index_uid: safe_index_uid("UniqUser"), per_environment: true, id: :name do
+  meilisearch synchronous: true, index_uid: safe_index_uid('UniqUser'), per_environment: true, id: :name do
   end
 end
 
 class NullableId < ActiveRecord::Base
   include MeiliSearch
 
-  meilisearch synchronous: true, index_uid: safe_index_uid("NullableId"), per_environment: true, id: :custom_id, if: :never do
+  meilisearch synchronous: true, index_uid: safe_index_uid('NullableId'), per_environment: true, id: :custom_id, if: :never do
   end
 
   def custom_id
@@ -359,11 +359,11 @@ class NullableId < ActiveRecord::Base
 end
 
 class NestedItem < ActiveRecord::Base
-  has_many :children, class_name: "NestedItem", foreign_key: "parent_id"
+  has_many :children, class_name: 'NestedItem', foreign_key: 'parent_id'
 
   include MeiliSearch
 
-  meilisearch synchronous: true, index_uid: safe_index_uid("NestedItem"), per_environment: true, unless: :hidden do
+  meilisearch synchronous: true, index_uid: safe_index_uid('NestedItem'), per_environment: true, unless: :hidden do
     attribute :nb_children
   end
 
@@ -377,7 +377,7 @@ class SequelBook < Sequel::Model(SEQUEL_DB)
 
   include MeiliSearch
 
-  meilisearch synchronous: true, index_uid: safe_index_uid("SequelBook"), per_environment: true, sanitize: true do
+  meilisearch synchronous: true, index_uid: safe_index_uid('SequelBook'), per_environment: true, sanitize: true do
     add_attribute :test
     add_attribute :test2
 
@@ -407,7 +407,7 @@ describe 'SequelBook' do
     SequelBook.clear_index!(true)
   end
 
-  it "should index the book" do
+  it 'should index the book' do
     @steve_jobs = SequelBook.create name: 'Steve Jobs', author: 'Walter Isaacson', premium: true, released: true
     results = SequelBook.search('steve')
 
@@ -415,7 +415,7 @@ describe 'SequelBook' do
     expect(results[0].id).to eq(@steve_jobs.id)
   end
 
-  it "should not override after hooks" do
+  it 'should not override after hooks' do
     expect(SequelBook).to receive(:new).twice.and_call_original
     SequelBook.create name: 'Steve Jobs', author: 'Walter Isaacson', premium: true, released: true
   end
@@ -425,22 +425,22 @@ end
 class MongoDocument < ActiveRecord::Base
   include MeiliSearch
 
-  meilisearch index_uid: safe_index_uid("MongoDocument") do
+  meilisearch index_uid: safe_index_uid('MongoDocument') do
   end
 
   def self.reindex!
-    raise NameError.new("never reached")
+    raise NameError.new('never reached')
   end
 
   def index!
-    raise NameError.new("never reached")
+    raise NameError.new('never reached')
   end
 end
 
 class Book < ActiveRecord::Base
   include MeiliSearch
 
-  meilisearch synchronous: true, index_uid: safe_index_uid("SecuredBook"), per_environment: true, sanitize: true do
+  meilisearch synchronous: true, index_uid: safe_index_uid('SecuredBook'), per_environment: true, sanitize: true do
     searchable_attributes [:name]
 
     add_index safe_index_uid('BookAuthor'), per_environment: true do
@@ -462,7 +462,7 @@ class Ebook < ActiveRecord::Base
   include MeiliSearch
   attr_accessor :current_time, :published_at
 
-  meilisearch synchronous: true, index_uid: safe_index_uid("eBooks")do
+  meilisearch synchronous: true, index_uid: safe_index_uid('eBooks')do
     searchable_attributes [:name]
   end
 
@@ -477,7 +477,7 @@ end
 class EncodedString < ActiveRecord::Base
   include MeiliSearch
 
-  meilisearch synchronous: true, force_utf8_encoding: true, index_uid: safe_index_uid("EncodedString") do
+  meilisearch synchronous: true, force_utf8_encoding: true, index_uid: safe_index_uid('EncodedString') do
     attribute :value do
       "\xC2\xA0\xE2\x80\xA2\xC2\xA0".force_encoding('ascii-8bit')
     end
@@ -507,7 +507,7 @@ unless OLD_RAILS
   class DisabledEnqueuedDocument < ActiveRecord::Base
     include MeiliSearch
 
-    meilisearch(enqueue: Proc.new { |record| raise "enqueued" },
+    meilisearch(enqueue: Proc.new { |record| raise 'enqueued' },
       index_uid: safe_index_uid('EnqueuedDocument'),
       disable_indexing: true) do
       attributes [:name]
@@ -539,7 +539,7 @@ if defined?(ActiveModel::Serializer)
       SerializedDocument.clear_index!(true)
     end
 
-    it "should push the name but not the other attribute" do
+    it 'should push the name but not the other attribute' do
       o = SerializedDocument.new name: 'test', skip: 'skip me'
       attributes = SerializedDocument.meilisearch_settings.get_attributes(o)
       expect(attributes).to eq({name: 'test'})
@@ -551,7 +551,7 @@ describe 'Encoding' do
   before(:all) do
     EncodedString.clear_index!(true)
   end
-  it "should convert to utf-8" do
+  it 'should convert to utf-8' do
     EncodedString.create!
     results = EncodedString.raw_search ''
     expect(results['hits'].size).to eq(1)
@@ -561,25 +561,25 @@ end
 
 describe 'Settings change detection' do
 
-  it "should detect settings changes" do
+  it 'should detect settings changes' do
     Color.send(:meilisearch_settings_changed?, nil, {}).should == true
-    Color.send(:meilisearch_settings_changed?, {}, {"searchableAttributes" => ["name"]}).should == true
-    Color.send(:meilisearch_settings_changed?, {"searchableAttributes" => ["name"]}, {"searchableAttributes" => ["name", "hex"]}).should == true
-    Color.send(:meilisearch_settings_changed?, {"searchableAttributes" => ["name"]}, {"rankingRules" => ["typo", "words", "proximity", "attribute", "wordsPosition", "exactness", "asc(hex)"]}).should == true
+    Color.send(:meilisearch_settings_changed?, {}, {'searchableAttributes' => ['name']}).should == true
+    Color.send(:meilisearch_settings_changed?, {'searchableAttributes' => ['name']}, {'searchableAttributes' => ['name', 'hex']}).should == true
+    Color.send(:meilisearch_settings_changed?, {'searchableAttributes' => ['name']}, {'rankingRules' => ['typo', 'words', 'proximity', 'attribute', 'wordsPosition', 'exactness', 'asc(hex)']}).should == true
   end
 
-  it "should not detect settings changes" do
+  it 'should not detect settings changes' do
     Color.send(:meilisearch_settings_changed?, {}, {}).should == false
-    Color.send(:meilisearch_settings_changed?, {"searchableAttributes" => ["name"]}, {searchableAttributes: ["name"]}).should == false
-    Color.send(:meilisearch_settings_changed?, {"searchableAttributes" => ["name"], "rankingRules" => ["typo", "words", "proximity", "attribute", "wordsPosition", "exactness", "asc(hex)"]}, {"rankingRules" => ["typo", "words", "proximity", "attribute", "wordsPosition", "exactness", "asc(hex)"]}).should == false
+    Color.send(:meilisearch_settings_changed?, {'searchableAttributes' => ['name']}, {searchableAttributes: ['name']}).should == false
+    Color.send(:meilisearch_settings_changed?, {'searchableAttributes' => ['name'], 'rankingRules' => ['typo', 'words', 'proximity', 'attribute', 'wordsPosition', 'exactness', 'asc(hex)']}, {'rankingRules' => ['typo', 'words', 'proximity', 'attribute', 'wordsPosition', 'exactness', 'asc(hex)']}).should == false
   end
 
 end
 
 describe 'Attributes change detection' do
 
-  it "should detect attribute changes" do
-    color = Color.new name: "dark-blue", short_name: "blue"
+  it 'should detect attribute changes' do
+    color = Color.new name: 'dark-blue', short_name: 'blue'
 
     Color.ms_must_reindex?(color).should == true
     color.save
@@ -588,21 +588,21 @@ describe 'Attributes change detection' do
     color.hex = 123456
     Color.ms_must_reindex?(color).should == false
 
-    color.not_indexed = "strstr"
+    color.not_indexed = 'strstr'
     Color.ms_must_reindex?(color).should == false
-    color.name = "red"
+    color.name = 'red'
     Color.ms_must_reindex?(color).should == true
     color.delete
   end
 
-  it "should detect attribute changes even in a transaction" do
-    color = Color.new name: "dark-blue", short_name: "blue"
+  it 'should detect attribute changes even in a transaction' do
+    color = Color.new name: 'dark-blue', short_name: 'blue'
     color.save
     color.instance_variable_get("@ms_must_reindex").should == nil
     Color.transaction do
-      color.name = "red"
+      color.name = 'red'
       color.save
-      color.not_indexed = "strstr"
+      color.not_indexed = 'strstr'
       color.save
       color.instance_variable_get("@ms_must_reindex").should == true
     end
@@ -610,8 +610,8 @@ describe 'Attributes change detection' do
     color.delete
   end
 
-  it "should detect change with ms_dirty? method" do
-    ebook = Ebook.new name: "My life", author: "Myself", premium: false, released: true
+  it 'should detect change with ms_dirty? method' do
+    ebook = Ebook.new name: 'My life', author: 'Myself', premium: false, released: true
     Ebook.ms_must_reindex?(ebook).should == true # Because it's defined in ms_dirty? method
     ebook.current_time = 10
     ebook.published_at = 8
@@ -626,18 +626,18 @@ describe 'Namespaced::Model' do
     Namespaced::Model.index.delete_all_documents!
   end
 
-  it "should have an index name without :: hierarchy" do
-    (Namespaced::Model.index_uid.end_with?("Namespaced_Model")).should == true
+  it 'should have an index name without :: hierarchy' do
+    (Namespaced::Model.index_uid.end_with?('Namespaced_Model')).should == true
   end
 
-  it "should use the block to determine attribute's value" do
+  it 'should use the block to determine attribute\'s value' do
     m = Namespaced::Model.new(another_private_value: 2)
     attributes = Namespaced::Model.meilisearch_settings.get_attributes(m)
     attributes['customAttr'].should == 42
     attributes['myid'].should == m.id
   end
 
-  it "should always update when there is no custom _changed? function" do
+  it 'should always update when there is no custom _changed? function' do
     m = Namespaced::Model.new(another_private_value: 2)
     m.save
     results = Namespaced::Model.search('42')
@@ -661,7 +661,7 @@ end
 #     UniqUser.clear_index!(true)
 #   end
 
-#   it "should not use the id field" do
+#   it 'should not use the id field' do
 #     UniqUser.create name: 'fooBar'
 #     results = UniqUser.search('foo')
 #     expect(results.size).to eq(1)
@@ -673,7 +673,7 @@ describe 'NestedItem' do
     NestedItem.clear_index!(true) rescue nil # not fatal
   end
 
-  it "should fetch attributes unscoped" do
+  it 'should fetch attributes unscoped' do
     @i1 = NestedItem.create hidden: false
     @i2 = NestedItem.create hidden: true
 
@@ -702,96 +702,96 @@ describe 'Colors' do
     Color.clear_index!(true)
   end
 
-  it "should be synchronous" do
+  it 'should be synchronous' do
     c = Color.new
     c.valid?
     c.send(:ms_synchronous?).should == true
   end
 
-  it "should auto index" do
-    @blue = Color.create!(name: "blue", short_name: "b", hex: 0xFF0000)
-    results = Color.search("blue")
+  it 'should auto index' do
+    @blue = Color.create!(name: 'blue', short_name: 'b', hex: 0xFF0000)
+    results = Color.search('blue')
     expect(results.size).to eq(1)
     results.should include(@blue)
   end
 
-  it "should return facets distribution" do
-    results = Color.search("", {facetsDistribution: ['short_name']})
+  it 'should return facets distribution' do
+    results = Color.search('', {facetsDistribution: ['short_name']})
     results.raw_answer.should_not be_nil
     results.facets_distribution.should_not be_nil
     results.facets_distribution.size.should eq(1)
     results.facets_distribution['short_name']['b'].should eq(1)
   end
 
-  it "should be raw searchable" do
-    results = Color.raw_search("blue")
+  it 'should be raw searchable' do
+    results = Color.raw_search('blue')
     results['hits'].size.should eq(1)
     results['nbHits'].should eq(1)
   end
 
-  it "should be able to temporarily disable auto-indexing" do
+  it 'should be able to temporarily disable auto-indexing' do
     Color.without_auto_index do
-      Color.create!(name: "blue", short_name: "b", hex: 0xFF0000)
+      Color.create!(name: 'blue', short_name: 'b', hex: 0xFF0000)
     end
-    expect(Color.search("blue").size).to eq(1)
+    expect(Color.search('blue').size).to eq(1)
     Color.reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
-    expect(Color.search("blue").size).to eq(2)
+    expect(Color.search('blue').size).to eq(2)
   end
 
-  it "should not be searchable with non-searchable fields" do
-    @blue = Color.create!(name: "blue", short_name: "x", hex: 0xFF0000)
-    results = Color.search("x")
+  it 'should not be searchable with non-searchable fields' do
+    @blue = Color.create!(name: 'blue', short_name: 'x', hex: 0xFF0000)
+    results = Color.search('x')
     expect(results.size).to eq(0)
   end
 
-  it "should rank with custom hex" do
-    @blue = Color.create!(name: "red", short_name: "r3", hex: 3)
-    @blue2 = Color.create!(name: "red", short_name: "r1", hex: 1)
-    @blue3 = Color.create!(name: "red", short_name: "r2", hex: 2)
-    results = Color.search("red")
+  it 'should rank with custom hex' do
+    @blue = Color.create!(name: 'red', short_name: 'r3', hex: 3)
+    @blue2 = Color.create!(name: 'red', short_name: 'r1', hex: 1)
+    @blue3 = Color.create!(name: 'red', short_name: 'r2', hex: 2)
+    results = Color.search('red')
     expect(results.size).to eq(3)
     results[0].hex.should eq(1)
     results[1].hex.should eq(2)
     results[2].hex.should eq(3)
   end
 
-  it "should update the index if the attribute changed" do
-    @purple = Color.create!(name: "purple", short_name: "p")
-    expect(Color.search("purple").size).to eq(1)
-    expect(Color.search("pink").size).to eq(0)
-    @purple.name = "pink"
+  it 'should update the index if the attribute changed' do
+    @purple = Color.create!(name: 'purple', short_name: 'p')
+    expect(Color.search('purple').size).to eq(1)
+    expect(Color.search('pink').size).to eq(0)
+    @purple.name = 'pink'
     @purple.save
-    expect(Color.search("purple").size).to eq(0)
-    expect(Color.search("pink").size).to eq(1)
+    expect(Color.search('purple').size).to eq(0)
+    expect(Color.search('pink').size).to eq(1)
   end
 
-  it "should use the specified scope" do
+  it 'should use the specified scope' do
     Color.clear_index!(true)
     Color.where(name: 'red').reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
-    expect(Color.search("").size).to eq(3)
+    expect(Color.search('').size).to eq(3)
     Color.clear_index!(true)
     Color.where(id: Color.first.id).reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
-    expect(Color.search("").size).to eq(1)
+    expect(Color.search('').size).to eq(1)
   end
 
-  it "should have a Rails env-based index name" do
-    Color.index_uid.should == safe_index_uid("Color") + "_#{Rails.env}"
+  it 'should have a Rails env-based index name' do
+    Color.index_uid.should == safe_index_uid('Color') + "_#{Rails.env}"
   end
 
-  it "should include _formatted object" do
-    Color.create!(name: "green", short_name: "b", hex: 0xFF0000)
-    results = Color.search("gre")
+  it 'should include _formatted object' do
+    Color.create!(name: 'green', short_name: 'b', hex: 0xFF0000)
+    results = Color.search('gre')
     expect(results.size).to eq(1)
     expect(results[0].formatted).to_not be_nil
   end
 
-  it "should index an array of documents" do
+  it 'should index an array of documents' do
     json = Color.raw_search('')
     Color.index_documents Color.limit(1), true # reindex last color, `limit` is incompatible with the reindex! method
     json['hits'].count.should eq(Color.raw_search('')['hits'].count)
   end
 
-  it "should not index non-saved document" do
+  it 'should not index non-saved document' do
     expect { Color.new(name: 'purple').index!(true) }.to raise_error(ArgumentError)
     expect { Color.new(name: 'purple').remove_from_index!(true) }.to raise_error(ArgumentError)
   end
@@ -805,38 +805,38 @@ describe 'An imaginary store' do
 
 
     # Google products
-    @blackberry = Product.create!(name: 'blackberry', href: "google", tags: ['decent', 'businessmen love it'])
-    @nokia = Product.create!(name: 'nokia', href: "google", tags: ['decent'])
+    @blackberry = Product.create!(name: 'blackberry', href: 'google', tags: ['decent', 'businessmen love it'])
+    @nokia = Product.create!(name: 'nokia', href: 'google', tags: ['decent'])
 
     # Amazon products
-    @android = Product.create!(name: 'android', href: "amazon", tags: ['awesome'])
-    @samsung = Product.create!(name: 'samsung', href: "amazon", tags: ['decent'])
-    @motorola = Product.create!(name: 'motorola', href: "amazon", tags: ['decent'],
-      description: "Not sure about features since I've never owned one.")
+    @android = Product.create!(name: 'android', href: 'amazon', tags: ['awesome'])
+    @samsung = Product.create!(name: 'samsung', href: 'amazon', tags: ['decent'])
+    @motorola = Product.create!(name: 'motorola', href: 'amazon', tags: ['decent'],
+      description: 'Not sure about features since I\'ve never owned one.')
 
     # Ebay products
-    @palmpre = Product.create!(name: 'palmpre', href: "ebay", tags: ['discontinued', 'worst phone ever'])
-    @palm_pixi_plus = Product.create!(name: 'palm pixi plus', href: "ebay", tags: ['terrible'])
-    @lg_vortex = Product.create!(name: 'lg vortex', href: "ebay", tags: ['decent'])
-    @t_mobile = Product.create!(name: 't mobile', href: "ebay", tags: ['terrible'])
+    @palmpre = Product.create!(name: 'palmpre', href: 'ebay', tags: ['discontinued', 'worst phone ever'])
+    @palm_pixi_plus = Product.create!(name: 'palm pixi plus', href: 'ebay', tags: ['terrible'])
+    @lg_vortex = Product.create!(name: 'lg vortex', href: 'ebay', tags: ['decent'])
+    @t_mobile = Product.create!(name: 't mobile', href: 'ebay', tags: ['terrible'])
 
     # Yahoo products
-    @htc = Product.create!(name: 'htc', href: "yahoo", tags: ['decent'])
-    @htc_evo = Product.create!(name: 'htc evo', href: "yahoo", tags: ['decent'])
-    @ericson = Product.create!(name: 'ericson', href: "yahoo", tags: ['decent'])
+    @htc = Product.create!(name: 'htc', href: 'yahoo', tags: ['decent'])
+    @htc_evo = Product.create!(name: 'htc evo', href: 'yahoo', tags: ['decent'])
+    @ericson = Product.create!(name: 'ericson', href: 'yahoo', tags: ['decent'])
 
     # Apple products
-    @iphone = Product.create!(name: 'iphone', href: "apple", tags: ['awesome', 'poor reception'],
+    @iphone = Product.create!(name: 'iphone', href: 'apple', tags: ['awesome', 'poor reception'],
       description: 'Puts even more features at your fingertips')
 
     # Unindexed products
-    @sekrit = Product.create!(name: 'super sekrit', href: "amazon", release_date: Time.now + 1.day)
+    @sekrit = Product.create!(name: 'super sekrit', href: 'amazon', release_date: Time.now + 1.day)
     @no_href = Product.create!(name: 'super sekrit too; missing href')
 
     # Subproducts
     @camera = Camera.create!(name: 'canon eos rebel t3', href: 'canon')
 
-    100.times do ; Product.create!(name: 'crapoola', href: "crappy", tags: ['crappy']) ; end
+    100.times do ; Product.create!(name: 'crapoola', href: 'crappy', tags: ['crappy']) ; end
 
     @products_in_database = Product.all
 
@@ -844,7 +844,7 @@ describe 'An imaginary store' do
     sleep 5
   end
 
-  it "should not be synchronous" do
+  it 'should not be synchronous' do
     p = Product.new
     p.valid?
     p.send(:ms_synchronous?).should == false
@@ -870,7 +870,7 @@ describe 'An imaginary store' do
       results.should include(@iphone)
     end
 
-    it "should search case insensitively" do
+    it 'should search case insensitively' do
       results = Product.search('IPHONE')
       expect(results.size).to eq(1)
       results.should include(@iphone)
@@ -894,24 +894,30 @@ describe 'An imaginary store' do
       results.should include(@palm_pixi_plus)
     end
 
-    it "should narrow the results by searching across multiple fields" do
+    it 'should find using phrase search' do
+      results = Product.search('coco "palm"')
+      expect(results.size).to eq(1)
+      results.should include(@palm_pixi_plus)
+    end
+
+    it 'should narrow the results by searching across multiple fields' do
       results = Product.search('apple iphone')
       expect(results.size).to eq(1)
       results.should include(@iphone)
     end
 
-    it "should not search on non-indexed fields" do
+    it 'should not search on non-indexed fields' do
       results = Product.search('features')
       expect(results.size).to eq(0)
     end
 
-    it "should delete the associated record" do
+    it 'should delete the associated record' do
       @iphone.destroy
       results = Product.search('iphone')
       expect(results.size).to eq(0)
     end
 
-    it "should not throw an exception if a search result isn't found locally" do
+    it 'should not throw an exception if a search result isn\'t found locally' do
       Product.without_auto_index { @palmpre.destroy }
       expect { Product.search('pal').to_json }.to_not raise_error
     end
@@ -921,7 +927,7 @@ describe 'An imaginary store' do
       JSON.parse(Product.search('pal').to_json).size.should == 1
     end
 
-    it "should not duplicate an already indexed record" do
+    it 'should not duplicate an already indexed record' do
       expect(Product.search('nokia').size).to eq(1)
       @nokia.index!
       expect(Product.search('nokia').size).to eq(1)
@@ -930,21 +936,21 @@ describe 'An imaginary store' do
       expect(Product.search('nokia').size).to eq(1)
     end
 
-    it "should not return products that are not indexable" do
+    it 'should not return products that are not indexable' do
       @sekrit.index!
       @no_href.index!
       results = Product.search('sekrit')
       expect(results.size).to eq(0)
     end
 
-    it "should include items belong to subclasses" do
+    it 'should include items belong to subclasses' do
       @camera.index!
       results = Product.search('eos rebel')
       expect(results.size).to eq(1)
       results.should include(@camera)
     end
 
-    it "should delete a not-anymore-indexable product" do
+    it 'should delete a not-anymore-indexable product' do
       results = Product.search('sekrit')
       expect(results.size).to eq(0)
 
@@ -961,14 +967,14 @@ describe 'An imaginary store' do
       expect(results.size).to eq(0)
     end
 
-    it "should find using synonyms" do
+    it 'should find using synonyms' do
       expect(Product.search('pomme').size).to eq(Product.search('apple').size)
     end
   end
 end
 
 describe 'MongoDocument' do
-  it "should not have method conflicts" do
+  it 'should not have method conflicts' do
     expect { MongoDocument.reindex! }.to raise_error(NameError)
     expect { MongoDocument.new.index! }.to raise_error(NameError)
     MongoDocument.ms_reindex!
@@ -983,7 +989,7 @@ describe 'Book' do
     Book.index(safe_index_uid('Book')).delete_all_documents
   end
 
-  it "should index the book in 2 indexes of 3" do
+  it 'should index the book in 2 indexes of 3' do
     @steve_jobs = Book.create! name: 'Steve Jobs', author: 'Walter Isaacson', premium: true, released: true
     results = Book.search('steve')
     expect(results.size).to eq(1)
@@ -1003,7 +1009,7 @@ describe 'Book' do
     results['hits'].length.should eq(0)
   end
 
-  it "should sanitize attributes" do
+  it 'should sanitize attributes' do
     @hack = Book.create! name: "\"><img src=x onerror=alert(1)> hack0r", author: "<script type=\"text/javascript\">alert(1)</script>", premium: true, released: true
     b = Book.raw_search('hack', { attributesToHighlight: ['*'] })
     expect(b['hits'].length).to eq(1)
@@ -1026,7 +1032,7 @@ describe 'Book' do
     end
   end
 
-  it "should handle removal in an extra index" do
+  it 'should handle removal in an extra index' do
     # add a new public book which (not premium but released)
     book = Book.create! name: 'Public book', author: 'me', premium: false, released: true
 
@@ -1047,7 +1053,7 @@ describe 'Book' do
     expect(results['hits'].size).to eq(0)
   end
 
-  it "should use the per_environment option in the additional index as well" do
+  it 'should use the per_environment option in the additional index as well' do
     index = Book.index(safe_index_uid('Book'))
     expect(index.uid).to eq("#{safe_index_uid('Book')}_#{Rails.env}")
   end
@@ -1073,7 +1079,7 @@ describe 'Kaminari' do
   end
 
 
-  it "should paginate" do
+  it 'should paginate' do
     hits = Restaurant.search ''
     hits.total_count.should eq(Restaurant.raw_search('')['hits'].size)
 
@@ -1088,7 +1094,7 @@ describe 'Kaminari' do
     p2.total_count.should eq(Restaurant.raw_search('')['hits'].count)
   end
 
-  it "should not return error if pagination params are strings" do
+  it 'should not return error if pagination params are strings' do
     p1 = Restaurant.search '', page: '1', hitsPerPage: '1'
     p1.size.should eq(1)
     p1.total_count.should eq(Restaurant.raw_search('')['hits'].count)
@@ -1115,14 +1121,14 @@ describe 'Will_paginate' do
     sleep 5
   end
 
-  it "should paginate" do
+  it 'should paginate' do
     hits = Movies.search '', hitsPerPage: 2
     hits.per_page.should eq(2)
     hits.total_pages.should eq(5)
     hits.total_entries.should eq(Movies.raw_search('')['hits'].count)
   end
 
-  it "should return most relevant elements in the first page" do
+  it 'should return most relevant elements in the first page' do
     hits = Movies.search '', hitsPerPage: 2
     raw_hits = Movies.raw_search ''
     hits[0]['id'].should eq(raw_hits['hits'][0]['id'].to_i)
@@ -1132,7 +1138,7 @@ describe 'Will_paginate' do
     hits[0]['id'].should eq(raw_hits['hits'][2]['id'].to_i)
   end
 
-  it "should not return error if pagination params are strings" do
+  it 'should not return error if pagination params are strings' do
     hits = Movies.search '', hitsPerPage: '5'
     hits.per_page.should eq(5)
     hits.total_pages.should eq(2)
@@ -1180,17 +1186,17 @@ describe 'Disabled' do
     DisabledSymbol.index.delete_all_documents!
   end
 
-  it "should disable the indexing using a boolean" do
+  it 'should disable the indexing using a boolean' do
     DisabledBoolean.create name: 'foo'
     expect(DisabledBoolean.search('').size).to eq(0)
   end
 
-  it "should disable the indexing using a proc" do
+  it 'should disable the indexing using a proc' do
     DisabledProc.create name: 'foo'
     expect(DisabledProc.search('').size).to eq(0)
   end
 
-  it "should disable the indexing using a symbol" do
+  it 'should disable the indexing using a symbol' do
     DisabledSymbol.create name: 'foo'
     expect(DisabledSymbol.search('').size).to eq(0)
   end
@@ -1198,13 +1204,13 @@ end
 
 unless OLD_RAILS
   describe 'EnqueuedDocument' do
-    it "should enqueue a job" do
+    it 'should enqueue a job' do
       expect {
         EnqueuedDocument.create! name: 'test'
-      }.to raise_error("enqueued 1")
+      }.to raise_error('enqueued 1')
     end
 
-    it "should not enqueue a job inside no index block" do
+    it 'should not enqueue a job inside no index block' do
       expect {
         EnqueuedDocument.without_auto_index do
           EnqueuedDocument.create! name: 'test'
@@ -1214,7 +1220,7 @@ unless OLD_RAILS
   end
 
   describe 'DisabledEnqueuedDocument' do
-    it "should not try to enqueue a job" do
+    it 'should not try to enqueue a job' do
       expect {
         DisabledEnqueuedDocument.create! name: 'test'
       }.not_to raise_error
@@ -1223,7 +1229,7 @@ unless OLD_RAILS
 end
 
 describe 'Misconfigured Block' do
-  it "should force the meilisearch block" do
+  it 'should force the meilisearch block' do
     expect {
       MisconfiguredBlock.reindex!
     }.to raise_error(ArgumentError)
@@ -1293,7 +1299,7 @@ describe 'Animals' do
   end
 end
 
-describe "Songs" do
+describe 'Songs' do
   it 'should target multiple indices' do
     Song.create!(name: 'Coconut nut', artist: 'Smokey Mountain', premium: false, released: true) #Only song supposed to be added to Songs index
     Song.create!(name: 'Smoking hot', artist: 'Cigarettes before lunch', premium: true, released: true)
@@ -1311,7 +1317,7 @@ describe "Songs" do
   end
 end
 
-describe "Raise on failure" do
+describe 'Raise on failure' do
   it 'should raise on failure' do
     expect do
       Fruit.search('', { filter: 'title = Nightshift' })

@@ -4,7 +4,7 @@ class Book < ApplicationRecord
   meilisearch do
     # add_attribute :extra_attr
     searchable_attributes [:title, :author, :publisher, :description]
-    attributes_for_faceting [:genre]
+    filterable_attributes [:genre]
     ranking_rules [
       'proximity',
       'typo',
