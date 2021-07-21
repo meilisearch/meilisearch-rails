@@ -795,6 +795,15 @@ describe 'Colors' do
     expect { Color.new(name: 'purple').index!(true) }.to raise_error(ArgumentError)
     expect { Color.new(name: 'purple').remove_from_index!(true) }.to raise_error(ArgumentError)
   end
+
+  it "should search with filter" do
+    @blue = Color.create!(name: "blue", short_name: "blu", hex: 0x0000FF)
+    @black = Color.create!(name: "black", short_name: "bla", hex: 0x000000)
+    @green = Color.create!(name: "green", short_name: "gre", hex: 0x00FF00)
+    facets = Color.search('bl', {filter: ['short_name = bla']})
+    expect(facets.size).to eq(1)
+    expect(facets).to include(@black)
+  end
 end
 
 describe 'An imaginary store' do
