@@ -214,7 +214,7 @@ class Book < ApplicationRecord
       'words',
       'attribute',
       'exactness',
-      'desc(publication_year)',
+      'desc(publication_year)'
     ]
     synonyms nyc: ['new york']
 
