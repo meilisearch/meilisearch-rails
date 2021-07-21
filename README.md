@@ -213,9 +213,8 @@ class Book < ApplicationRecord
       'typo',
       'words',
       'attribute',
-      'wordsPosition',
       'exactness',
-      'desc(publication_year)'
+      'desc(publication_year)',
     ]
     synonyms nyc: ['new york']
 
