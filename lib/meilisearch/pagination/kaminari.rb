@@ -9,7 +9,11 @@ module MeiliSearch
     class Kaminari < ::Kaminari::PaginatableArray
 
       def initialize(array, options)
-        super(array, options)
+        if RUBY_VERSION >= '3'
+          super(array, **options)
+        else
+          super(array, options)
+        end
       end
 
       def limit(num)
