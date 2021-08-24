@@ -53,7 +53,7 @@ module MeiliSearch
     # MeiliSearch settings
     OPTIONS = [
       :searchableAttributes,
-      :attributesForFaceting,
+      :filterableAttributes,
       :displayedAttributes,
       :distinctAttribute,
       :synonyms,
