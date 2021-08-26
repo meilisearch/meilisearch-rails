@@ -17,6 +17,12 @@ describe MeiliSearch::Utilities do
 
       meilisearch
     end
+
+    class DummyChild < Dummy
+    end
+
+    class DummyGrandChild < DummyChild
+    end
   end
 
   after(:each) do
@@ -24,7 +30,7 @@ describe MeiliSearch::Utilities do
   end
 
   it "should get the models where MeiliSearch module was included" do
-    (MeiliSearch::Utilities.get_model_classes - [Dummy]).should == []
+    (MeiliSearch::Utilities.get_model_classes - [Dummy, DummyChild, DummyGrandChild]).should == []
   end
 
 end

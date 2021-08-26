@@ -7,7 +7,8 @@ module MeiliSearch
         elsif Rails.application
           Rails.application.eager_load!
         end
-        MeiliSearch.instance_variable_get :@included_in
+        klasses = MeiliSearch.instance_variable_get(:@included_in)
+        (klasses + klasses.map{ |klass| klass.descendants }.flatten).uniq
       end
 
       def clear_all_indexes
