@@ -233,8 +233,9 @@ Check the dedicated section of the documentation, for more information on the [s
 All the supported options are described in the [search parameters](https://docs.meilisearch.com/reference/features/search_parameters.html) section of the documentation.
 
 ```ruby
-Book.search('Harry', attributesToHighlight: ['*'])
+Book.search('Harry', attributes_to_highlight: ['*'])
 ```
+
 👉 Don't forget that `attributes_to_highlight`, `attributes_to_crop`, and
 `crop_length` can be set up in the `meilisearch` block of your model.
 
