@@ -104,7 +104,7 @@ Create a new file `config/initializers/meilisearch.rb` to setup your `MEILISEARC
 
 ```ruby
 MeiliSearch.configuration = {
-  meilisearch_host: 'YourMeiliSearchHost',
+  meilisearch_host: 'http://YourMeiliSearchHost:7700',
   meilisearch_api_key: 'YourMeiliSearchAPIKey',
 }
 ```
