@@ -29,33 +29,26 @@
 
 - [📖 Documentation](#-documentation)
 - [🤖 Compatibility with MeiliSearch](#-compatibility-with-meilisearch)
-- [🔧 Installation](#-installation)
-- [🔩 Settings](#-settings)
+- [🚀 Getting Started](#-getting-started)
+- [⚙️ Settings](#️-settings)
 - [🔍 Custom search](#-custom-search)
 - [🪛 Options](#-options)
-  - [MeiliSearch configuration & environment](#meilisearch-configuration-&-environment)
-    - [Custom index_uid](#custom-index_uid)
-    - [Per-environment index_uid](#per-environment-index_uid)
+  - [MeiliSearch configuration & environment](#meilisearch-configuration--environment)
   - [Index configuration](#index-configuration)
     - [Custom attribute definition](#custom-attribute-definition)
     - [Custom primary key](#custom-primary-key)
     - [Conditional indexing](#conditional-indexing)
-      - [Target multiple indexes](#target-multiple-indexes)
     - [Share a single index](#share-a-single-index)
-    - [Queues & background jobs](#queues-&-background-jobs)
+    - [Queues & background jobs](#queues--background-jobs)
     - [Relations](#relations)
     - [Sanitize attributes](#sanitize-attributes)
     - [UTF-8 encoding](#utf-8-encoding)
   - [Manual operations](#manual-operations)
-    - [Indexing & deletion](#indexing-&-deletion)
+    - [Indexing & deletion](#indexing--deletion)
     - [Access the underlying index object](#access-the-underlying-index-object)
-  - [Development & testing](#development-&-testing)
-    - [Exceptions](#exceptions)
-    - [Testing](#testing)
-      - [Synchronous testing](#synchronous-testing)
-      - [Disable auto-indexing & auto-removal](#disable-auto-indexing-&-auto-removal)
-- [⚙️ Development Workflow and Contributing](#️-development-workflow-and-contributing)
-- [👏 Credits](#-credits)
+  - [Development & testing](#development--testing)
+- [⚙️ Development workflow & contributing](#️-development-workflow--contributing)
+- [👏  Credits](#--credits)
 
 ## 📖 Documentation
 
@@ -65,9 +58,9 @@ To learn more about MeiliSearch, check out our [Documentation](https://docs.meil
 
 ## 🤖 Compatibility with MeiliSearch
 
-This package only guarantees the compatibility with the [version v0.21.0 of MeiliSearch](https://github.com/meilisearch/MeiliSearch/releases/tag/v0.21.0).
+This package only guarantees the compatibility with the [version v0.22.0 of MeiliSearch](https://github.com/meilisearch/MeiliSearch/releases/tag/v0.22.0).
 
-## 🔧 Installation
+## 🔧 Installation <!-- omit in toc -->
 
 This package requires Ruby version 2.6.0 or later and Rails 5.2 or later.
 
@@ -213,8 +206,9 @@ class Book < ApplicationRecord
       'typo',
       'words',
       'attribute',
+      'sort',
       'exactness',
-      'desc(publication_year)'
+      'publication_year:desc'
     ]
     synonyms nyc: ['new york']
 
@@ -242,7 +236,7 @@ Book.search('Harry', attributesToHighlight: ['*'])
 
 ### MeiliSearch configuration & environment
 
-#### Custom index_uid
+#### Custom index_uid <!-- omit in toc -->
 
 By default, the **index_uid** will be the class name, e.g. `Book`. You can customize the index_uid by using the `index_uid:` option.
 
@@ -255,7 +249,7 @@ class Book < ActiveRecord::Base
 end
 ```
 
-#### Index UID according to the environment
+#### Index UID according to the environment <!-- omit in toc -->
 
 You can suffix the index UID with the current Rails environment using the following option:
 
@@ -341,7 +335,7 @@ class Book < ActiveRecord::Base
   end
 end
 ```
-##### Target multiple indexes
+##### Target multiple indexes <!-- omit in toc -->
 
 You can index a record in several indexes using the `add_index` option:
 
@@ -637,7 +631,7 @@ index = Book.index
 
 ### Development & testing
 
-#### Exceptions
+#### Exceptions <!-- omit in toc -->
 
 You can disable exceptions that could be raised while trying to reach MeiliSearch's API by using the `raise_on_failure` option:
 
@@ -651,9 +645,9 @@ class Book < ActiveRecord::Base
 end
 ```
 
-#### Testing
+#### Testing <!-- omit in toc -->
 
-##### Synchronous testing
+##### Synchronous testing <!-- omit in toc -->
 
 You can force indexing and removing to be synchronous by setting the following option:
 
@@ -667,7 +661,7 @@ end
 ```
 🚨 This is only recommended for testing purposes, the gem will call the `wait_for_pending_update` method that will stop your code execution until the asynchronous task has been processed by MeilSearch.
 
-##### Disable auto-indexing & auto-removal
+##### Disable auto-indexing & auto-removal <!-- omit in toc -->
 
 You can disable auto-indexing and auto-removing setting the following options:
 

@@ -10,8 +10,9 @@ class Book < ApplicationRecord
       'typo',
       'words',
       'attribute',
+      'sort',
       'exactness',
-      'desc(publication_year)',
+      'publication_year:desc',
     ]
     attributes_to_highlight ['*']
     attributes_to_crop [:description]

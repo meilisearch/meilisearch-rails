@@ -277,8 +277,9 @@ class Color < ActiveRecord::Base
       'typo',
       'proximity',
       'attribute',
+      'sort',
       'exactness',
-      'asc(hex)',
+      'hex:asc',
     ]
     attributes_to_highlight [:name]
   end
@@ -565,13 +566,13 @@ describe 'Settings change detection' do
     Color.send(:meilisearch_settings_changed?, nil, {}).should == true
     Color.send(:meilisearch_settings_changed?, {}, {'searchableAttributes' => ['name']}).should == true
     Color.send(:meilisearch_settings_changed?, {'searchableAttributes' => ['name']}, {'searchableAttributes' => ['name', 'hex']}).should == true
-    Color.send(:meilisearch_settings_changed?, {'searchableAttributes' => ['name']}, {'rankingRules' => ['words', 'typo', 'proximity', 'attribute', 'exactness', 'asc(hex)']}).should == true
+    Color.send(:meilisearch_settings_changed?, {'searchableAttributes' => ['name']}, {'rankingRules' => ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness', 'hex:asc']}).should == true
   end
 
   it 'should not detect settings changes' do
     Color.send(:meilisearch_settings_changed?, {}, {}).should == false
     Color.send(:meilisearch_settings_changed?, {'searchableAttributes' => ['name']}, {searchableAttributes: ['name']}).should == false
-    Color.send(:meilisearch_settings_changed?, {'searchableAttributes' => ['name'], 'rankingRules' => ['words', 'typo', 'proximity', 'attribute', 'exactness', 'asc(hex)']}, {'rankingRules' => ['words', 'typo', 'proximity', 'attribute', 'exactness', 'asc(hex)']}).should == false
+    Color.send(:meilisearch_settings_changed?, {'searchableAttributes' => ['name'], 'rankingRules' => ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness', 'hex:asc']}, {'rankingRules' => ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness', 'hex:asc']}).should == false
   end
 
 end
