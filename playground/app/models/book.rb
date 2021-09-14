@@ -11,7 +11,7 @@ class Book < ApplicationRecord
       'words',
       'attribute',
       'exactness',
-      'desc(publication_year)',
+      'publication_year:desc',
     ]
     attributes_to_highlight ['*']
     attributes_to_crop [:description]
