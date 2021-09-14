@@ -206,6 +206,7 @@ class Book < ApplicationRecord
       'typo',
       'words',
       'attribute',
+      'sort',
       'exactness',
       'publication_year:desc'
     ]
