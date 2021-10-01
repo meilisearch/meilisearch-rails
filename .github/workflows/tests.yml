@@ -36,3 +36,17 @@ jobs:
       run: docker run -d -p 7700:7700 getmeili/meilisearch:latest ./meilisearch --master-key=masterKey --no-analytics=true
     - name: Run tests
       run: bundle exec rspec
+
+  linter_check:
+    name: linter-check
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: 2.6
+    - name: Install ruby dependencies
+      run: bundle install --with test
+    - name: Run linter
+      run: bundle exec rubocop lib/ spec/
