@@ -7,6 +7,12 @@ if defined?(RUBY_ENGINE) && RUBY_ENGINE == 'rbx'
   gem 'rubysl', '~> 2.0', :platform => :rbx
 end
 
+group :development do
+  gem 'rubocop', '~> 1.22'
+  gem 'rubocop-rails'
+  gem 'rubocop-rspec'
+end
+
 group :test do
   rails_version = ENV["RAILS_VERSION"] || '5.2'
   gem 'rails', "~> #{rails_version}"
