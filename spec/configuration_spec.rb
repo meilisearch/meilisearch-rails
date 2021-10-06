@@ -24,6 +24,23 @@ describe MeiliSearch::Configuration do
         .with("http://localhost:7700", "s3cr3tap1k3y", {})
     end
 
+    context 'without meilisearch_host' do
+      let(:configuration) {
+        {
+          meilisearch_host: nil,
+          meilisearch_api_key: "s3cr3tap1k3y",
+        }
+      }
+
+      it 'defines a default value for meilisearch_host' do
+        expect(MeiliSearch.client).to eq(client_double)
+
+        expect(MeiliSearch::Client)
+          .to have_received(:new)
+          .with("http://localhost:7700", "s3cr3tap1k3y", {})
+      end
+    end
+
     context "with timeout and max retries" do
       let(:configuration) {
         {

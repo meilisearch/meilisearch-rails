@@ -12,7 +12,7 @@ module MeiliSearch
 
     def client
       ::MeiliSearch::Client.new(
-        configuration[:meilisearch_host],
+        configuration[:meilisearch_host] || 'http://localhost:7700',
         configuration[:meilisearch_api_key],
         configuration.slice(:timeout, :max_retries)
       )
