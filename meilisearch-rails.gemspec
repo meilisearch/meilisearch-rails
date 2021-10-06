@@ -20,25 +20,14 @@ Gem::Specification.new do |s|
     'README.md'
   ]
 
-  s.files = [
+  s.files = Dir[
+    'lib/**/*',
     '.rspec',
+    'meilisearch-rails.gemspec',
     'Gemfile',
     'LICENSE',
     'README.md',
-    'Rakefile',
-    'meilisearch-rails.gemspec',
-    'lib/meilisearch-rails.rb',
-    'lib/meilisearch/ms_job.rb',
-    'lib/meilisearch/configuration.rb',
-    'lib/meilisearch/pagination.rb',
-    'lib/meilisearch/pagination/kaminari.rb',
-    'lib/meilisearch/pagination/will_paginate.rb',
-    'lib/meilisearch/railtie.rb',
-    'lib/meilisearch/tasks/meilisearch.rake',
-    'lib/meilisearch/utilities.rb',
-    'lib/meilisearch/version.rb',
-    'spec/spec_helper.rb',
-    'spec/utilities_spec.rb'
+    'Rakefile'
   ]
 
   s.required_ruby_version = '>= 2.6.0'
