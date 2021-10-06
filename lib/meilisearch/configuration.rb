@@ -1,11 +1,13 @@
 module MeiliSearch
   module Configuration
     def configuration
-      @@configuration || raise(NotConfigured, "Please configure MeiliSearch. Set MeiliSearch.configuration = {meilisearch_host: 'YOUR_MEILISEARCH_HOST', meilisearch_api_key: 'YOUR_API_KEY'}")
+      raise NotConfigured if @_config.blank?
+
+      @_config
     end
 
     def configuration=(configuration)
-      @@configuration = configuration
+      @_config = configuration
     end
 
     def client
