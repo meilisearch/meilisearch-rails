@@ -43,7 +43,7 @@ It's [Hacktoberfest month](https://blog.meilisearch.com/contribute-hacktoberfest
 bundle install
 ```
 
-### Tests and Linter <!-- omit in toc -->
+### Tests <!-- omit in toc -->
 
 Set the credentials of the MeiliSearch instance as environment variables.
 
@@ -52,7 +52,7 @@ MEILISEARCH_HOST="http://127.0.0.1:7700"
 MEILISEARCH_API_KEY="masterKey"
 ```
 
-Each PR should pass the tests and the linter to be accepted.
+Each PR should pass the tests to be accepted.
 
 ```bash
 # Tests
@@ -63,10 +63,25 @@ bundle exec rspec
 bundle exec rspec spec/integration_spec.rb -e 'should include _formatted object'
 # Launch tests in a specific folder or file 
 bundle exec rspec spec/integration_spec.rb
-# Linter
+```
+
+### Linter <!-- omit in toc -->
+
+Each PR should pass the linter to be accepted.
+
+```bash
+# Check the linter errors
 bundle exec rubocop lib/ spec/
-# Linter with fixing
+# Auto-correct the linter errors
 bundle exec rubocop -a lib/ spec/
+```
+
+If you think the remaining linter errors are acceptable, do not add any `rubocop` in-line comments in the code.<br>
+This project uses a `rubocop_todo.yml` file that is generated. Do not modify this file manually.<br>
+To update it, run the following command:
+
+```bash
+bundle exec rubocop --auto-gen-config
 ```
 
 ### Playground <!-- omit in toc -->
