@@ -30,6 +30,11 @@ RSpec.configure do |c|
 
   # Remove all indexes setup in this run in local or CI
   c.after(:suite) do
+    MeiliSearch.configuration = {
+      meilisearch_host: ENV['MEILISEARCH_HOST'],
+      meilisearch_api_key: ENV['MEILISEARCH_API_KEY']
+    }
+
     safe_index_list.each do |index|
       MeiliSearch.client.delete_index(index['name'])
     end

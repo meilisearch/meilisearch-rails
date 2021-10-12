@@ -1,10 +1,5 @@
 require File.expand_path(File.join(__dir__, "spec_helper"))
 
-MeiliSearch.configuration = {
-  meilisearch_host: ENV['MEILISEARCH_HOST'],
-  meilisearch_api_key: ENV['MEILISEARCH_API_KEY'],
-}
-
 describe MeiliSearch::Configuration do
   let(:configuration) {
     {
@@ -13,14 +8,11 @@ describe MeiliSearch::Configuration do
     }
   }
 
-  before do
-    allow(MeiliSearch).to receive(:configuration) { configuration }
-  end
-
   describe ".client" do
     let(:client_double) { double MeiliSearch::Client }
 
     before do
+      allow(MeiliSearch).to receive(:configuration) { configuration }
       allow(MeiliSearch::Client).to receive(:new) { client_double }
     end
 
@@ -54,6 +46,23 @@ describe MeiliSearch::Configuration do
             max_retries: 1,
           )
       end
+    end
+  end
+
+  context 'when use MeiliSearch without configuration' do
+    around do |example|
+      config = MeiliSearch.configuration
+      MeiliSearch.configuration = nil
+
+      example.run
+
+      MeiliSearch.configuration = config
+    end
+
+    it 'raise NotConfigured error' do
+      expect {
+        MeiliSearch.configuration
+      }.to raise_error(MeiliSearch::NotConfigured, /Please configure MeiliSearch/)
     end
   end
 end

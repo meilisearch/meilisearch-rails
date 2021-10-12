@@ -2,6 +2,7 @@ require 'meilisearch'
 
 require 'meilisearch/version'
 require 'meilisearch/utilities'
+require 'meilisearch/errors'
 
 if defined? Rails
   begin
@@ -19,10 +20,6 @@ end
 require 'logger'
 
 module MeiliSearch
-
-  class NotConfigured < StandardError; end
-  class BadConfiguration < StandardError; end
-  class NoBlockGiven < StandardError; end
 
   autoload :Configuration, 'meilisearch/configuration'
   extend Configuration

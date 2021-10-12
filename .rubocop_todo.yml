@@ -566,11 +566,6 @@ Style/ClassEqualityComparison:
     - 'lib/meilisearch-rails.rb'
 
 # Offense count: 1
-Style/ClassVars:
-  Exclude:
-    - 'lib/meilisearch/configuration.rb'
-
-# Offense count: 1
 # Cop supports --auto-correct.
 Style/ColonMethodCall:
   Exclude:
