@@ -17,6 +17,10 @@ require:
 
 AllCops:
   NewCops: enable
+  TargetRubyVersion: 2.6
+  SuggestExtensions: false
+  Exclude:
+    - playground/**/*
 
 Style/Documentation:
   Enabled: false
