@@ -6,14 +6,6 @@
 # Note that changes in the inspected code, or installation of new
 # versions of RuboCop, may require this file to be generated again.
 
-# Offense count: 7
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle, IndentationWidth.
-# SupportedStyles: with_first_argument, with_fixed_indentation
-Layout/ArgumentAlignment:
-  Exclude:
-    - 'spec/integration_spec.rb'
-
 # Offense count: 1
 # Cop supports --auto-correct.
 # Configuration parameters: IndentationWidth.
@@ -21,50 +13,35 @@ Layout/AssignmentIndentation:
   Exclude:
     - 'lib/meilisearch-rails.rb'
 
-# Offense count: 1
-# Cop supports --auto-correct.
-Layout/ClosingParenthesisIndentation:
-  Exclude:
-    - 'spec/integration_spec.rb'
-
 # Offense count: 3
 # Cop supports --auto-correct.
 Layout/ElseAlignment:
   Exclude:
     - 'lib/meilisearch-rails.rb'
 
-# Offense count: 24
+# Offense count: 23
 # Cop supports --auto-correct.
 Layout/EmptyLineAfterGuardClause:
   Exclude:
     - 'lib/meilisearch-rails.rb'
     - 'lib/meilisearch/pagination.rb'
-    - 'spec/integration_spec.rb'
 
-# Offense count: 2
+# Offense count: 1
 # Cop supports --auto-correct.
 # Configuration parameters: EmptyLineBetweenMethodDefs, EmptyLineBetweenClassDefs, EmptyLineBetweenModuleDefs, AllowAdjacentOneLineDefs, NumberOfEmptyLines.
 Layout/EmptyLineBetweenDefs:
   Exclude:
     - 'lib/meilisearch/railtie.rb'
-    - 'spec/integration_spec.rb'
 
-# Offense count: 5
-# Cop supports --auto-correct.
-Layout/EmptyLines:
-  Exclude:
-    - 'spec/integration_spec.rb'
-
-# Offense count: 7
+# Offense count: 2
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle.
 # SupportedStyles: around, only_before
 Layout/EmptyLinesAroundAccessModifier:
   Exclude:
     - 'lib/meilisearch-rails.rb'
-    - 'spec/integration_spec.rb'
 
-# Offense count: 16
+# Offense count: 5
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle.
 # SupportedStyles: empty_lines, no_empty_lines
@@ -72,10 +49,9 @@ Layout/EmptyLinesAroundBlockBody:
   Exclude:
     - 'lib/meilisearch-rails.rb'
     - 'lib/meilisearch/tasks/meilisearch.rake'
-    - 'spec/integration_spec.rb'
     - 'spec/utilities_spec.rb'
 
-# Offense count: 4
+# Offense count: 2
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle.
 # SupportedStyles: empty_lines, empty_lines_except_namespace, empty_lines_special, no_empty_lines, beginning_only, ending_only
@@ -83,7 +59,6 @@ Layout/EmptyLinesAroundClassBody:
   Exclude:
     - 'lib/meilisearch-rails.rb'
     - 'lib/meilisearch/pagination/kaminari.rb'
-    - 'spec/integration_spec.rb'
 
 # Offense count: 4
 # Cop supports --auto-correct.
@@ -102,39 +77,13 @@ Layout/EndAlignment:
   Exclude:
     - 'lib/meilisearch-rails.rb'
 
-# Offense count: 4
+# Offense count: 3
 # Cop supports --auto-correct.
 # Configuration parameters: AllowForAlignment, AllowBeforeTrailingComments, ForceEqualSignAlignment.
 Layout/ExtraSpacing:
   Exclude:
     - 'lib/meilisearch-rails.rb'
     - 'lib/meilisearch/pagination/will_paginate.rb'
-    - 'spec/integration_spec.rb'
-
-# Offense count: 1
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle, IndentationWidth.
-# SupportedStyles: consistent, consistent_relative_to_receiver, special_for_inner_method_call, special_for_inner_method_call_in_parentheses
-Layout/FirstArgumentIndentation:
-  Exclude:
-    - 'spec/integration_spec.rb'
-
-# Offense count: 2
-# Cop supports --auto-correct.
-# Configuration parameters: IndentationWidth.
-# SupportedStyles: special_inside_parentheses, consistent, align_braces
-Layout/FirstHashElementIndentation:
-  EnforcedStyle: consistent
-
-# Offense count: 7
-# Cop supports --auto-correct.
-# Configuration parameters: AllowMultipleStyles, EnforcedHashRocketStyle, EnforcedColonStyle, EnforcedLastArgumentHashStyle.
-# SupportedHashRocketStyles: key, separator, table
-# SupportedColonStyles: key, separator, table
-# SupportedLastArgumentHashStyles: always_inspect, always_ignore, ignore_implicit, ignore_explicit
-Layout/HashAlignment:
-  Exclude:
-    - 'spec/integration_spec.rb'
 
 # Offense count: 1
 # Cop supports --auto-correct.
@@ -153,13 +102,6 @@ Layout/IndentationWidth:
 
 # Offense count: 1
 # Cop supports --auto-correct.
-# Configuration parameters: AllowDoxygenCommentStyle, AllowGemfileRubyComment.
-Layout/LeadingCommentSpace:
-  Exclude:
-    - 'spec/integration_spec.rb'
-
-# Offense count: 1
-# Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle, IndentationWidth.
 # SupportedStyles: aligned, indented
 Layout/MultilineOperationIndentation:
@@ -172,20 +114,13 @@ Layout/SpaceAfterComma:
   Exclude:
     - 'lib/meilisearch-rails.rb'
 
-# Offense count: 3
-# Cop supports --auto-correct.
-Layout/SpaceAroundKeyword:
-  Exclude:
-    - 'spec/integration_spec.rb'
-
-# Offense count: 5
+# Offense count: 4
 # Cop supports --auto-correct.
 # Configuration parameters: AllowForAlignment, EnforcedStyleForExponentOperator.
 # SupportedStylesForExponentOperator: space, no_space
 Layout/SpaceAroundOperators:
   Exclude:
     - 'lib/meilisearch-rails.rb'
-    - 'spec/integration_spec.rb'
 
 # Offense count: 1
 # Cop supports --auto-correct.
@@ -202,12 +137,6 @@ Layout/SpaceBeforeComma:
   Exclude:
     - 'lib/meilisearch-rails.rb'
 
-# Offense count: 2
-# Cop supports --auto-correct.
-Layout/SpaceBeforeSemicolon:
-  Exclude:
-    - 'spec/integration_spec.rb'
-
 # Offense count: 1
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle, EnforcedStyleForEmptyBrackets.
@@ -216,23 +145,6 @@ Layout/SpaceBeforeSemicolon:
 Layout/SpaceInsideArrayLiteralBrackets:
   Exclude:
     - 'lib/meilisearch-rails.rb'
-
-# Offense count: 25
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle, EnforcedStyleForEmptyBraces.
-# SupportedStyles: space, no_space, compact
-# SupportedStylesForEmptyBraces: space, no_space
-Layout/SpaceInsideHashLiteralBraces:
-  Exclude:
-    - 'spec/integration_spec.rb'
-
-# Offense count: 2
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: space, compact, no_space
-Layout/SpaceInsideParens:
-  Exclude:
-    - 'spec/integration_spec.rb'
 
 # Offense count: 1
 # Cop supports --auto-correct.
@@ -864,4 +776,4 @@ Style/ZeroLengthPredicate:
 # Configuration parameters: AllowHeredoc, AllowURI, URISchemes, IgnoreCopDirectives, IgnoredPatterns.
 # URISchemes: http, https
 Layout/LineLength:
-  Max: 292
+  Max: 296

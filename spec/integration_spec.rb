@@ -16,14 +16,14 @@ require 'byebug'
 
 MeiliSearch.configuration = { meilisearch_host: ENV['MEILISEARCH_HOST'], meilisearch_api_key: ENV['MEILISEARCH_API_KEY'] }
 
-FileUtils.rm( 'data.sqlite3' ) rescue nil
+FileUtils.rm('data.sqlite3') rescue nil
 ActiveRecord::Base.logger = Logger.new(STDOUT)
 ActiveRecord::Base.logger.level = Logger::WARN
 ActiveRecord::Base.establish_connection(
-    'adapter' => defined?(JRUBY_VERSION) ? 'jdbcsqlite3' : 'sqlite3',
-    'database' => 'data.sqlite3',
-    'pool' => 5,
-    'timeout' => 5000
+  'adapter' => defined?(JRUBY_VERSION) ? 'jdbcsqlite3' : 'sqlite3',
+  'database' => 'data.sqlite3',
+  'pool' => 5,
+  'timeout' => 5000
 )
 
 if ActiveRecord::Base.respond_to?(:raise_in_transactional_callbacks)
@@ -149,17 +149,15 @@ class Product < ActiveRecord::Base
   include MeiliSearch
 
   meilisearch auto_index: false,
-    if: :published?, unless: lambda { |o| o.href.blank? },
-    index_uid: safe_index_uid('my_products_index') do
-
+              if: :published?, unless: lambda { |o| o.href.blank? },
+              index_uid: safe_index_uid('my_products_index') do
     attribute :href, :name
 
     synonyms({
-      iphone: ['applephone', 'iBidule'],
-      apple: ['pomme'],
-      samsung: ['galaxy']
-    })
-
+               iphone: ['applephone', 'iBidule'],
+               apple: ['pomme'],
+               samsung: ['galaxy']
+             })
   end
 
   def published?
@@ -172,7 +170,7 @@ end
 
 class Restaurant < ActiveRecord::Base
   include MeiliSearch
-  meilisearch index_uid: safe_index_uid('Restaurant')do
+  meilisearch index_uid: safe_index_uid('Restaurant') do
     attributes_to_crop [:description]
     crop_length 10
   end
@@ -180,7 +178,7 @@ end
 
 class Movies < ActiveRecord::Base
   include MeiliSearch
-  meilisearch index_uid: safe_index_uid('Movies')do
+  meilisearch index_uid: safe_index_uid('Movies') do
   end
 end
 
@@ -204,10 +202,10 @@ class Cat < ActiveRecord::Base
   include MeiliSearch
 
   meilisearch index_uid: safe_index_uid('animals'), id: :ms_id do
-
   end
 
   private
+
   def ms_id
     "cat_#{id}"
   end
@@ -217,17 +215,16 @@ class Dog < ActiveRecord::Base
   include MeiliSearch
 
   meilisearch index_uid: safe_index_uid('animals'), id: :ms_id do
-
   end
 
   private
+
   def ms_id
     "dog_#{id}"
   end
 end
 
 class Song < ActiveRecord::Base
-
   include MeiliSearch
 
   PUBLIC_INDEX_UID  = safe_index_uid('Songs')
@@ -242,10 +239,10 @@ class Song < ActiveRecord::Base
   end
 
   private
+
   def public?
     released && !premium
   end
-
 end
 
 class Fruit < ActiveRecord::Base
@@ -323,6 +320,7 @@ module Namespaced
     'namespaced_'
   end
 end
+
 class Namespaced::Model < ActiveRecord::Base
   include MeiliSearch
 
@@ -398,6 +396,7 @@ class SequelBook < Sequel::Model(SEQUEL_DB)
   end
 
   private
+
   def public?
     released && !premium
   end
@@ -420,7 +419,6 @@ describe 'SequelBook' do
     expect(SequelBook).to receive(:new).twice.and_call_original
     SequelBook.create name: 'Steve Jobs', author: 'Walter Isaacson', premium: true, released: true
   end
-
 end
 
 class MongoDocument < ActiveRecord::Base
@@ -454,6 +452,7 @@ class Book < ActiveRecord::Base
   end
 
   private
+
   def public?
     released && !premium
   end
@@ -463,12 +462,13 @@ class Ebook < ActiveRecord::Base
   include MeiliSearch
   attr_accessor :current_time, :published_at
 
-  meilisearch synchronous: true, index_uid: safe_index_uid('eBooks')do
+  meilisearch synchronous: true, index_uid: safe_index_uid('eBooks') do
     searchable_attributes [:name]
   end
 
   def ms_dirty?
     return true if self.published_at.nil? || self.current_time.nil?
+
     # Consider dirty if published date is in the past
     # This doesn't make so much business sense but it's easy to test.
     self.published_at < self.current_time
@@ -500,7 +500,7 @@ unless OLD_RAILS
     end
 
     meilisearch enqueue: Proc.new { |record| raise "enqueued #{record.id}" },
-      index_uid: safe_index_uid('EnqueuedDocument') do
+                index_uid: safe_index_uid('EnqueuedDocument') do
       attributes [:name]
     end
   end
@@ -509,8 +509,8 @@ unless OLD_RAILS
     include MeiliSearch
 
     meilisearch(enqueue: Proc.new { |record| raise 'enqueued' },
-      index_uid: safe_index_uid('EnqueuedDocument'),
-      disable_indexing: true) do
+                index_uid: safe_index_uid('EnqueuedDocument'),
+                disable_indexing: true) do
       attributes [:name]
     end
   end
@@ -543,7 +543,7 @@ if defined?(ActiveModel::Serializer)
     it 'pushes the name but not the other attribute' do
       o = SerializedDocument.new name: 'test', skip: 'skip me'
       attributes = SerializedDocument.meilisearch_settings.get_attributes(o)
-      expect(attributes).to eq({name: 'test'})
+      expect(attributes).to eq({ name: 'test' })
     end
   end
 end
@@ -561,24 +561,21 @@ describe 'Encoding' do
 end
 
 describe 'Settings change detection' do
-
   it 'detects settings changes' do
     Color.send(:meilisearch_settings_changed?, nil, {}).should == true
-    Color.send(:meilisearch_settings_changed?, {}, {'searchableAttributes' => ['name']}).should == true
-    Color.send(:meilisearch_settings_changed?, {'searchableAttributes' => ['name']}, {'searchableAttributes' => ['name', 'hex']}).should == true
-    Color.send(:meilisearch_settings_changed?, {'searchableAttributes' => ['name']}, {'rankingRules' => ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness', 'hex:asc']}).should == true
+    Color.send(:meilisearch_settings_changed?, {}, { 'searchableAttributes' => ['name'] }).should == true
+    Color.send(:meilisearch_settings_changed?, { 'searchableAttributes' => ['name'] }, { 'searchableAttributes' => ['name', 'hex'] }).should == true
+    Color.send(:meilisearch_settings_changed?, { 'searchableAttributes' => ['name'] }, { 'rankingRules' => ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness', 'hex:asc'] }).should == true
   end
 
   it 'does not detect settings changes' do
     Color.send(:meilisearch_settings_changed?, {}, {}).should == false
-    Color.send(:meilisearch_settings_changed?, {'searchableAttributes' => ['name']}, {searchableAttributes: ['name']}).should == false
-    Color.send(:meilisearch_settings_changed?, {'searchableAttributes' => ['name'], 'rankingRules' => ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness', 'hex:asc']}, {'rankingRules' => ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness', 'hex:asc']}).should == false
+    Color.send(:meilisearch_settings_changed?, { 'searchableAttributes' => ['name'] }, { searchableAttributes: ['name'] }).should == false
+    Color.send(:meilisearch_settings_changed?, { 'searchableAttributes' => ['name'], 'rankingRules' => ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness', 'hex:asc'] }, { 'rankingRules' => ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness', 'hex:asc'] }).should == false
   end
-
 end
 
 describe 'Attributes change detection' do
-
   it 'detects attribute changes' do
     color = Color.new name: 'dark-blue', short_name: 'blue'
 
@@ -717,7 +714,7 @@ describe 'Colors' do
   end
 
   it 'returns facets distribution' do
-    results = Color.search('', {facetsDistribution: ['short_name']})
+    results = Color.search('', { facetsDistribution: ['short_name'] })
     results.raw_answer.should_not be_nil
     results.facets_distribution.should_not be_nil
     results.facets_distribution.size.should eq(1)
@@ -801,18 +798,15 @@ describe 'Colors' do
     Color.create!(name: "blue", short_name: "blu", hex: 0x0000FF)
     black = Color.create!(name: "black", short_name: "bla", hex: 0x000000)
     Color.create!(name: "green", short_name: "gre", hex: 0x00FF00)
-    facets = Color.search('bl', {filter: ['short_name = bla']})
+    facets = Color.search('bl', { filter: ['short_name = bla'] })
     expect(facets.size).to eq(1)
     expect(facets).to include(black)
   end
 end
 
 describe 'An imaginary store' do
-
   before(:all) do
     Product.clear_index!(true)
-
-
 
     # Google products
     @blackberry = Product.create!(name: 'blackberry', href: 'google', tags: ['decent', 'businessmen love it'])
@@ -822,7 +816,7 @@ describe 'An imaginary store' do
     @android = Product.create!(name: 'android', href: 'amazon', tags: ['awesome'])
     @samsung = Product.create!(name: 'samsung', href: 'amazon', tags: ['decent'])
     @motorola = Product.create!(name: 'motorola', href: 'amazon', tags: ['decent'],
-      description: 'Not sure about features since I\'ve never owned one.')
+                                description: 'Not sure about features since I\'ve never owned one.')
 
     # Ebay products
     @palmpre = Product.create!(name: 'palmpre', href: 'ebay', tags: ['discontinued', 'worst phone ever'])
@@ -837,7 +831,7 @@ describe 'An imaginary store' do
 
     # Apple products
     @iphone = Product.create!(name: 'iphone', href: 'apple', tags: ['awesome', 'poor reception'],
-      description: 'Puts even more features at your fingertips')
+                              description: 'Puts even more features at your fingertips')
 
     # Unindexed products
     @sekrit = Product.create!(name: 'super sekrit', href: 'amazon', release_date: Time.now + 1.day)
@@ -846,7 +840,7 @@ describe 'An imaginary store' do
     # Subproducts
     @camera = Camera.create!(name: 'canon eos rebel t3', href: 'canon')
 
-    100.times do ; Product.create!(name: 'crapoola', href: 'crappy', tags: ['crappy']) ; end
+    100.times do; Product.create!(name: 'crapoola', href: 'crappy', tags: ['crappy']); end
 
     @products_in_database = Product.all
 
@@ -873,7 +867,6 @@ describe 'An imaginary store' do
   end
 
   describe 'basic searching' do
-
     it 'finds the iphone' do
       results = Product.search('iphone')
       expect(results.size).to eq(1)
@@ -1075,7 +1068,6 @@ describe 'Kaminari' do
     MeiliSearch.configuration = { meilisearch_host: ENV['MEILISEARCH_HOST'], meilisearch_api_key: ENV['MEILISEARCH_API_KEY'], pagination_backend: :kaminari }
     Restaurant.clear_index!(true)
 
-
     10.times do
       Restaurant.create(
         name: Faker::Restaurant.name,
@@ -1087,7 +1079,6 @@ describe 'Kaminari' do
     Restaurant.reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
     sleep 5
   end
-
 
   it 'paginates' do
     hits = Restaurant.search ''
@@ -1163,7 +1154,7 @@ end
 
 describe 'attributes_to_crop' do
   before(:all) do
-    MeiliSearch.configuration = { meilisearch_host: ENV['MEILISEARCH_HOST'], meilisearch_api_key: ENV['MEILISEARCH_API_KEY']}
+    MeiliSearch.configuration = { meilisearch_host: ENV['MEILISEARCH_HOST'], meilisearch_api_key: ENV['MEILISEARCH_API_KEY'] }
     10.times do
       Restaurant.create(
         name: Faker::Restaurant.name,
@@ -1185,8 +1176,6 @@ describe 'attributes_to_crop' do
     expect(results.first.formatted['description']).to eq(raw_search_results['hits'].first['_formatted']['description'])
     expect(results.first.formatted['description']).not_to eq(results.first['description'])
   end
-
-
 end
 
 describe 'Disabled' do
@@ -1260,7 +1249,7 @@ describe 'People' do
     expect(result['hits'][0]['full_name']).to eq('Jane Doe')
   end
   it 'does not call the API if there has been no attribute change' do
-    person =  People.search('Jane')[0]
+    person = People.search('Jane')[0]
     before_save_statuses = People.index.get_all_update_status
     before_save_status = before_save_statuses.last
     person.first_name = 'Jane'
@@ -1311,7 +1300,7 @@ end
 
 describe 'Songs' do
   it 'targets multiple indices' do
-    Song.create!(name: 'Coconut nut', artist: 'Smokey Mountain', premium: false, released: true) #Only song supposed to be added to Songs index
+    Song.create!(name: 'Coconut nut', artist: 'Smokey Mountain', premium: false, released: true) # Only song supposed to be added to Songs index
     Song.create!(name: 'Smoking hot', artist: 'Cigarettes before lunch', premium: true, released: true)
     Song.create!(name: 'Floor is lava', artist: 'Volcano', premium: true, released: false)
     Song.index.wait_for_pending_update(Song.index.get_all_update_status.last['updateId'])
