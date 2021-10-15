@@ -31,7 +31,7 @@ describe MeiliSearch::Utilities do
     end
   end
 
-  it "should get the models where MeiliSearch module was included" do
+  it "gets the models where MeiliSearch module was included" do
     (MeiliSearch::Utilities.get_model_classes - [Dummy, DummyChild, DummyGrandChild]).should == []
   end
 

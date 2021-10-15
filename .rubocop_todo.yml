@@ -411,14 +411,6 @@ RSpec/EmptyLineAfterHook:
 RSpec/ExampleLength:
   Max: 18
 
-# Offense count: 75
-# Cop supports --auto-correct.
-# Configuration parameters: CustomTransform, IgnoredWords.
-RSpec/ExampleWording:
-  Exclude:
-    - 'spec/integration_spec.rb'
-    - 'spec/utilities_spec.rb'
-
 # Offense count: 2
 # Configuration parameters: Include, CustomTransform, IgnoreMethods, SpecSuffixOnly.
 # Include: **/*_spec*rb*, **/spec/**/*
