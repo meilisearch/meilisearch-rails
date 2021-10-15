@@ -409,11 +409,11 @@ describe 'SequelBook' do
   end
 
   it 'should index the book' do
-    @steve_jobs = SequelBook.create name: 'Steve Jobs', author: 'Walter Isaacson', premium: true, released: true
+    steve_jobs = SequelBook.create name: 'Steve Jobs', author: 'Walter Isaacson', premium: true, released: true
     results = SequelBook.search('steve')
 
     expect(results.size).to eq(1)
-    expect(results[0].id).to eq(@steve_jobs.id)
+    expect(results[0].id).to eq(steve_jobs.id)
   end
 
   it 'should not override after hooks' do
@@ -675,22 +675,22 @@ describe 'NestedItem' do
   end
 
   it 'should fetch attributes unscoped' do
-    @i1 = NestedItem.create hidden: false
-    @i2 = NestedItem.create hidden: true
+    i1 = NestedItem.create hidden: false
+    i2 = NestedItem.create hidden: true
 
-    @i1.children << NestedItem.create(hidden: true) << NestedItem.create(hidden: true)
-    NestedItem.where(id: [@i1.id, @i2.id]).reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
+    i1.children << NestedItem.create(hidden: true) << NestedItem.create(hidden: true)
+    NestedItem.where(id: [i1.id, i2.id]).reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
 
-    result = NestedItem.index.get_document(@i1.id)
+    result = NestedItem.index.get_document(i1.id)
     result['nb_children'].should == 2
 
     result = NestedItem.raw_search('')
     result['hits'].size.should == 1
 
-    if @i2.respond_to? :update_attributes
-      @i2.update_attributes hidden: false
+    if i2.respond_to? :update_attributes
+      i2.update_attributes hidden: false
     else
-      @i2.update hidden: false
+      i2.update hidden: false
     end
 
     result = NestedItem.raw_search('')
@@ -710,10 +710,10 @@ describe 'Colors' do
   end
 
   it 'should auto index' do
-    @blue = Color.create!(name: 'blue', short_name: 'b', hex: 0xFF0000)
+    blue = Color.create!(name: 'blue', short_name: 'b', hex: 0xFF0000)
     results = Color.search('blue')
     expect(results.size).to eq(1)
-    results.should include(@blue)
+    results.should include(blue)
   end
 
   it 'should return facets distribution' do
@@ -740,15 +740,15 @@ describe 'Colors' do
   end
 
   it 'should not be searchable with non-searchable fields' do
-    @blue = Color.create!(name: 'blue', short_name: 'x', hex: 0xFF0000)
+    Color.create!(name: 'blue', short_name: 'x', hex: 0xFF0000)
     results = Color.search('x')
     expect(results.size).to eq(0)
   end
 
   it 'should rank with custom hex' do
-    @blue = Color.create!(name: 'red', short_name: 'r3', hex: 3)
-    @blue2 = Color.create!(name: 'red', short_name: 'r1', hex: 1)
-    @blue3 = Color.create!(name: 'red', short_name: 'r2', hex: 2)
+    Color.create!(name: 'red', short_name: 'r3', hex: 3)
+    Color.create!(name: 'red', short_name: 'r1', hex: 1)
+    Color.create!(name: 'red', short_name: 'r2', hex: 2)
     results = Color.search('red')
     expect(results.size).to eq(3)
     results[0].hex.should eq(1)
@@ -757,11 +757,11 @@ describe 'Colors' do
   end
 
   it 'should update the index if the attribute changed' do
-    @purple = Color.create!(name: 'purple', short_name: 'p')
+    purple = Color.create!(name: 'purple', short_name: 'p')
     expect(Color.search('purple').size).to eq(1)
     expect(Color.search('pink').size).to eq(0)
-    @purple.name = 'pink'
-    @purple.save
+    purple.name = 'pink'
+    purple.save
     expect(Color.search('purple').size).to eq(0)
     expect(Color.search('pink').size).to eq(1)
   end
@@ -798,12 +798,12 @@ describe 'Colors' do
   end
 
   it "should search with filter" do
-    @blue = Color.create!(name: "blue", short_name: "blu", hex: 0x0000FF)
-    @black = Color.create!(name: "black", short_name: "bla", hex: 0x000000)
-    @green = Color.create!(name: "green", short_name: "gre", hex: 0x00FF00)
+    Color.create!(name: "blue", short_name: "blu", hex: 0x0000FF)
+    black = Color.create!(name: "black", short_name: "bla", hex: 0x000000)
+    Color.create!(name: "green", short_name: "gre", hex: 0x00FF00)
     facets = Color.search('bl', {filter: ['short_name = bla']})
     expect(facets.size).to eq(1)
-    expect(facets).to include(@black)
+    expect(facets).to include(black)
   end
 end
 
@@ -1000,10 +1000,10 @@ describe 'Book' do
   end
 
   it 'should index the book in 2 indexes of 3' do
-    @steve_jobs = Book.create! name: 'Steve Jobs', author: 'Walter Isaacson', premium: true, released: true
+    steve_jobs = Book.create! name: 'Steve Jobs', author: 'Walter Isaacson', premium: true, released: true
     results = Book.search('steve')
     expect(results.size).to eq(1)
-    results.should include(@steve_jobs)
+    results.should include(steve_jobs)
 
     index_author = Book.index(safe_index_uid('BookAuthor'))
     index_author.should_not be_nil
@@ -1020,7 +1020,7 @@ describe 'Book' do
   end
 
   it 'should sanitize attributes' do
-    @hack = Book.create! name: "\"><img src=x onerror=alert(1)> hack0r", author: "<script type=\"text/javascript\">alert(1)</script>", premium: true, released: true
+    _hack = Book.create! name: "\"><img src=x onerror=alert(1)> hack0r", author: "<script type=\"text/javascript\">alert(1)</script>", premium: true, released: true
     b = Book.raw_search('hack', { attributesToHighlight: ['*'] })
     expect(b['hits'].length).to eq(1)
     begin
@@ -1255,7 +1255,7 @@ describe 'People' do
     expect(index.primary_key).to eq('card_number')
   end
   it 'should add custom complex attribute' do
-    person = People.create(first_name: 'Jane', last_name: 'Doe', card_number: 75801887)
+    People.create(first_name: 'Jane', last_name: 'Doe', card_number: 75801887)
     result = People.raw_search('Jane')
     expect(result['hits'][0]['full_name']).to eq('Jane Doe')
   end

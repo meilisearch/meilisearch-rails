@@ -4,10 +4,16 @@ MeiliSearch.configuration = { meilisearch_host: ENV['MEILISEARCH_HOST'], meilise
 
 describe MeiliSearch::Utilities do
 
-  before(:each) do
-    @included_in = MeiliSearch.instance_variable_get :@included_in
+  around(:each) do |example|
+    included_in = MeiliSearch.instance_variable_get :@included_in
     MeiliSearch.instance_variable_set :@included_in, []
 
+    example.run
+
+    MeiliSearch.instance_variable_set :@included_in, included_in
+  end
+
+  before(:each) do
     class Dummy
       include MeiliSearch
 
@@ -23,10 +29,6 @@ describe MeiliSearch::Utilities do
 
     class DummyGrandChild < DummyChild
     end
-  end
-
-  after(:each) do
-    MeiliSearch.instance_variable_set :@included_in, @included_in
   end
 
   it "should get the models where MeiliSearch module was included" do

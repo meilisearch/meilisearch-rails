@@ -303,11 +303,6 @@ Lint/UselessAccessModifier:
   Exclude:
     - 'lib/meilisearch-rails.rb'
 
-# Offense count: 1
-Lint/UselessAssignment:
-  Exclude:
-    - 'spec/integration_spec.rb'
-
 # Offense count: 17
 # Configuration parameters: CheckForMethodsWithNoSideEffects.
 Lint/Void:
@@ -441,12 +436,11 @@ RSpec/HookArgument:
     - 'spec/spec_helper.rb'
     - 'spec/utilities_spec.rb'
 
-# Offense count: 40
+# Offense count: 26
 # Configuration parameters: AssignmentOnly.
 RSpec/InstanceVariable:
   Exclude:
     - 'spec/integration_spec.rb'
-    - 'spec/utilities_spec.rb'
 
 # Offense count: 3
 RSpec/LeakyConstantDeclaration:
