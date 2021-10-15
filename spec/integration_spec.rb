@@ -8,7 +8,7 @@ unless OLD_RAILS || NEW_RAILS
   require 'active_job/test_helper'
   ActiveJob::Base.queue_adapter = :test
 end
-require 'sqlite3' if !defined?(JRUBY_VERSION)
+require 'sqlite3' unless defined?(JRUBY_VERSION)
 require 'logger'
 require 'sequel'
 require 'active_model_serializers'
@@ -16,8 +16,8 @@ require 'byebug'
 
 MeiliSearch.configuration = { meilisearch_host: ENV['MEILISEARCH_HOST'], meilisearch_api_key: ENV['MEILISEARCH_API_KEY'] }
 
-FileUtils.rm('data.sqlite3') rescue nil
-ActiveRecord::Base.logger = Logger.new(STDOUT)
+FileUtils.rm('data.sqlite3') if File.exist?('data.sqlite3')
+ActiveRecord::Base.logger = Logger.new($stdout)
 ActiveRecord::Base.logger.level = Logger::WARN
 ActiveRecord::Base.establish_connection(
   'adapter' => defined?(JRUBY_VERSION) ? 'jdbcsqlite3' : 'sqlite3',
@@ -149,12 +149,12 @@ class Product < ActiveRecord::Base
   include MeiliSearch
 
   meilisearch auto_index: false,
-              if: :published?, unless: lambda { |o| o.href.blank? },
+              if: :published?, unless: ->(o) { o.href.blank? },
               index_uid: safe_index_uid('my_products_index') do
     attribute :href, :name
 
     synonyms({
-               iphone: ['applephone', 'iBidule'],
+               iphone: %w[applephone iBidule],
                apple: ['pomme'],
                samsung: ['galaxy']
              })
@@ -231,10 +231,10 @@ class Song < ActiveRecord::Base
   SECURED_INDEX_UID = safe_index_uid('PrivateSongs')
 
   meilisearch index_uid: SECURED_INDEX_UID do
-    searchable_attributes [:name, :artist]
+    searchable_attributes %i[name artist]
 
     add_index PUBLIC_INDEX_UID, if: :public? do
-      searchable_attributes [:name, :artist]
+      searchable_attributes %i[name artist]
     end
   end
 
@@ -300,7 +300,7 @@ end
 class DisabledProc < ActiveRecord::Base
   include MeiliSearch
 
-  meilisearch synchronous: true, disable_indexing: Proc.new { true }, index_uid: safe_index_uid('DisabledProc') do
+  meilisearch synchronous: true, disable_indexing: proc { true }, index_uid: safe_index_uid('DisabledProc') do
   end
 end
 
@@ -321,17 +321,19 @@ module Namespaced
   end
 end
 
-class Namespaced::Model < ActiveRecord::Base
-  include MeiliSearch
+module Namespaced
+  class Model < ActiveRecord::Base
+    include MeiliSearch
 
-  meilisearch synchronous: true, index_uid: safe_index_uid(ms_index_uid({})) do
-    attribute :customAttr do
-      40 + another_private_value
+    meilisearch synchronous: true, index_uid: safe_index_uid(ms_index_uid({})) do
+      attribute :customAttr do
+        40 + another_private_value
+      end
+      attribute :myid do
+        id
+      end
+      searchable_attributes ['customAttr']
     end
-    attribute :myid do
-      id
-    end
-    searchable_attributes ['customAttr']
   end
 end
 
@@ -428,11 +430,11 @@ class MongoDocument < ActiveRecord::Base
   end
 
   def self.reindex!
-    raise NameError.new('never reached')
+    raise NameError, 'never reached'
   end
 
   def index!
-    raise NameError.new('never reached')
+    raise NameError, 'never reached'
   end
 end
 
@@ -467,11 +469,11 @@ class Ebook < ActiveRecord::Base
   end
 
   def ms_dirty?
-    return true if self.published_at.nil? || self.current_time.nil?
+    return true if published_at.nil? || current_time.nil?
 
     # Consider dirty if published date is in the past
     # This doesn't make so much business sense but it's easy to test.
-    self.published_at < self.current_time
+    published_at < current_time
   end
 end
 
@@ -499,7 +501,7 @@ unless OLD_RAILS
       EnqueuedDocument.first
     end
 
-    meilisearch enqueue: Proc.new { |record| raise "enqueued #{record.id}" },
+    meilisearch enqueue: proc { |record| raise "enqueued #{record.id}" },
                 index_uid: safe_index_uid('EnqueuedDocument') do
       attributes [:name]
     end
@@ -508,7 +510,7 @@ unless OLD_RAILS
   class DisabledEnqueuedDocument < ActiveRecord::Base
     include MeiliSearch
 
-    meilisearch(enqueue: Proc.new { |record| raise 'enqueued' },
+    meilisearch(enqueue: proc { |record| raise 'enqueued' },
                 index_uid: safe_index_uid('EnqueuedDocument'),
                 disable_indexing: true) do
       attributes [:name]
@@ -564,7 +566,7 @@ describe 'Settings change detection' do
   it 'detects settings changes' do
     Color.send(:meilisearch_settings_changed?, nil, {}).should == true
     Color.send(:meilisearch_settings_changed?, {}, { 'searchableAttributes' => ['name'] }).should == true
-    Color.send(:meilisearch_settings_changed?, { 'searchableAttributes' => ['name'] }, { 'searchableAttributes' => ['name', 'hex'] }).should == true
+    Color.send(:meilisearch_settings_changed?, { 'searchableAttributes' => ['name'] }, { 'searchableAttributes' => %w[name hex] }).should == true
     Color.send(:meilisearch_settings_changed?, { 'searchableAttributes' => ['name'] }, { 'rankingRules' => ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness', 'hex:asc'] }).should == true
   end
 
@@ -583,7 +585,7 @@ describe 'Attributes change detection' do
     color.save
     Color.ms_must_reindex?(color).should == false
 
-    color.hex = 123456
+    color.hex = 123_456
     Color.ms_must_reindex?(color).should == false
 
     color.not_indexed = 'strstr'
@@ -625,7 +627,7 @@ describe 'Namespaced::Model' do
   end
 
   it 'has an index name without :: hierarchy' do
-    (Namespaced::Model.index_uid.end_with?('Namespaced_Model')).should == true
+    Namespaced::Model.index_uid.end_with?('Namespaced_Model').should == true
   end
 
   it 'uses the block to determine attribute\'s value' do
@@ -668,7 +670,9 @@ end
 
 describe 'NestedItem' do
   before(:all) do
-    NestedItem.clear_index!(true) rescue nil # not fatal
+    NestedItem.clear_index!(true)
+  rescue StandardError
+    # not fatal
   end
 
   it 'fetches attributes unscoped' do
@@ -794,10 +798,10 @@ describe 'Colors' do
     expect { Color.new(name: 'purple').remove_from_index!(true) }.to raise_error(ArgumentError)
   end
 
-  it "searches with filter" do
-    Color.create!(name: "blue", short_name: "blu", hex: 0x0000FF)
-    black = Color.create!(name: "black", short_name: "bla", hex: 0x000000)
-    Color.create!(name: "green", short_name: "gre", hex: 0x00FF00)
+  it 'searches with filter' do
+    Color.create!(name: 'blue', short_name: 'blu', hex: 0x0000FF)
+    black = Color.create!(name: 'black', short_name: 'bla', hex: 0x000000)
+    Color.create!(name: 'green', short_name: 'gre', hex: 0x00FF00)
     facets = Color.search('bl', { filter: ['short_name = bla'] })
     expect(facets.size).to eq(1)
     expect(facets).to include(black)
@@ -840,7 +844,7 @@ describe 'An imaginary store' do
     # Subproducts
     @camera = Camera.create!(name: 'canon eos rebel t3', href: 'canon')
 
-    100.times do; Product.create!(name: 'crapoola', href: 'crappy', tags: ['crappy']); end
+    100.times { Product.create!(name: 'crapoola', href: 'crappy', tags: ['crappy']) }
 
     @products_in_database = Product.all
 
@@ -1013,20 +1017,20 @@ describe 'Book' do
   end
 
   it 'sanitizes attributes' do
-    _hack = Book.create! name: "\"><img src=x onerror=alert(1)> hack0r", author: "<script type=\"text/javascript\">alert(1)</script>", premium: true, released: true
+    _hack = Book.create! name: '"><img src=x onerror=alert(1)> hack0r', author: '<script type="text/javascript">alert(1)</script>', premium: true, released: true
     b = Book.raw_search('hack', { attributesToHighlight: ['*'] })
     expect(b['hits'].length).to eq(1)
     begin
       expect(b['hits'][0]['name']).to eq('"> hack0r')
       expect(b['hits'][0]['author']).to eq('alert(1)')
       expect(b['hits'][0]['_formatted']['name']).to eq('"> <em>hack</em>0r')
-    rescue
+    rescue StandardError
       # rails 4.2's sanitizer
       begin
         expect(b['hits'][0]['name']).to eq('&quot;&gt; hack0r')
         expect(b['hits'][0]['author']).to eq('')
         expect(b['hits'][0]['_formatted']['name']).to eq('&quot;&gt; <em>hack</em>0r')
-      rescue
+      rescue StandardError
         # jruby
         expect(b['hits'][0]['name']).to eq('"&gt; hack0r')
         expect(b['hits'][0]['author']).to eq('')
@@ -1114,7 +1118,7 @@ describe 'Will_paginate' do
 
     10.times do
       Movies.create(
-        title: Faker::Movie.title,
+        title: Faker::Movie.title
       )
     end
 

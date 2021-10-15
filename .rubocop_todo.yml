@@ -433,7 +433,7 @@ Style/AndOr:
     - 'lib/meilisearch-rails.rb'
     - 'lib/meilisearch/pagination/kaminari.rb'
 
-# Offense count: 10
+# Offense count: 9
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle, ProceduralMethods, FunctionalMethods, IgnoredMethods, AllowBracesOnProceduralOneLiners, BracesRequiredMethods.
 # SupportedStyles: line_count_based, semantic, braces_for_chaining, always_braces
@@ -445,14 +445,6 @@ Style/BlockDelimiters:
     - 'spec/configuration_spec.rb'
     - 'spec/integration_spec.rb'
     - 'spec/spec_helper.rb'
-
-# Offense count: 1
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: nested, compact
-Style/ClassAndModuleChildren:
-  Exclude:
-    - 'spec/integration_spec.rb'
 
 # Offense count: 1
 # Cop supports --auto-correct.
@@ -476,12 +468,11 @@ Style/ConditionalAssignment:
   Exclude:
     - 'lib/meilisearch-rails.rb'
 
-# Offense count: 2
+# Offense count: 1
 # Cop supports --auto-correct.
 Style/GlobalStdStream:
   Exclude:
     - 'lib/meilisearch-rails.rb'
-    - 'spec/integration_spec.rb'
 
 # Offense count: 2
 # Configuration parameters: MinBodyLength.
@@ -535,14 +526,6 @@ Style/InverseMethods:
 
 # Offense count: 1
 # Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: line_count_dependent, lambda, literal
-Style/Lambda:
-  Exclude:
-    - 'spec/integration_spec.rb'
-
-# Offense count: 1
-# Cop supports --auto-correct.
 # Configuration parameters: IgnoredMethods.
 Style/MethodCallWithoutArgsParentheses:
   Exclude:
@@ -557,14 +540,13 @@ Style/MutableConstant:
     - 'lib/meilisearch-rails.rb'
     - 'lib/meilisearch/version.rb'
 
-# Offense count: 6
+# Offense count: 5
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle.
 # SupportedStyles: both, prefix, postfix
 Style/NegatedIf:
   Exclude:
     - 'lib/meilisearch-rails.rb'
-    - 'spec/integration_spec.rb'
 
 # Offense count: 1
 # Cop supports --auto-correct.
@@ -594,7 +576,7 @@ Style/Not:
   Exclude:
     - 'lib/meilisearch-rails.rb'
 
-# Offense count: 4
+# Offense count: 3
 # Cop supports --auto-correct.
 # Configuration parameters: Strict.
 Style/NumericLiterals:
@@ -628,21 +610,19 @@ Style/PerlBackrefs:
   Exclude:
     - 'lib/meilisearch/pagination.rb'
 
-# Offense count: 10
+# Offense count: 7
 # Cop supports --auto-correct.
 Style/Proc:
   Exclude:
     - 'lib/meilisearch-rails.rb'
-    - 'spec/integration_spec.rb'
 
-# Offense count: 13
+# Offense count: 11
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle, AllowedCompactTypes.
 # SupportedStyles: compact, exploded
 Style/RaiseArgs:
   Exclude:
     - 'lib/meilisearch-rails.rb'
-    - 'spec/integration_spec.rb'
 
 # Offense count: 1
 # Cop supports --auto-correct.
@@ -656,12 +636,11 @@ Style/RedundantBegin:
   Exclude:
     - 'lib/meilisearch-rails.rb'
 
-# Offense count: 2
+# Offense count: 1
 # Cop supports --auto-correct.
 Style/RedundantParentheses:
   Exclude:
     - 'lib/meilisearch-rails.rb'
-    - 'spec/integration_spec.rb'
 
 # Offense count: 1
 # Cop supports --auto-correct.
@@ -670,12 +649,11 @@ Style/RedundantReturn:
   Exclude:
     - 'lib/meilisearch-rails.rb'
 
-# Offense count: 9
+# Offense count: 5
 # Cop supports --auto-correct.
 Style/RedundantSelf:
   Exclude:
     - 'lib/meilisearch-rails.rb'
-    - 'spec/integration_spec.rb'
 
 # Offense count: 1
 # Cop supports --auto-correct.
@@ -685,22 +663,13 @@ Style/RegexpLiteral:
   Exclude:
     - 'lib/meilisearch/pagination.rb'
 
-# Offense count: 3
+# Offense count: 1
 # Cop supports --auto-correct.
 Style/RescueModifier:
   Exclude:
     - 'lib/meilisearch-rails.rb'
-    - 'spec/integration_spec.rb'
 
-# Offense count: 2
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: implicit, explicit
-Style/RescueStandardError:
-  Exclude:
-    - 'spec/integration_spec.rb'
-
-# Offense count: 47
+# Offense count: 38
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle, ConsistentQuotesInMultiline.
 # SupportedStyles: single_quotes, double_quotes
@@ -716,12 +685,14 @@ Style/StringLiterals:
     - 'spec/spec_helper.rb'
     - 'spec/utilities_spec.rb'
 
-# Offense count: 5
+# Offense count: 3
 # Cop supports --auto-correct.
-# Configuration parameters: MinSize.
+# Configuration parameters: EnforcedStyle, MinSize.
 # SupportedStyles: percent, brackets
 Style/SymbolArray:
-  EnforcedStyle: brackets
+  Exclude:
+    - 'Gemfile'
+    - 'lib/meilisearch-rails.rb'
 
 # Offense count: 4
 # Cop supports --auto-correct.
@@ -732,14 +703,13 @@ Style/SymbolProc:
     - 'lib/meilisearch-rails.rb'
     - 'lib/meilisearch/utilities.rb'
 
-# Offense count: 2
+# Offense count: 1
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyleForMultiline.
 # SupportedStylesForMultiline: comma, consistent_comma, no_comma
 Style/TrailingCommaInArguments:
   Exclude:
     - 'spec/configuration_spec.rb'
-    - 'spec/integration_spec.rb'
 
 # Offense count: 2
 # Cop supports --auto-correct.
@@ -757,13 +727,6 @@ Style/TrailingCommaInArrayLiteral:
 Style/TrailingCommaInHashLiteral:
   Exclude:
     - 'spec/configuration_spec.rb'
-
-# Offense count: 2
-# Cop supports --auto-correct.
-# Configuration parameters: MinSize, WordRegex.
-# SupportedStyles: percent, brackets
-Style/WordArray:
-  EnforcedStyle: brackets
 
 # Offense count: 1
 # Cop supports --auto-correct.
