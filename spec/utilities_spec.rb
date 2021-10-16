@@ -1,6 +1,6 @@
 require File.expand_path(File.join(File.dirname(__FILE__), 'spec_helper'))
 
-MeiliSearch.configuration = { meilisearch_host: ENV['MEILISEARCH_HOST'], meilisearch_api_key: ENV['MEILISEARCH_API_KEY'] }
+MeiliSearch.configuration = { meilisearch_host: ENV.fetch("MEILISEARCH_HOST", "http://127.0.0.1:7700"), meilisearch_api_key: ENV.fetch("MEILISEARCH_API_KEY", "masterKey") }
 
 describe MeiliSearch::Utilities do
 

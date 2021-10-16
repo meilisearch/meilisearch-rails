@@ -12,8 +12,6 @@ require 'meilisearch-rails'
 require 'rspec'
 require 'rails/all'
 
-raise "missing MEILISEARCH_HOST or MEILISEARCH_API_KEY environment variables" if ENV['MEILISEARCH_HOST'].nil? || ENV['MEILISEARCH_API_KEY'].nil?
-
 Thread.current[:meilisearch_hosts] = nil
 
 RSpec.configure do |c|
@@ -31,8 +29,8 @@ RSpec.configure do |c|
   # Remove all indexes setup in this run in local or CI
   c.after(:suite) do
     MeiliSearch.configuration = {
-      meilisearch_host: ENV['MEILISEARCH_HOST'],
-      meilisearch_api_key: ENV['MEILISEARCH_API_KEY']
+      meilisearch_host: ENV.fetch("MEILISEARCH_HOST", "http://127.0.0.1:7700"),
+      meilisearch_api_key: ENV.fetch("MEILISEARCH_API_KEY", "masterKey")
     }
 
     safe_index_list.each do |index|

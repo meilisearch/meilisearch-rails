@@ -14,7 +14,7 @@ require 'sequel'
 require 'active_model_serializers'
 require 'byebug'
 
-MeiliSearch.configuration = { meilisearch_host: ENV['MEILISEARCH_HOST'], meilisearch_api_key: ENV['MEILISEARCH_API_KEY'] }
+MeiliSearch.configuration = { meilisearch_host: ENV.fetch("MEILISEARCH_HOST", "http://127.0.0.1:7700"), meilisearch_api_key: ENV.fetch("MEILISEARCH_API_KEY", "masterKey") }
 
 FileUtils.rm('data.sqlite3') if File.exist?('data.sqlite3')
 ActiveRecord::Base.logger = Logger.new($stdout)
@@ -1069,7 +1069,7 @@ end
 describe 'Kaminari' do
   before(:all) do
     require 'kaminari'
-    MeiliSearch.configuration = { meilisearch_host: ENV['MEILISEARCH_HOST'], meilisearch_api_key: ENV['MEILISEARCH_API_KEY'], pagination_backend: :kaminari }
+    MeiliSearch.configuration = { meilisearch_host: ENV.fetch("MEILISEARCH_HOST", "http://127.0.0.1:7700"), meilisearch_api_key: ENV.fetch("MEILISEARCH_API_KEY", "masterKey"), pagination_backend: :kaminari }
     Restaurant.clear_index!(true)
 
     10.times do
@@ -1113,7 +1113,7 @@ end
 describe 'Will_paginate' do
   before(:all) do
     require 'will_paginate'
-    MeiliSearch.configuration = { meilisearch_host: ENV['MEILISEARCH_HOST'], meilisearch_api_key: ENV['MEILISEARCH_API_KEY'], pagination_backend: :will_paginate }
+    MeiliSearch.configuration = { meilisearch_host: ENV.fetch("MEILISEARCH_HOST", "http://127.0.0.1:7700"), meilisearch_api_key: ENV.fetch("MEILISEARCH_API_KEY", "masterKey"), pagination_backend: :will_paginate }
     Movies.clear_index!(true)
 
     10.times do
@@ -1158,7 +1158,7 @@ end
 
 describe 'attributes_to_crop' do
   before(:all) do
-    MeiliSearch.configuration = { meilisearch_host: ENV['MEILISEARCH_HOST'], meilisearch_api_key: ENV['MEILISEARCH_API_KEY'] }
+    MeiliSearch.configuration = { meilisearch_host: ENV.fetch("MEILISEARCH_HOST", "http://127.0.0.1:7700"), meilisearch_api_key: ENV.fetch("MEILISEARCH_API_KEY", "masterKey") }
     10.times do
       Restaurant.create(
         name: Faker::Restaurant.name,
