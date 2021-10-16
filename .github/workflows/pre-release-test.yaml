@@ -19,8 +19,6 @@ jobs:
         rails-version: [5.2, 6.1]
     env:
       RAILS_VERSION: ${{ matrix.rails-version }}
-      MEILISEARCH_HOST: http://localhost:7700
-      MEILISEARCH_API_KEY: masterKey
     name: integration-tests-against-rc (Rails ${{ matrix.rails-version }})
     steps:
       - uses: actions/checkout@v2
