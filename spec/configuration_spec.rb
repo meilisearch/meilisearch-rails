@@ -1,14 +1,14 @@
-require File.expand_path(File.join(__dir__, "spec_helper"))
+require 'spec_helper'
 
 describe MeiliSearch::Configuration do
-  let(:configuration) {
+  let(:configuration) do
     {
-      meilisearch_host: "http://localhost:7700",
-      meilisearch_api_key: "s3cr3tap1k3y",
+      meilisearch_host: 'http://localhost:7700',
+      meilisearch_api_key: 's3cr3tap1k3y'
     }
-  }
+  end
 
-  describe ".client" do
+  describe '.client' do
     let(:client_double) { double MeiliSearch::Client }
 
     before do
@@ -16,52 +16,47 @@ describe MeiliSearch::Configuration do
       allow(MeiliSearch::Client).to receive(:new) { client_double }
     end
 
-    it "initializes a MeiliSearch::Client" do
+    it 'initializes a MeiliSearch::Client' do
       expect(MeiliSearch.client).to eq(client_double)
 
       expect(MeiliSearch::Client)
         .to have_received(:new)
-        .with("http://localhost:7700", "s3cr3tap1k3y", {})
+        .with('http://localhost:7700', 's3cr3tap1k3y', {})
     end
 
     context 'without meilisearch_host' do
-      let(:configuration) {
+      let(:configuration) do
         {
           meilisearch_host: nil,
-          meilisearch_api_key: "s3cr3tap1k3y",
+          meilisearch_api_key: 's3cr3tap1k3y'
         }
-      }
+      end
 
       it 'defines a default value for meilisearch_host' do
         expect(MeiliSearch.client).to eq(client_double)
 
         expect(MeiliSearch::Client)
           .to have_received(:new)
-          .with("http://localhost:7700", "s3cr3tap1k3y", {})
+          .with('http://localhost:7700', 's3cr3tap1k3y', {})
       end
     end
 
-    context "with timeout and max retries" do
-      let(:configuration) {
+    context 'with timeout and max retries' do
+      let(:configuration) do
         {
-          meilisearch_host: "http://localhost:7700",
-          meilisearch_api_key: "s3cr3tap1k3y",
+          meilisearch_host: 'http://localhost:7700',
+          meilisearch_api_key: 's3cr3tap1k3y',
           timeout: 2,
-          max_retries: 1,
+          max_retries: 1
         }
-      }
+      end
 
-      it "forwards them to the client" do
+      it 'forwards them to the client' do
         expect(MeiliSearch.client).to eq(client_double)
 
         expect(MeiliSearch::Client)
           .to have_received(:new)
-          .with(
-            "http://localhost:7700",
-            "s3cr3tap1k3y",
-            timeout: 2,
-            max_retries: 1,
-          )
+          .with('http://localhost:7700', 's3cr3tap1k3y', timeout: 2, max_retries: 1)
       end
     end
   end
@@ -77,9 +72,9 @@ describe MeiliSearch::Configuration do
     end
 
     it 'raise NotConfigured error' do
-      expect {
+      expect do
         MeiliSearch.configuration
-      }.to raise_error(MeiliSearch::NotConfigured, /Please configure MeiliSearch/)
+      end.to raise_error(MeiliSearch::NotConfigured, /Please configure MeiliSearch/)
     end
   end
 end
