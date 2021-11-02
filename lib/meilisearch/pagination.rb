@@ -7,12 +7,11 @@ module MeiliSearch
       return results if MeiliSearch.configuration[:pagination_backend].nil?
 
       begin
-        backend = MeiliSearch.configuration[:pagination_backend].to_s.gsub(/\/(.?)/) { "::#{$1.upcase}" }.gsub(/(?:^|_)(.)/) { $1.upcase } # classify pagination backend name
-        page = Object.const_get(:MeiliSearch).const_get(:Pagination).const_get(backend).create(results, total_hits, options)
+        backend = MeiliSearch.configuration[:pagination_backend].to_s.classify
 
-        page
+        ::MeiliSearch::Pagination.const_get(backend).create(results, total_hits, options)
       rescue NameError
-        raise(BadConfiguration, "Unknown pagination backend")
+        raise(BadConfiguration, 'Unknown pagination backend')
       end
     end
   end

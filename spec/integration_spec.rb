@@ -868,7 +868,8 @@ describe 'An imaginary store' do
   it 'is not synchronous' do
     p = Product.new
     p.valid?
-    p.send(:ms_synchronous?).should == false
+
+    expect(p).not_to be_ms_synchronous
   end
 
   it 'is able to reindex manually' do
@@ -1126,15 +1127,13 @@ end
 describe 'Will_paginate' do
   before(:all) do
     require 'will_paginate'
-    MeiliSearch.configuration = { meilisearch_host: ENV.fetch('MEILISEARCH_HOST', 'http://127.0.0.1:7700'),
-                                  meilisearch_api_key: ENV.fetch('MEILISEARCH_API_KEY', 'masterKey'), pagination_backend: :will_paginate }
+    MeiliSearch.configuration = {
+      meilisearch_host: ENV.fetch('MEILISEARCH_HOST', 'http://127.0.0.1:7700'),
+      meilisearch_api_key: ENV.fetch('MEILISEARCH_API_KEY', 'masterKey'), pagination_backend: :will_paginate
+    }
     Movies.clear_index!(true)
 
-    10.times do
-      Movies.create(
-        title: Faker::Movie.title
-      )
-    end
+    10.times { Movies.create(title: Faker::Movie.title) }
 
     Movies.reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
     sleep 5
