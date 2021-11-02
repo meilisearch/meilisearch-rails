@@ -8,13 +8,11 @@ module MeiliSearch
           Rails.application.eager_load!
         end
         klasses = MeiliSearch.instance_variable_get(:@included_in)
-        (klasses + klasses.map{ |klass| klass.descendants }.flatten).uniq
+        (klasses + klasses.map(&:descendants).flatten).uniq
       end
 
       def clear_all_indexes
-        get_model_classes.each do |klass|
-          klass.clear_index!
-        end
+        get_model_classes.each(&:clear_index!)
       end
 
       def reindex_all_models
@@ -46,4 +44,3 @@ module MeiliSearch
     end
   end
 end
-
