@@ -12,6 +12,8 @@ require 'meilisearch-rails'
 require 'rspec'
 require 'rails/all'
 
+require 'support/dummy_classes'
+
 Thread.current[:meilisearch_hosts] = nil
 
 RSpec.configure do |c|
