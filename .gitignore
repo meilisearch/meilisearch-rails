@@ -70,3 +70,6 @@ Gemfile.lock
 
 # Ignore db files
 *.sqlite3
+
+# Ignore editor files
+.idea
