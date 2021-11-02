@@ -20,7 +20,6 @@ end
 require 'logger'
 
 module MeiliSearch
-
   autoload :Configuration, 'meilisearch/configuration'
   extend Configuration
 
@@ -39,7 +38,6 @@ module MeiliSearch
         include InstanceMethods
       end
     end
-
   end
 
   class IndexSettings
@@ -131,7 +129,7 @@ module MeiliSearch
 
     def attributes_to_hash(attributes, document)
       if attributes
-        Hash[attributes.map { |name, value| [name.to_s, value.call(document) ] }]
+        attributes.map { |name, value| [name.to_s, value.call(document)] }.to_h
       else
         {}
       end
@@ -140,22 +138,18 @@ module MeiliSearch
     def get_attributes(document)
       # If a serializer is set, we ignore attributes
       # everything should be done via the serializer
-      if not @serializer.nil?
+      if !@serializer.nil?
         attributes = @serializer.new(document).attributes
-      else
-        if @attributes.blank?
+      elsif @attributes.blank?
+        attributes = get_default_attributes(document)
           # no `attribute ...` have been configured, use the default attributes of the model
-          attributes = get_default_attributes(document)
-        else
+      elsif active_record?(document)
           # at least 1 `attribute ...` has been configured, therefore use ONLY the one configured
-          if active_record?(document)
-            document.class.unscoped do
-              attributes = attributes_to_hash(@attributes, document)
-            end
-          else
+        document.class.unscoped do
             attributes = attributes_to_hash(@attributes, document)
           end
-        end
+      else
+        attributes = attributes_to_hash(@attributes, document)
       end
 
       attributes.merge!(attributes_to_hash(@additional_attributes, document)) if @additional_attributes
@@ -170,9 +164,7 @@ module MeiliSearch
         attributes = sanitize_attributes(attributes, sanitizer)
       end
 
-      if @options[:force_utf8_encoding]
-        attributes = encode_attributes(attributes)
-      end
+      attributes = encode_attributes(attributes) if @options[:force_utf8_encoding]
 
       attributes
     end
@@ -211,14 +203,16 @@ module MeiliSearch
       settings = {}
       OPTIONS.each do |k|
         v = get_setting(k)
-        settings[k] = v if !v.nil?
+        settings[k] = v unless v.nil?
       end
       settings
     end
 
     def add_index(index_uid, options = {}, &block)
-      raise ArgumentError, 'No block given' if !block_given?
-      raise ArgumentError, 'Options auto_index and auto_remove cannot be set on nested indexes' if options[:auto_index] || options[:auto_remove]
+      raise ArgumentError, 'No block given' unless block_given?
+      if options[:auto_index] || options[:auto_remove]
+        raise ArgumentError, 'Options auto_index and auto_remove cannot be set on nested indexes'
+      end
 
       @additional_indexes ||= {}
       options[:index_uid] = index_uid
@@ -338,24 +332,24 @@ module MeiliSearch
               ms_mark_synchronous
             end
           end
-        else
-          after_validation :ms_mark_synchronous if respond_to?(:after_validation)
+        elsif respond_to?(:after_validation)
+          after_validation :ms_mark_synchronous
         end
       end
       if options[:enqueue]
         raise ArgumentError, 'Cannot use a enqueue if the `synchronous` option if set' if options[:synchronous]
 
         proc = if options[:enqueue] == true
-          proc do |record, remove|
-            MSJob.perform_later(record, remove ? 'ms_remove_from_index!' : 'ms_index!')
-          end
-        elsif options[:enqueue].respond_to?(:call)
-          options[:enqueue]
-        elsif options[:enqueue].is_a?(Symbol)
-          proc { |record, remove| send(options[:enqueue], record, remove) }
-        else
-          raise ArgumentError, "Invalid `enqueue` option: #{options[:enqueue]}"
-        end
+                 proc do |record, remove|
+                   MSJob.perform_later(record, remove ? 'ms_remove_from_index!' : 'ms_index!')
+                 end
+               elsif options[:enqueue].respond_to?(:call)
+                 options[:enqueue]
+               elsif options[:enqueue].is_a?(Symbol)
+                 proc { |record, remove| send(options[:enqueue], record, remove) }
+               else
+                 raise ArgumentError, "Invalid `enqueue` option: #{options[:enqueue]}"
+               end
         meilisearch_options[:enqueue] = proc do |record, remove|
           proc.call(record, remove) unless ms_without_auto_index_scope
         end
@@ -418,8 +412,8 @@ module MeiliSearch
               super(*args)
             end
           end
-        else
-          after_destroy { |searchable| searchable.ms_enqueue_remove_from_index!(ms_synchronous?) } if respond_to?(:after_destroy)
+        elsif respond_to?(:after_destroy)
+          after_destroy { |searchable| searchable.ms_enqueue_remove_from_index!(ms_synchronous?) }
         end
       end
     end
@@ -460,9 +454,7 @@ module MeiliSearch
           end
           documents = group.map do |d|
             attributes = settings.get_attributes(d)
-            unless attributes.instance_of?(Hash)
-              attributes = attributes.to_hash
-            end
+            attributes = attributes.to_hash unless attributes.instance_of?(Hash)
             attributes.merge ms_pk(options) => ms_primary_key_of(d, options)
           end
           last_update= index.add_documents(documents)
@@ -559,24 +551,27 @@ module MeiliSearch
     end
 
     def ms_raw_search(q, params = {})
-      index_uid = params.delete(:index) ||
-                   params.delete('index')
+      index_uid = params.delete(:index) || params.delete('index')
 
-      if !meilisearch_settings.get_setting(:attributesToHighlight).nil?
+      unless meilisearch_settings.get_setting(:attributesToHighlight).nil?
         params[:attributesToHighlight] = meilisearch_settings.get_setting(:attributesToHighlight)
       end
 
-      if !meilisearch_settings.get_setting(:attributesToCrop).nil?
+      unless meilisearch_settings.get_setting(:attributesToCrop).nil?
         params[:attributesToCrop] = meilisearch_settings.get_setting(:attributesToCrop)
-        params[:cropLength] = meilisearch_settings.get_setting(:cropLength) if !meilisearch_settings.get_setting(:cropLength).nil?
+
+        unless meilisearch_settings.get_setting(:cropLength).nil?
+          params[:cropLength] = meilisearch_settings.get_setting(:cropLength)
+        end
       end
+
       index = ms_index(index_uid)
-      index.search(q, Hash[params.map { |k, v| [k, v] }])
+      index.search(q, params.map { |k, v| [k, v] }.to_h)
     end
 
     module AdditionalMethods
       def self.extended(base)
-        class <<base
+        class << base
           alias_method :raw_answer, :ms_raw_answer unless method_defined? :raw_answer
           alias_method :facets_distribution, :ms_facets_distribution unless method_defined? :facets_distribution
         end
@@ -597,7 +592,7 @@ module MeiliSearch
       end
     end
 
-    def ms_search(q, params = {})
+    def ms_search(query, params = {})
       if MeiliSearch.configuration[:pagination_backend]
 
         page = params[:page].nil? ? params[:page] : params[:page].to_i
@@ -609,8 +604,9 @@ module MeiliSearch
       end
 
       # Returns raw json hits as follows:
-      # {"hits"=>[{"id"=>"13", "href"=>"apple", "name"=>"iphone"}], "offset"=>0, "limit"=>|| 20, "nbHits"=>1, "exhaustiveNbHits"=>false, "processingTimeMs"=>0, "query"=>"iphone"}
-      json = ms_raw_search(q, params)
+      # {"hits"=>[{"id"=>"13", "href"=>"apple", "name"=>"iphone"}], "offset"=>0, "limit"=>|| 20, "nbHits"=>1,
+      #  "exhaustiveNbHits"=>false, "processingTimeMs"=>0, "query"=>"iphone"}
+      json = ms_raw_search(query, params)
 
       # Returns the ids of the hits: 13
       hit_ids = json['hits'].map { |hit| hit[ms_pk(meilisearch_options).to_s] }
@@ -623,8 +619,9 @@ module MeiliSearch
                       end
 
       # meilisearch_options[:type] refers to the Model name (e.g. Product)
-      # results_by_id creates a hash with the primaryKey of the document (id) as the key and the document itself as the value
-      # {"13"=>#<Product id: 13, name: "iphone", href: "apple", tags: nil, type: nil, description: "Puts even more features at your fingertips", release_date: nil>}
+      # results_by_id creates a hash with the primaryKey of the document (id) as the key and doc itself as the value
+      # {"13"=>#<Product id: 13, name: "iphone", href: "apple", tags: nil, type: nil,
+      # description: "Puts even more features at your fingertips", release_date: nil>}
       results_by_id = meilisearch_options[:type].where(condition_key => hit_ids).index_by do |hit|
         ms_primary_key_of(hit)
       end
@@ -770,8 +767,8 @@ module MeiliSearch
         if v.is_a?(Array) && prev_v.is_a?(Array)
           # compare array of strings, avoiding symbols VS strings comparison
           return true if v.map(&:to_s) != prev_v.map(&:to_s)
-        else
-          return true if prev_v != v
+        elsif prev_v != v
+          return true
         end
       end
       false
@@ -811,11 +808,11 @@ module MeiliSearch
         # All constraints must pass
         constraint.all? { |inner_constraint| ms_constraint_passes?(document, inner_constraint) }
       else
-        if constraint.respond_to?(:call) # Proc
-          constraint.call(document)
-        else
+        unless constraint.respond_to?(:call)
           raise ArgumentError, "Unknown constraint type: #{constraint} (#{constraint.class})"
         end
+
+        constraint.call(document)
       end
     end
 
@@ -884,7 +881,9 @@ module MeiliSearch
 
     def ms_enqueue_remove_from_index!(synchronous)
       if meilisearch_options[:enqueue]
-        meilisearch_options[:enqueue].call(self, true) unless self.class.send(:ms_indexing_disabled?, meilisearch_options)
+        unless self.class.send(:ms_indexing_disabled?, meilisearch_options)
+          meilisearch_options[:enqueue].call(self, true)
+        end
       else
         ms_remove_from_index!(synchronous || ms_synchronous?)
       end
@@ -892,7 +891,9 @@ module MeiliSearch
 
     def ms_enqueue_index!(synchronous)
       if meilisearch_options[:enqueue]
-        meilisearch_options[:enqueue].call(self, false) unless self.class.send(:ms_indexing_disabled?, meilisearch_options)
+        unless self.class.send(:ms_indexing_disabled?, meilisearch_options)
+          meilisearch_options[:enqueue].call(self, false)
+        end
       else
         ms_index!(synchronous)
       end
