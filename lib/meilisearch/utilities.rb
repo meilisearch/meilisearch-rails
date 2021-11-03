@@ -18,13 +18,12 @@ module MeiliSearch
       def reindex_all_models
         klasses = get_model_classes
 
-        puts ''
-        puts "Reindexing #{klasses.count} models: #{klasses.to_sentence}."
-        puts ''
+        Rails.logger.info "\n\nReindexing #{klasses.count} models: #{klasses.to_sentence}.\n"
 
         klasses.each do |klass|
-          puts klass
-          puts "Reindexing #{klass.count} records..."
+          Rails.logger.info klass
+          Rails.logger.info "Reindexing #{klass.count} records..."
+
           klass.ms_reindex!
         end
       end
@@ -32,12 +31,11 @@ module MeiliSearch
       def set_settings_all_models
         klasses = get_model_classes
 
-        puts ''
-        puts "Pushing settings for #{klasses.count} models: #{klasses.to_sentence}."
-        puts ''
+        Rails.logger.info "\n\nPushing settings for #{klasses.count} models: #{klasses.to_sentence}.\n"
 
         klasses.each do |klass|
-          puts "Pushing #{klass} settings..."
+          Rails.logger.info "Pushing #{klass} settings..."
+
           klass.ms_set_settings
         end
       end
