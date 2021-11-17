@@ -12,6 +12,8 @@ require 'meilisearch-rails'
 require 'rspec'
 require 'rails/all'
 
+require 'support/dummy_classes'
+
 Thread.current[:meilisearch_hosts] = nil
 
 RSpec.configure do |c|
@@ -20,17 +22,17 @@ RSpec.configure do |c|
   c.run_all_when_everything_filtered = true
   c.formatter = 'documentation'
 
-  c.around(:each) do |example|
-    Timeout::timeout(120) {
+  c.around do |example|
+    Timeout.timeout(120) do
       example.run
-    }
+    end
   end
 
   # Remove all indexes setup in this run in local or CI
   c.after(:suite) do
     MeiliSearch.configuration = {
-      meilisearch_host: ENV.fetch("MEILISEARCH_HOST", "http://127.0.0.1:7700"),
-      meilisearch_api_key: ENV.fetch("MEILISEARCH_API_KEY", "masterKey")
+      meilisearch_host: ENV.fetch('MEILISEARCH_HOST', 'http://127.0.0.1:7700'),
+      meilisearch_api_key: ENV.fetch('MEILISEARCH_API_KEY', 'masterKey')
     }
 
     safe_index_list.each do |index|
@@ -49,7 +51,7 @@ end
 
 # get a list of safe indexes in local or CI
 def safe_index_list
-  list = MeiliSearch.client.indexes()
-  list = list.select { |index| index["name"].include?(SAFE_INDEX_PREFIX) }
-  list.sort_by { |index| index["primary"] || "" }
+  list = MeiliSearch.client.indexes
+  list = list.select { |index| index['name'].include?(SAFE_INDEX_PREFIX) }
+  list.sort_by { |index| index['primary'] || '' }
 end

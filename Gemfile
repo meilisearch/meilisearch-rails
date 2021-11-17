@@ -20,9 +20,9 @@ group :test do
   gem 'sequel', sequel_version
 
   if Gem::Version.new(rails_version) >= Gem::Version.new('6.0')
-    gem 'sqlite3', '~> 1.4.0', platform: [:rbx, :ruby]
+    gem 'sqlite3', '~> 1.4.0', platform: %i[rbx ruby]
   else
-    gem 'sqlite3', '< 1.4.0', platform: [:rbx, :ruby]
+    gem 'sqlite3', '< 1.4.0', platform: %i[rbx ruby]
   end
 
   gem 'activerecord-jdbc-adapter', platform: :jruby

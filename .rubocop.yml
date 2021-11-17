@@ -27,3 +27,19 @@ Style/Documentation:
 
 Style/FrozenStringLiteralComment:
   Enabled: false
+
+RSpec/MultipleExpectations:
+  Max: 5
+
+Metrics/BlockLength:
+  Enabled: true
+  Exclude:
+    - spec/**/*
+
+Rails/ApplicationRecord:
+  Exclude:
+    - spec/**/*
+
+Rails/TimeZone:
+  Exclude:
+    - spec/**/*

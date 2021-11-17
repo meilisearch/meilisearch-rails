@@ -14,7 +14,8 @@ require 'sequel'
 require 'active_model_serializers'
 require 'byebug'
 
-MeiliSearch.configuration = { meilisearch_host: ENV.fetch("MEILISEARCH_HOST", "http://127.0.0.1:7700"), meilisearch_api_key: ENV.fetch("MEILISEARCH_API_KEY", "masterKey") }
+MeiliSearch.configuration = { meilisearch_host: ENV.fetch('MEILISEARCH_HOST', 'http://127.0.0.1:7700'),
+                              meilisearch_api_key: ENV.fetch('MEILISEARCH_API_KEY', 'masterKey') }
 
 FileUtils.rm('data.sqlite3') if File.exist?('data.sqlite3')
 ActiveRecord::Base.logger = Logger.new($stdout)
@@ -30,7 +31,12 @@ if ActiveRecord::Base.respond_to?(:raise_in_transactional_callbacks)
   ActiveRecord::Base.raise_in_transactional_callbacks = true
 end
 
-SEQUEL_DB = Sequel.connect(defined?(JRUBY_VERSION) ? 'jdbc:sqlite:sequel_data.sqlite3' : { 'adapter' => 'sqlite', 'database' => 'sequel_data.sqlite3' })
+SEQUEL_DB = Sequel.connect(if defined?(JRUBY_VERSION)
+                             'jdbc:sqlite:sequel_data.sqlite3'
+                           else
+                             { 'adapter' => 'sqlite',
+                               'database' => 'sequel_data.sqlite3' }
+                           end)
 
 unless SEQUEL_DB.table_exists?(:sequel_books)
   SEQUEL_DB.create_table(:sequel_books) do
@@ -185,7 +191,8 @@ end
 class People < ActiveRecord::Base
   include MeiliSearch
 
-  meilisearch synchronous: true, index_uid: safe_index_uid('MyCustomPeople'), primary_key: :card_number, auto_remove: false do
+  meilisearch synchronous: true, index_uid: safe_index_uid('MyCustomPeople'), primary_key: :card_number,
+              auto_remove: false do
     add_attribute :full_name
   end
 
@@ -276,7 +283,7 @@ class Color < ActiveRecord::Base
       'attribute',
       'sort',
       'exactness',
-      'hex:asc',
+      'hex:asc'
     ]
     attributes_to_highlight [:name]
   end
@@ -347,7 +354,8 @@ end
 class NullableId < ActiveRecord::Base
   include MeiliSearch
 
-  meilisearch synchronous: true, index_uid: safe_index_uid('NullableId'), per_environment: true, id: :custom_id, if: :never do
+  meilisearch synchronous: true, index_uid: safe_index_uid('NullableId'), per_environment: true, id: :custom_id,
+              if: :never do
   end
 
   def custom_id
@@ -497,7 +505,7 @@ unless OLD_RAILS
       read_attribute(:id)
     end
 
-    def self.find(id)
+    def self.find(_id)
       EnqueuedDocument.first
     end
 
@@ -510,7 +518,7 @@ unless OLD_RAILS
   class DisabledEnqueuedDocument < ActiveRecord::Base
     include MeiliSearch
 
-    meilisearch(enqueue: proc { |record| raise 'enqueued' },
+    meilisearch(enqueue: proc { |_record| raise 'enqueued' },
                 index_uid: safe_index_uid('EnqueuedDocument'),
                 disable_indexing: true) do
       attributes [:name]
@@ -554,6 +562,7 @@ describe 'Encoding' do
   before(:all) do
     EncodedString.clear_index!(true)
   end
+
   it 'converts to utf-8' do
     EncodedString.create!
     results = EncodedString.raw_search ''
@@ -566,14 +575,18 @@ describe 'Settings change detection' do
   it 'detects settings changes' do
     Color.send(:meilisearch_settings_changed?, nil, {}).should == true
     Color.send(:meilisearch_settings_changed?, {}, { 'searchableAttributes' => ['name'] }).should == true
-    Color.send(:meilisearch_settings_changed?, { 'searchableAttributes' => ['name'] }, { 'searchableAttributes' => %w[name hex] }).should == true
-    Color.send(:meilisearch_settings_changed?, { 'searchableAttributes' => ['name'] }, { 'rankingRules' => ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness', 'hex:asc'] }).should == true
+    Color.send(:meilisearch_settings_changed?, { 'searchableAttributes' => ['name'] },
+               { 'searchableAttributes' => %w[name hex] }).should == true
+    Color.send(:meilisearch_settings_changed?, { 'searchableAttributes' => ['name'] },
+               { 'rankingRules' => ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness', 'hex:asc'] }).should == true
   end
 
   it 'does not detect settings changes' do
     Color.send(:meilisearch_settings_changed?, {}, {}).should == false
-    Color.send(:meilisearch_settings_changed?, { 'searchableAttributes' => ['name'] }, { searchableAttributes: ['name'] }).should == false
-    Color.send(:meilisearch_settings_changed?, { 'searchableAttributes' => ['name'], 'rankingRules' => ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness', 'hex:asc'] }, { 'rankingRules' => ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness', 'hex:asc'] }).should == false
+    Color.send(:meilisearch_settings_changed?, { 'searchableAttributes' => ['name'] },
+               { searchableAttributes: ['name'] }).should == false
+    Color.send(:meilisearch_settings_changed?,
+               { 'searchableAttributes' => ['name'], 'rankingRules' => ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness', 'hex:asc'] }, { 'rankingRules' => ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness', 'hex:asc'] }).should == false
   end
 end
 
@@ -598,15 +611,15 @@ describe 'Attributes change detection' do
   it 'detects attribute changes even in a transaction' do
     color = Color.new name: 'dark-blue', short_name: 'blue'
     color.save
-    color.instance_variable_get("@ms_must_reindex").should == nil
+    color.instance_variable_get('@ms_must_reindex').should.nil?
     Color.transaction do
       color.name = 'red'
       color.save
       color.not_indexed = 'strstr'
       color.save
-      color.instance_variable_get("@ms_must_reindex").should == true
+      color.instance_variable_get('@ms_must_reindex').should == true
     end
-    color.instance_variable_get("@ms_must_reindex").should == nil
+    color.instance_variable_get('@ms_must_reindex').should.nil?
     color.delete
   end
 
@@ -689,7 +702,7 @@ describe 'NestedItem' do
     result['hits'].size.should == 1
 
     if i2.respond_to? :update_attributes
-      i2.update_attributes hidden: false
+      i2.update_attributes hidden: false # rubocop:disable Rails/ActiveRecordAliases
     else
       i2.update hidden: false
     end
@@ -784,7 +797,7 @@ describe 'Colors' do
     Color.create!(name: 'green', short_name: 'b', hex: 0xFF0000)
     results = Color.search('gre')
     expect(results.size).to eq(1)
-    expect(results[0].formatted).to_not be_nil
+    expect(results[0].formatted).not_to be_nil
   end
 
   it 'indexes an array of documents' do
@@ -855,7 +868,8 @@ describe 'An imaginary store' do
   it 'is not synchronous' do
     p = Product.new
     p.valid?
-    p.send(:ms_synchronous?).should == false
+
+    expect(p).not_to be_ms_synchronous
   end
 
   it 'is able to reindex manually' do
@@ -926,7 +940,7 @@ describe 'An imaginary store' do
 
     it 'does not throw an exception if a search result isn\'t found locally' do
       Product.without_auto_index { @palmpre.destroy }
-      expect { Product.search('pal').to_json }.to_not raise_error
+      expect { Product.search('pal').to_json }.not_to raise_error
     end
 
     it 'returns the other results if those are still available locally' do
@@ -1016,8 +1030,10 @@ describe 'Book' do
     results['hits'].length.should eq(0)
   end
 
+  # rubocop:disable RSpec/MultipleExpectations
   it 'sanitizes attributes' do
-    _hack = Book.create! name: '"><img src=x onerror=alert(1)> hack0r', author: '<script type="text/javascript">alert(1)</script>', premium: true, released: true
+    _hack = Book.create! name: '"><img src=x onerror=alert(1)> hack0r',
+                         author: '<script type="text/javascript">alert(1)</script>', premium: true, released: true
     b = Book.raw_search('hack', { attributesToHighlight: ['*'] })
     expect(b['hits'].length).to eq(1)
     begin
@@ -1038,6 +1054,7 @@ describe 'Book' do
       end
     end
   end
+  # rubocop:enable RSpec/MultipleExpectations
 
   it 'handles removal in an extra index' do
     # add a new public book which (not premium but released)
@@ -1049,11 +1066,7 @@ describe 'Book' do
     expect(results['hits'].size).to eq(1)
 
     # update the book and make it non-public anymore (not premium, not released)
-    if book.respond_to? :update_attributes
-      book.update_attributes released: false
-    else
-      book.update released: false
-    end
+    book.update released: false
 
     # should be removed from the index
     results = index.search('Public book')
@@ -1069,7 +1082,8 @@ end
 describe 'Kaminari' do
   before(:all) do
     require 'kaminari'
-    MeiliSearch.configuration = { meilisearch_host: ENV.fetch("MEILISEARCH_HOST", "http://127.0.0.1:7700"), meilisearch_api_key: ENV.fetch("MEILISEARCH_API_KEY", "masterKey"), pagination_backend: :kaminari }
+    MeiliSearch.configuration = { meilisearch_host: ENV.fetch('MEILISEARCH_HOST', 'http://127.0.0.1:7700'),
+                                  meilisearch_api_key: ENV.fetch('MEILISEARCH_API_KEY', 'masterKey'), pagination_backend: :kaminari }
     Restaurant.clear_index!(true)
 
     10.times do
@@ -1113,14 +1127,13 @@ end
 describe 'Will_paginate' do
   before(:all) do
     require 'will_paginate'
-    MeiliSearch.configuration = { meilisearch_host: ENV.fetch("MEILISEARCH_HOST", "http://127.0.0.1:7700"), meilisearch_api_key: ENV.fetch("MEILISEARCH_API_KEY", "masterKey"), pagination_backend: :will_paginate }
+    MeiliSearch.configuration = {
+      meilisearch_host: ENV.fetch('MEILISEARCH_HOST', 'http://127.0.0.1:7700'),
+      meilisearch_api_key: ENV.fetch('MEILISEARCH_API_KEY', 'masterKey'), pagination_backend: :will_paginate
+    }
     Movies.clear_index!(true)
 
-    10.times do
-      Movies.create(
-        title: Faker::Movie.title
-      )
-    end
+    10.times { Movies.create(title: Faker::Movie.title) }
 
     Movies.reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
     sleep 5
@@ -1158,7 +1171,8 @@ end
 
 describe 'attributes_to_crop' do
   before(:all) do
-    MeiliSearch.configuration = { meilisearch_host: ENV.fetch("MEILISEARCH_HOST", "http://127.0.0.1:7700"), meilisearch_api_key: ENV.fetch("MEILISEARCH_API_KEY", "masterKey") }
+    MeiliSearch.configuration = { meilisearch_host: ENV.fetch('MEILISEARCH_HOST', 'http://127.0.0.1:7700'),
+                                  meilisearch_api_key: ENV.fetch('MEILISEARCH_API_KEY', 'masterKey') }
     10.times do
       Restaurant.create(
         name: Faker::Restaurant.name,
@@ -1174,7 +1188,7 @@ describe 'attributes_to_crop' do
   it 'includes _formatted object' do
     results = Restaurant.search('')
     raw_search_results = Restaurant.raw_search('')
-    expect(results[0].formatted).to_not be_nil
+    expect(results[0].formatted).not_to be_nil
     expect(results[0].formatted).to eq(raw_search_results['hits'].first['_formatted'])
     expect(results.first.formatted['description'].length).to be < results.first['description'].length
     expect(results.first.formatted['description']).to eq(raw_search_results['hits'].first['_formatted']['description'])
@@ -1208,34 +1222,34 @@ end
 unless OLD_RAILS
   describe 'EnqueuedDocument' do
     it 'enqueues a job' do
-      expect {
+      expect do
         EnqueuedDocument.create! name: 'test'
-      }.to raise_error('enqueued 1')
+      end.to raise_error('enqueued 1')
     end
 
     it 'does not enqueue a job inside no index block' do
-      expect {
+      expect do
         EnqueuedDocument.without_auto_index do
           EnqueuedDocument.create! name: 'test'
         end
-      }.not_to raise_error
+      end.not_to raise_error
     end
   end
 
   describe 'DisabledEnqueuedDocument' do
     it 'does not try to enqueue a job' do
-      expect {
+      expect do
         DisabledEnqueuedDocument.create! name: 'test'
-      }.not_to raise_error
+      end.not_to raise_error
     end
   end
 end
 
 describe 'Misconfigured Block' do
   it 'forces the meilisearch block' do
-    expect {
+    expect do
       MisconfiguredBlock.reindex!
-    }.to raise_error(ArgumentError)
+    end.to raise_error(ArgumentError)
   end
 end
 
@@ -1243,15 +1257,18 @@ describe 'People' do
   it 'has as uid the custom name specified' do
     expect(People.index.uid).to eq(safe_index_uid('MyCustomPeople'))
   end
+
   it 'has the chosen field as custom primary key' do
     index = MeiliSearch.client.fetch_index(safe_index_uid('MyCustomPeople'))
     expect(index.primary_key).to eq('card_number')
   end
+
   it 'adds custom complex attribute' do
-    People.create(first_name: 'Jane', last_name: 'Doe', card_number: 75801887)
+    People.create(first_name: 'Jane', last_name: 'Doe', card_number: 75_801_887)
     result = People.raw_search('Jane')
     expect(result['hits'][0]['full_name']).to eq('Jane Doe')
   end
+
   it 'does not call the API if there has been no attribute change' do
     person = People.search('Jane')[0]
     before_save_statuses = People.index.get_all_update_status
@@ -1267,21 +1284,24 @@ describe 'People' do
     after_change_status = after_change_statuses.last
     expect(before_save_status['updateId']).not_to eq(after_change_status['updateId'])
   end
+
   it 'does not auto-remove' do
-    People.create(first_name: 'Joanna', last_name: 'Banana', card_number: 75801888)
+    People.create(first_name: 'Joanna', last_name: 'Banana', card_number: 75_801_888)
     joanna = People.search('Joanna')[0]
     joanna.destroy
     result = People.raw_search('Joanna')
     expect(result['hits'].size).to eq(1)
   end
+
   it 'is able to remove manually' do
-    bob = People.create(first_name: 'Bob', last_name: 'Sponge', card_number: 75801889)
+    bob = People.create(first_name: 'Bob', last_name: 'Sponge', card_number: 75_801_889)
     result = People.raw_search('Bob')
     expect(result['hits'].size).to eq(1)
     bob.remove_from_index!
     result = People.raw_search('Bob')
     expect(result['hits'].size).to eq(0)
   end
+
   it 'clears index manually' do
     results = People.raw_search('')
     expect(results['hits'].size).not_to eq(0)
@@ -1326,6 +1346,7 @@ describe 'Raise on failure' do
       Fruit.search('', { filter: 'title = Nightshift' })
     end.to raise_error(MeiliSearch::ApiError)
   end
+
   it 'does not raise on failure' do
     expect do
       Vegetable.search('', { filter: 'title = Kale' })

@@ -8,25 +8,22 @@ module MeiliSearch
           Rails.application.eager_load!
         end
         klasses = MeiliSearch.instance_variable_get(:@included_in)
-        (klasses + klasses.map{ |klass| klass.descendants }.flatten).uniq
+        (klasses + klasses.map(&:descendants).flatten).uniq
       end
 
       def clear_all_indexes
-        get_model_classes.each do |klass|
-          klass.clear_index!
-        end
+        get_model_classes.each(&:clear_index!)
       end
 
       def reindex_all_models
         klasses = get_model_classes
 
-        puts ''
-        puts "Reindexing #{klasses.count} models: #{klasses.to_sentence}."
-        puts ''
+        Rails.logger.info "\n\nReindexing #{klasses.count} models: #{klasses.to_sentence}.\n"
 
         klasses.each do |klass|
-          puts klass
-          puts "Reindexing #{klass.count} records..."
+          Rails.logger.info klass
+          Rails.logger.info "Reindexing #{klass.count} records..."
+
           klass.ms_reindex!
         end
       end
@@ -34,16 +31,14 @@ module MeiliSearch
       def set_settings_all_models
         klasses = get_model_classes
 
-        puts ''
-        puts "Pushing settings for #{klasses.count} models: #{klasses.to_sentence}."
-        puts ''
+        Rails.logger.info "\n\nPushing settings for #{klasses.count} models: #{klasses.to_sentence}.\n"
 
         klasses.each do |klass|
-          puts "Pushing #{klass} settings..."
+          Rails.logger.info "Pushing #{klass} settings..."
+
           klass.ms_set_settings
         end
       end
     end
   end
 end
-
