@@ -36,7 +36,7 @@ RSpec.configure do |c|
     }
 
     safe_index_list.each do |index|
-      MeiliSearch.client.delete_index(index['name'])
+      MeiliSearch.client.delete_index(index.uid)
     end
   end
 end
@@ -52,6 +52,6 @@ end
 # get a list of safe indexes in local or CI
 def safe_index_list
   list = MeiliSearch.client.indexes
-  list = list.select { |index| index['name'].include?(SAFE_INDEX_PREFIX) }
-  list.sort_by { |index| index['primary'] || '' }
+  list = list.select { |index| index.uid.include?(SAFE_INDEX_PREFIX) }
+  list.sort_by { |index| index.primary_key || '' }
 end
