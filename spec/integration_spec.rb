@@ -576,17 +576,17 @@ describe 'Settings change detection' do
     expect(Color.send(:meilisearch_settings_changed?, nil, {})).to eq(true)
     expect(Color.send(:meilisearch_settings_changed?, {}, { 'searchableAttributes' => ['name'] })).to eq(true)
     expect(Color.send(:meilisearch_settings_changed?, { 'searchableAttributes' => ['name'] },
-               { 'searchableAttributes' => %w[name hex] })).to eq(true)
+                      { 'searchableAttributes' => %w[name hex] })).to eq(true)
     expect(Color.send(:meilisearch_settings_changed?, { 'searchableAttributes' => ['name'] },
-               { 'rankingRules' => ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness', 'hex:asc'] })).to eq(true)
+                      { 'rankingRules' => ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness', 'hex:asc'] })).to eq(true)
   end
 
   it 'does not detect settings changes' do
     expect(Color.send(:meilisearch_settings_changed?, {}, {})).to eq(false)
     expect(Color.send(:meilisearch_settings_changed?, { 'searchableAttributes' => ['name'] },
-               { searchableAttributes: ['name'] })).to eq(false)
+                      { searchableAttributes: ['name'] })).to eq(false)
     expect(Color.send(:meilisearch_settings_changed?,
-               { 'searchableAttributes' => ['name'], 'rankingRules' => ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness', 'hex:asc'] }, { 'rankingRules' => ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness', 'hex:asc'] })).to eq(false)
+                      { 'searchableAttributes' => ['name'], 'rankingRules' => ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness', 'hex:asc'] }, { 'rankingRules' => ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness', 'hex:asc'] })).to eq(false)
   end
 end
 
@@ -1010,6 +1010,7 @@ describe 'Book' do
     Book.index(safe_index_uid('Book')).delete_all_documents
   end
 
+  # rubocop:disable RSpec/MultipleExpectations
   it 'indexes the book in 2 indexes of 3' do
     steve_jobs = Book.create! name: 'Steve Jobs', author: 'Walter Isaacson', premium: true, released: true
     results = Book.search('steve')
@@ -1029,6 +1030,7 @@ describe 'Book' do
     results = index_book.search('steve')
     expect(results['hits'].length).to eq(0)
   end
+  # rubocop:enable RSpec/MultipleExpectations
 
   # rubocop:disable RSpec/MultipleExpectations
   it 'sanitizes attributes' do
@@ -1098,6 +1100,7 @@ describe 'Kaminari' do
     sleep 5
   end
 
+  # rubocop:disable RSpec/MultipleExpectations
   it 'paginates' do
     hits = Restaurant.search ''
     expect(hits.total_count).to eq(Restaurant.raw_search('')['hits'].size)
@@ -1112,6 +1115,7 @@ describe 'Kaminari' do
     expect(p2[0]).to eq(hits[1])
     expect(p2.total_count).to eq(Restaurant.raw_search('')['hits'].count)
   end
+  # rubocop:enable RSpec/MultipleExpectations
 
   it 'does not return error if pagination params are strings' do
     p1 = Restaurant.search '', page: '1', hitsPerPage: '1'
@@ -1163,8 +1167,6 @@ describe 'Will_paginate' do
     expect(hits.current_page).to eq(1)
 
     hits = Movies.search '', hitsPerPage: '5', page: '2'
-    expect(hits.per_page).to eq(5)
-    expect(hits.total_pages).to eq(2)
     expect(hits.current_page).to eq(2)
   end
 end
