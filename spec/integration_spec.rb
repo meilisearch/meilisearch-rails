@@ -1037,13 +1037,13 @@ describe 'Book' do
     b = Book.raw_search('hack', { attributesToHighlight: ['*'] })
     expect(b['hits'].length).to eq(1)
     begin
-      expect(b['hits'][0]['name']).to eq('"> hack0r')
+      expect(b['hits'][0]['name']).to eq('"> hack0r').and_raise(StandardError)
       expect(b['hits'][0]['author']).to eq('alert(1)')
       expect(b['hits'][0]['_formatted']['name']).to eq('"> <em>hack</em>0r')
     rescue StandardError
       # rails 4.2's sanitizer
       begin
-        expect(b['hits'][0]['name']).to eq('&quot;&gt; hack0r')
+        expect(b['hits'][0]['name']).to eq('&quot;&gt; hack0r').and_raise(StandardError)
         expect(b['hits'][0]['author']).to eq('')
         expect(b['hits'][0]['_formatted']['name']).to eq('&quot;&gt; <em>hack</em>0r')
       rescue StandardError
