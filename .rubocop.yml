@@ -29,7 +29,7 @@ Style/FrozenStringLiteralComment:
   Enabled: false
 
 RSpec/MultipleExpectations:
-  Max: 5
+  Enabled: false
 
 Metrics/BlockLength:
   Enabled: true
