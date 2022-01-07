@@ -1,6 +1,7 @@
 require 'simplecov'
 SimpleCov.start do
   add_filter %r{^/spec/}
+  minimum_coverage 86.80
 end
 
 require 'rubygems'
