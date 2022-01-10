@@ -129,7 +129,7 @@ module MeiliSearch
 
     def attributes_to_hash(attributes, document)
       if attributes
-        attributes.map { |name, value| [name.to_s, value.call(document)] }.to_h
+        attributes.to_h { |name, value| [name.to_s, value.call(document)] }
       else
         {}
       end
@@ -566,7 +566,7 @@ module MeiliSearch
       end
 
       index = ms_index(index_uid)
-      index.search(q, params.map { |k, v| [k, v] }.to_h)
+      index.search(q, params.to_h { |k, v| [k, v] })
     end
 
     module AdditionalMethods
