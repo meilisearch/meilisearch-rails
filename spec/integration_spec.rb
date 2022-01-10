@@ -27,9 +27,7 @@ ActiveRecord::Base.establish_connection(
   'timeout' => 5000
 )
 
-if ActiveRecord::Base.respond_to?(:raise_in_transactional_callbacks)
-  ActiveRecord::Base.raise_in_transactional_callbacks = true
-end
+ActiveRecord::Base.raise_in_transactional_callbacks = true if ActiveRecord::Base.respond_to?(:raise_in_transactional_callbacks)
 
 SEQUEL_DB = Sequel.connect(if defined?(JRUBY_VERSION)
                              'jdbc:sqlite:sequel_data.sqlite3'
@@ -573,20 +571,20 @@ end
 
 describe 'Settings change detection' do
   it 'detects settings changes' do
-    Color.send(:meilisearch_settings_changed?, nil, {}).should == true
-    Color.send(:meilisearch_settings_changed?, {}, { 'searchableAttributes' => ['name'] }).should == true
-    Color.send(:meilisearch_settings_changed?, { 'searchableAttributes' => ['name'] },
-               { 'searchableAttributes' => %w[name hex] }).should == true
-    Color.send(:meilisearch_settings_changed?, { 'searchableAttributes' => ['name'] },
-               { 'rankingRules' => ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness', 'hex:asc'] }).should == true
+    expect(Color.send(:meilisearch_settings_changed?, nil, {})).to eq(true)
+    expect(Color.send(:meilisearch_settings_changed?, {}, { 'searchableAttributes' => ['name'] })).to eq(true)
+    expect(Color.send(:meilisearch_settings_changed?, { 'searchableAttributes' => ['name'] },
+                      { 'searchableAttributes' => %w[name hex] })).to eq(true)
+    expect(Color.send(:meilisearch_settings_changed?, { 'searchableAttributes' => ['name'] },
+                      { 'rankingRules' => ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness', 'hex:asc'] })).to eq(true)
   end
 
   it 'does not detect settings changes' do
-    Color.send(:meilisearch_settings_changed?, {}, {}).should == false
-    Color.send(:meilisearch_settings_changed?, { 'searchableAttributes' => ['name'] },
-               { searchableAttributes: ['name'] }).should == false
-    Color.send(:meilisearch_settings_changed?,
-               { 'searchableAttributes' => ['name'], 'rankingRules' => ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness', 'hex:asc'] }, { 'rankingRules' => ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness', 'hex:asc'] }).should == false
+    expect(Color.send(:meilisearch_settings_changed?, {}, {})).to eq(false)
+    expect(Color.send(:meilisearch_settings_changed?, { 'searchableAttributes' => ['name'] },
+                      { searchableAttributes: ['name'] })).to eq(false)
+    expect(Color.send(:meilisearch_settings_changed?,
+                      { 'searchableAttributes' => ['name'], 'rankingRules' => ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness', 'hex:asc'] }, { 'rankingRules' => ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness', 'hex:asc'] })).to eq(false)
   end
 end
 
@@ -594,43 +592,43 @@ describe 'Attributes change detection' do
   it 'detects attribute changes' do
     color = Color.new name: 'dark-blue', short_name: 'blue'
 
-    Color.ms_must_reindex?(color).should == true
+    expect(Color.ms_must_reindex?(color)).to eq(true)
     color.save
-    Color.ms_must_reindex?(color).should == false
+    expect(Color.ms_must_reindex?(color)).to eq(false)
 
     color.hex = 123_456
-    Color.ms_must_reindex?(color).should == false
+    expect(Color.ms_must_reindex?(color)).to eq(false)
 
     color.not_indexed = 'strstr'
-    Color.ms_must_reindex?(color).should == false
+    expect(Color.ms_must_reindex?(color)).to eq(false)
     color.name = 'red'
-    Color.ms_must_reindex?(color).should == true
+    expect(Color.ms_must_reindex?(color)).to eq(true)
     color.delete
   end
 
   it 'detects attribute changes even in a transaction' do
     color = Color.new name: 'dark-blue', short_name: 'blue'
     color.save
-    color.instance_variable_get('@ms_must_reindex').should.nil?
+    expect(color.instance_variable_get('@ms_must_reindex')).to be_nil
     Color.transaction do
       color.name = 'red'
       color.save
       color.not_indexed = 'strstr'
       color.save
-      color.instance_variable_get('@ms_must_reindex').should == true
+      expect(color.instance_variable_get('@ms_must_reindex')).to eq(true)
     end
-    color.instance_variable_get('@ms_must_reindex').should.nil?
+    expect(color.instance_variable_get('@ms_must_reindex')).to be_nil
     color.delete
   end
 
   it 'detects change with ms_dirty? method' do
     ebook = Ebook.new name: 'My life', author: 'Myself', premium: false, released: true
-    Ebook.ms_must_reindex?(ebook).should == true # Because it's defined in ms_dirty? method
+    expect(Ebook.ms_must_reindex?(ebook)).to eq(true) # Because it's defined in ms_dirty? method
     ebook.current_time = 10
     ebook.published_at = 8
-    Ebook.ms_must_reindex?(ebook).should == true
+    expect(Ebook.ms_must_reindex?(ebook)).to eq(true)
     ebook.published_at = 12
-    Ebook.ms_must_reindex?(ebook).should == false
+    expect(Ebook.ms_must_reindex?(ebook)).to eq(false)
   end
 end
 
@@ -640,14 +638,14 @@ describe 'Namespaced::Model' do
   end
 
   it 'has an index name without :: hierarchy' do
-    Namespaced::Model.index_uid.end_with?('Namespaced_Model').should == true
+    expect(Namespaced::Model.index_uid.end_with?('Namespaced_Model')).to eq(true)
   end
 
   it 'uses the block to determine attribute\'s value' do
     m = Namespaced::Model.new(another_private_value: 2)
     attributes = Namespaced::Model.meilisearch_settings.get_attributes(m)
-    attributes['customAttr'].should == 42
-    attributes['myid'].should == m.id
+    expect(attributes['customAttr']).to eq(42)
+    expect(attributes['myid']).to eq(m.id)
   end
 
   it 'always updates when there is no custom _changed? function' do
@@ -696,10 +694,10 @@ describe 'NestedItem' do
     NestedItem.where(id: [i1.id, i2.id]).reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
 
     result = NestedItem.index.get_document(i1.id)
-    result['nb_children'].should == 2
+    expect(result['nb_children']).to eq(2)
 
     result = NestedItem.raw_search('')
-    result['hits'].size.should == 1
+    expect(result['hits'].size).to eq(1)
 
     if i2.respond_to? :update_attributes
       i2.update_attributes hidden: false # rubocop:disable Rails/ActiveRecordAliases
@@ -708,7 +706,7 @@ describe 'NestedItem' do
     end
 
     result = NestedItem.raw_search('')
-    result['hits'].size.should == 2
+    expect(result['hits'].size).to eq(2)
   end
 end
 
@@ -720,28 +718,28 @@ describe 'Colors' do
   it 'is synchronous' do
     c = Color.new
     c.valid?
-    c.send(:ms_synchronous?).should == true
+    expect(c.send(:ms_synchronous?)).to eq(true)
   end
 
   it 'auto indexes' do
     blue = Color.create!(name: 'blue', short_name: 'b', hex: 0xFF0000)
     results = Color.search('blue')
     expect(results.size).to eq(1)
-    results.should include(blue)
+    expect(results).to include(blue)
   end
 
   it 'returns facets distribution' do
     results = Color.search('', { facetsDistribution: ['short_name'] })
-    results.raw_answer.should_not be_nil
-    results.facets_distribution.should_not be_nil
-    results.facets_distribution.size.should eq(1)
-    results.facets_distribution['short_name']['b'].should eq(1)
+    expect(results.raw_answer).not_to be_nil
+    expect(results.facets_distribution).not_to be_nil
+    expect(results.facets_distribution.size).to eq(1)
+    expect(results.facets_distribution['short_name']['b']).to eq(1)
   end
 
   it 'is raw searchable' do
     results = Color.raw_search('blue')
-    results['hits'].size.should eq(1)
-    results['nbHits'].should eq(1)
+    expect(results['hits'].size).to eq(1)
+    expect(results['nbHits']).to eq(1)
   end
 
   it 'is able to temporarily disable auto-indexing' do
@@ -765,9 +763,9 @@ describe 'Colors' do
     Color.create!(name: 'red', short_name: 'r2', hex: 2)
     results = Color.search('red')
     expect(results.size).to eq(3)
-    results[0].hex.should eq(1)
-    results[1].hex.should eq(2)
-    results[2].hex.should eq(3)
+    expect(results[0].hex).to eq(1)
+    expect(results[1].hex).to eq(2)
+    expect(results[2].hex).to eq(3)
   end
 
   it 'updates the index if the attribute changed' do
@@ -790,7 +788,7 @@ describe 'Colors' do
   end
 
   it 'has a Rails env-based index name' do
-    Color.index_uid.should == safe_index_uid('Color') + "_#{Rails.env}"
+    expect(Color.index_uid).to eq(safe_index_uid('Color') + "_#{Rails.env}")
   end
 
   it 'includes _formatted object' do
@@ -803,7 +801,7 @@ describe 'Colors' do
   it 'indexes an array of documents' do
     json = Color.raw_search('')
     Color.index_documents Color.limit(1), true # reindex last color, `limit` is incompatible with the reindex! method
-    json['hits'].count.should eq(Color.raw_search('')['hits'].count)
+    expect(json['hits'].count).to eq(Color.raw_search('')['hits'].count)
   end
 
   it 'does not index non-saved document' do
@@ -888,43 +886,43 @@ describe 'An imaginary store' do
     it 'finds the iphone' do
       results = Product.search('iphone')
       expect(results.size).to eq(1)
-      results.should include(@iphone)
+      expect(results).to include(@iphone)
     end
 
     it 'searches case insensitively' do
       results = Product.search('IPHONE')
       expect(results.size).to eq(1)
-      results.should include(@iphone)
+      expect(results).to include(@iphone)
     end
 
     it 'finds all amazon products' do
       results = Product.search('amazon')
       expect(results.size).to eq(3)
-      results.should include(@android, @samsung, @motorola)
+      expect(results).to include(@android, @samsung, @motorola)
     end
 
     it 'finds all "palm" phones with wildcard word search' do
       results = Product.search('pal')
       expect(results.size).to eq(2)
-      results.should include(@palmpre, @palm_pixi_plus)
+      expect(results).to include(@palmpre, @palm_pixi_plus)
     end
 
     it 'searches multiple words from the same field' do
       results = Product.search('palm pixi plus')
       expect(results.size).to eq(1)
-      results.should include(@palm_pixi_plus)
+      expect(results).to include(@palm_pixi_plus)
     end
 
     it 'finds using phrase search' do
       results = Product.search('coco "palm"')
       expect(results.size).to eq(1)
-      results.should include(@palm_pixi_plus)
+      expect(results).to include(@palm_pixi_plus)
     end
 
     it 'narrows the results by searching across multiple fields' do
       results = Product.search('apple iphone')
       expect(results.size).to eq(1)
-      results.should include(@iphone)
+      expect(results).to include(@iphone)
     end
 
     it 'does not search on non-indexed fields' do
@@ -945,7 +943,7 @@ describe 'An imaginary store' do
 
     it 'returns the other results if those are still available locally' do
       Product.without_auto_index { @palmpre.destroy }
-      JSON.parse(Product.search('pal').to_json).size.should == 1
+      expect(JSON.parse(Product.search('pal').to_json).size).to eq(1)
     end
 
     it 'does not duplicate an already indexed record' do
@@ -968,7 +966,7 @@ describe 'An imaginary store' do
       @camera.index!
       results = Product.search('eos rebel')
       expect(results.size).to eq(1)
-      results.should include(@camera)
+      expect(results).to include(@camera)
     end
 
     it 'deletes a not-anymore-indexable product' do
@@ -1014,36 +1012,35 @@ describe 'Book' do
     steve_jobs = Book.create! name: 'Steve Jobs', author: 'Walter Isaacson', premium: true, released: true
     results = Book.search('steve')
     expect(results.size).to eq(1)
-    results.should include(steve_jobs)
+    expect(results).to include(steve_jobs)
 
     index_author = Book.index(safe_index_uid('BookAuthor'))
-    index_author.should_not be_nil
+    expect(index_author).not_to be_nil
     results = index_author.search('steve')
-    results['hits'].length.should eq(0)
+    expect(results['hits'].length).to eq(0)
     results = index_author.search('walter')
-    results['hits'].length.should eq(1)
+    expect(results['hits'].length).to eq(1)
 
     # premium -> not part of the public index
     index_book = Book.index(safe_index_uid('Book'))
-    index_book.should_not be_nil
+    expect(index_book).not_to be_nil
     results = index_book.search('steve')
-    results['hits'].length.should eq(0)
+    expect(results['hits'].length).to eq(0)
   end
 
-  # rubocop:disable RSpec/MultipleExpectations
   it 'sanitizes attributes' do
     _hack = Book.create! name: '"><img src=x onerror=alert(1)> hack0r',
                          author: '<script type="text/javascript">alert(1)</script>', premium: true, released: true
     b = Book.raw_search('hack', { attributesToHighlight: ['*'] })
     expect(b['hits'].length).to eq(1)
     begin
-      expect(b['hits'][0]['name']).to eq('"> hack0r')
+      expect(b['hits'][0]['name']).to eq('"> hack0r').and_raise(StandardError)
       expect(b['hits'][0]['author']).to eq('alert(1)')
       expect(b['hits'][0]['_formatted']['name']).to eq('"> <em>hack</em>0r')
     rescue StandardError
       # rails 4.2's sanitizer
       begin
-        expect(b['hits'][0]['name']).to eq('&quot;&gt; hack0r')
+        expect(b['hits'][0]['name']).to eq('&quot;&gt; hack0r').and_raise(StandardError)
         expect(b['hits'][0]['author']).to eq('')
         expect(b['hits'][0]['_formatted']['name']).to eq('&quot;&gt; <em>hack</em>0r')
       rescue StandardError
@@ -1054,7 +1051,6 @@ describe 'Book' do
       end
     end
   end
-  # rubocop:enable RSpec/MultipleExpectations
 
   it 'handles removal in an extra index' do
     # add a new public book which (not premium but released)
@@ -1100,27 +1096,27 @@ describe 'Kaminari' do
 
   it 'paginates' do
     hits = Restaurant.search ''
-    hits.total_count.should eq(Restaurant.raw_search('')['hits'].size)
+    expect(hits.total_count).to eq(Restaurant.raw_search('')['hits'].size)
 
     p1 = Restaurant.search '', page: 1, hitsPerPage: 1
-    p1.size.should eq(1)
-    p1[0].should eq(hits[0])
-    p1.total_count.should eq(Restaurant.raw_search('')['hits'].count)
+    expect(p1.size).to eq(1)
+    expect(p1[0]).to eq(hits[0])
+    expect(p1.total_count).to eq(Restaurant.raw_search('')['hits'].count)
 
     p2 = Restaurant.search '', page: 2, hitsPerPage: 1
-    p2.size.should eq(1)
-    p2[0].should eq(hits[1])
-    p2.total_count.should eq(Restaurant.raw_search('')['hits'].count)
+    expect(p2.size).to eq(1)
+    expect(p2[0]).to eq(hits[1])
+    expect(p2.total_count).to eq(Restaurant.raw_search('')['hits'].count)
   end
 
   it 'does not return error if pagination params are strings' do
     p1 = Restaurant.search '', page: '1', hitsPerPage: '1'
-    p1.size.should eq(1)
-    p1.total_count.should eq(Restaurant.raw_search('')['hits'].count)
+    expect(p1.size).to eq(1)
+    expect(p1.total_count).to eq(Restaurant.raw_search('')['hits'].count)
 
     p2 = Restaurant.search '', page: '2', hitsPerPage: '1'
-    p2.size.should eq(1)
-    p2.total_count.should eq(Restaurant.raw_search('')['hits'].count)
+    expect(p2.size).to eq(1)
+    expect(p2.total_count).to eq(Restaurant.raw_search('')['hits'].count)
   end
 end
 
@@ -1141,31 +1137,29 @@ describe 'Will_paginate' do
 
   it 'paginates' do
     hits = Movies.search '', hitsPerPage: 2
-    hits.per_page.should eq(2)
-    hits.total_pages.should eq(5)
-    hits.total_entries.should eq(Movies.raw_search('')['hits'].count)
+    expect(hits.per_page).to eq(2)
+    expect(hits.total_pages).to eq(5)
+    expect(hits.total_entries).to eq(Movies.raw_search('')['hits'].count)
   end
 
   it 'returns most relevant elements in the first page' do
     hits = Movies.search '', hitsPerPage: 2
     raw_hits = Movies.raw_search ''
-    hits[0]['id'].should eq(raw_hits['hits'][0]['id'].to_i)
+    expect(hits[0]['id']).to eq(raw_hits['hits'][0]['id'].to_i)
 
     hits = Movies.search '', hitsPerPage: 2, page: 2
     raw_hits = Movies.raw_search ''
-    hits[0]['id'].should eq(raw_hits['hits'][2]['id'].to_i)
+    expect(hits[0]['id']).to eq(raw_hits['hits'][2]['id'].to_i)
   end
 
   it 'does not return error if pagination params are strings' do
     hits = Movies.search '', hitsPerPage: '5'
-    hits.per_page.should eq(5)
-    hits.total_pages.should eq(2)
-    hits.current_page.should eq(1)
+    expect(hits.per_page).to eq(5)
+    expect(hits.total_pages).to eq(2)
+    expect(hits.current_page).to eq(1)
 
     hits = Movies.search '', hitsPerPage: '5', page: '2'
-    hits.per_page.should eq(5)
-    hits.total_pages.should eq(2)
-    hits.current_page.should eq(2)
+    expect(hits.current_page).to eq(2)
   end
 end
 
