@@ -29,6 +29,7 @@ group :test do
   gem 'activerecord-jdbcsqlite3-adapter', platform: :jruby
   gem 'jdbc-sqlite3', platform: :jruby
   gem 'rspec', '>= 2.5.0', '< 3.0'
+  gem 'simplecov', require: 'false'
 
   gem 'byebug'
   gem 'dotenv', '~> 2.7', '>= 2.7.6'
