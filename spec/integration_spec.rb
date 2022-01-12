@@ -1248,6 +1248,12 @@ describe 'Misconfigured Block' do
 end
 
 describe 'People' do
+  it 'adds custom complex attribute' do
+    People.create(first_name: 'Jane', last_name: 'Doe', card_number: 75_801_887)
+    result = People.raw_search('Jane')
+    expect(result['hits'][0]['full_name']).to eq('Jane Doe')
+  end
+
   it 'has as uid the custom name specified' do
     expect(People.index.uid).to eq(safe_index_uid('MyCustomPeople'))
   end
@@ -1257,26 +1263,20 @@ describe 'People' do
     expect(index.primary_key).to eq('card_number')
   end
 
-  it 'adds custom complex attribute' do
-    People.create(first_name: 'Jane', last_name: 'Doe', card_number: 75_801_887)
-    result = People.raw_search('Jane')
-    expect(result['hits'][0]['full_name']).to eq('Jane Doe')
-  end
-
   it 'does not call the API if there has been no attribute change' do
     person = People.search('Jane')[0]
-    before_save_statuses = People.index.get_all_update_status
-    before_save_status = before_save_statuses.last
+    before_save_statuses = People.index.tasks['results']
+    before_save_status = before_save_statuses.first
     person.first_name = 'Jane'
     person.save
-    after_save_statuses = People.index.get_all_update_status
-    after_save_status = after_save_statuses.last
-    expect(before_save_status['updateId']).to eq(after_save_status['updateId'])
+    after_save_statuses = People.index.tasks['results']
+    after_save_status = after_save_statuses.first
+    expect(before_save_status['uid']).to eq(after_save_status['uid'])
     person.first_name = 'Alice'
     person.save
-    after_change_statuses = People.index.get_all_update_status
-    after_change_status = after_change_statuses.last
-    expect(before_save_status['updateId']).not_to eq(after_change_status['updateId'])
+    after_change_statuses = People.index.tasks['results']
+    after_change_status = after_change_statuses.first
+    expect(before_save_status['uid']).not_to eq(after_change_status['uid'])
   end
 
   it 'does not auto-remove' do
@@ -1310,7 +1310,7 @@ describe 'Animals' do
     Dog.create!(name: 'Toby')
     Cat.create!(name: 'Felix')
     index = MeiliSearch.client.index(safe_index_uid('animals'))
-    index.wait_for_pending_update(index.get_all_update_status.last['updateId'])
+    index.wait_for_task(index.tasks['results'].first['uid'])
     docs = index.search('')
     expect(docs['hits'].size).to eq(2)
   end
@@ -1321,8 +1321,8 @@ describe 'Songs' do
     Song.create!(name: 'Coconut nut', artist: 'Smokey Mountain', premium: false, released: true) # Only song supposed to be added to Songs index
     Song.create!(name: 'Smoking hot', artist: 'Cigarettes before lunch', premium: true, released: true)
     Song.create!(name: 'Floor is lava', artist: 'Volcano', premium: true, released: false)
-    Song.index.wait_for_pending_update(Song.index.get_all_update_status.last['updateId'])
-    MeiliSearch.client.index(safe_index_uid('PrivateSongs')).wait_for_pending_update(MeiliSearch.client.index(safe_index_uid('PrivateSongs')).get_all_update_status.last['updateId'])
+    Song.index.wait_for_task(Song.index.tasks['results'].first['uid'])
+    MeiliSearch.client.index(safe_index_uid('PrivateSongs')).wait_for_task(MeiliSearch.client.index(safe_index_uid('PrivateSongs')).tasks['results'].first['uid'])
     results = Song.search('', index: safe_index_uid('Songs'))
     expect(results.size).to eq(1)
     raw_results = Song.raw_search('', index: safe_index_uid('Songs'))

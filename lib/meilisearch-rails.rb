@@ -237,7 +237,8 @@ module MeiliSearch
     def initialize(index_uid, raise_on_failure, options)
       client = MeiliSearch.client
       primary_key = options[:primary_key] || MeiliSearch::IndexSettings::DEFAULT_PRIMARY_KEY
-      @index = client.get_or_create_index(index_uid, { primaryKey: primary_key })
+      client.create_index(index_uid, { primaryKey: primary_key })
+      @index = client.index(index_uid)
       @raise_on_failure = raise_on_failure.nil? || raise_on_failure
     end
 
@@ -254,12 +255,12 @@ module MeiliSearch
       end
     end
 
-    # special handling of wait_for_pending_update to handle null task_id
-    def wait_for_pending_update(update_id)
-      return if update_id.nil? && !@raise_on_failure # ok
+    # special handling of wait_for_task to handle null task_id
+    def wait_for_task(task_uid)
+      return if task_uid.nil? && !@raise_on_failure # ok
 
-      SafeIndex.log_or_throw(:wait_for_pending_update, @raise_on_failure) do
-        @index.wait_for_pending_update(update_id)
+      SafeIndex.log_or_throw(:wait_for_task, @raise_on_failure) do
+        @index.wait_for_task(task_uid)
       end
     end
 
@@ -442,7 +443,7 @@ module MeiliSearch
         next if ms_indexing_disabled?(options)
 
         index = ms_ensure_init(options, settings)
-        last_update = nil
+        last_task = nil
 
         ms_find_in_batches(batch_size) do |group|
           if ms_conditional_index?(options)
@@ -457,9 +458,9 @@ module MeiliSearch
             attributes = attributes.to_hash unless attributes.instance_of?(Hash)
             attributes.merge ms_pk(options) => ms_primary_key_of(d, options)
           end
-          last_update= index.add_documents(documents)
+          last_task = index.add_documents(documents)
         end
-        index.wait_for_pending_update(last_update['updateId']) if last_update && (synchronous || options[:synchronous])
+        index.wait_for_task(last_task['uid']) if last_task && (synchronous || options[:synchronous])
       end
       nil
     end
@@ -474,8 +475,8 @@ module MeiliSearch
         end
 
         index = SafeIndex.new(ms_index_uid(options), true, options)
-        update = index.update_settings(final_settings)
-        index.wait_for_pending_update(update['updateId']) if synchronous
+        task = index.update_settings(final_settings)
+        index.wait_for_task(task['uid']) if synchronous
       end
     end
 
@@ -484,8 +485,8 @@ module MeiliSearch
         next if ms_indexing_disabled?(options)
 
         index = ms_ensure_init(options, settings)
-        update = index.add_documents(documents.map { |d| settings.get_attributes(d).merge ms_pk(options) => ms_primary_key_of(d, options) })
-        index.wait_for_pending_update(update['updateId']) if synchronous || options[:synchronous]
+        task = index.add_documents(documents.map { |d| settings.get_attributes(d).merge ms_pk(options) => ms_primary_key_of(d, options) })
+        index.wait_for_task(task['uid']) if synchronous || options[:synchronous]
       end
     end
 

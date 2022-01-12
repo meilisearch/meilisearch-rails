@@ -659,7 +659,7 @@ class Book < ActiveRecord::Base
   end
 end
 ```
-🚨 This is only recommended for testing purposes, the gem will call the `wait_for_pending_update` method that will stop your code execution until the asynchronous task has been processed by MeilSearch.
+🚨 This is only recommended for testing purposes, the gem will call the `wait_for_task` method that will stop your code execution until the asynchronous task has been processed by MeilSearch.
 
 ##### Disable auto-indexing & auto-removal <!-- omit in toc -->
 
