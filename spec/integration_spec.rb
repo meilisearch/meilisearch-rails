@@ -1264,19 +1264,11 @@ describe 'People' do
   end
 
   it 'does not call the API if there has been no attribute change' do
-    person = People.search('Jane')[0]
-    before_save_statuses = People.index.tasks['results']
-    before_save_status = before_save_statuses.first
-    person.first_name = 'Jane'
-    person.save
-    after_save_statuses = People.index.tasks['results']
-    after_save_status = after_save_statuses.first
-    expect(before_save_status['uid']).to eq(after_save_status['uid'])
-    person.first_name = 'Alice'
-    person.save
-    after_change_statuses = People.index.tasks['results']
-    after_change_status = after_change_statuses.first
-    expect(before_save_status['uid']).not_to eq(after_change_status['uid'])
+    person = People.search('Jane').first
+
+    expect do
+      person.update(first_name: 'Jane')
+    end.to_not change(People.index.tasks['results'], :size)
   end
 
   it 'does not auto-remove' do
