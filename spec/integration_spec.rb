@@ -1268,7 +1268,7 @@ describe 'People' do
 
     expect do
       person.update(first_name: 'Jane')
-    end.to_not change(People.index.tasks['results'], :size)
+    end.not_to change(People.index.tasks['results'], :size)
   end
 
   it 'does not auto-remove' do
