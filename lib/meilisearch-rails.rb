@@ -317,7 +317,7 @@ module MeiliSearch
     def meilisearch(options = {}, &block)
       self.meilisearch_settings = IndexSettings.new(options, &block)
       self.meilisearch_options = {
-        type: ms_full_const_get(model_name.to_s),
+        type: model_name.to_s.constantize,
         per_page: meilisearch_settings.get_setting(:hitsPerPage) || 20, page: 1
       }.merge(options)
 
@@ -773,18 +773,6 @@ module MeiliSearch
         end
       end
       false
-    end
-
-    def ms_full_const_get(name)
-      list = name.split('::')
-      list.shift if list.first.blank?
-      obj = self
-      list.each do |x|
-        # This is required because const_get tries to look for constants in the
-        # ancestor chain, but we only want constants that are HERE
-        obj = obj.const_defined?(x) ? obj.const_get(x) : obj.const_missing(x)
-      end
-      obj
     end
 
     def ms_conditional_index?(options = nil)
