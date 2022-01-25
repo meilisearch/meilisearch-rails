@@ -50,6 +50,9 @@ ActiveRecord::Schema.define do
   create_table :fruits do |t|
     t.string :name
   end
+  create_table :tasks do |t|
+    t.string :title
+  end
   create_table :vegetables do |t|
     t.string :name
   end
@@ -376,6 +379,13 @@ class NestedItem < ActiveRecord::Base
 
   def nb_children
     children.count
+  end
+end
+
+class Task < ActiveRecord::Base
+  include MeiliSearch
+
+  meilisearch synchronous: true, index_uid: safe_index_uid('Task') do
   end
 end
 
@@ -1336,6 +1346,16 @@ describe 'Raise on failure' do
   it 'does not raise on failure' do
     expect do
       Vegetable.search('', { filter: 'title = Kale' })
+    end.not_to raise_error
+  end
+end
+
+context "when have a internal class defined in the app's scope" do
+  it 'does not raise NoMethodError' do
+    Task.create(title: 'my task #1')
+
+    expect do
+      Task.search('task')
     end.not_to raise_error
   end
 end
