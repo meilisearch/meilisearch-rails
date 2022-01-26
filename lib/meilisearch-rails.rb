@@ -45,7 +45,7 @@ module MeiliSearch
 
     DEFAULT_PRIMARY_KEY = 'id'.freeze
 
-    # MeiliSearch settings
+    # Meilisearch settings
     OPTIONS = %i[
       searchableAttributes
       filterableAttributes
@@ -294,7 +294,7 @@ module MeiliSearch
     end
   end
 
-  # these are the class methods added when MeiliSearch is included
+  # these are the class methods added when Meilisearch is included
   module ClassMethods
     def self.extended(base)
       class << base

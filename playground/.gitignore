@@ -39,5 +39,5 @@
 yarn-debug.log*
 .yarn-integrity
 
-# MeiliSearch
+# Meilisearch
 data.ms
