@@ -1,6 +1,6 @@
 # Contributing <!-- omit in toc -->
 
-First of all, thank you for contributing to MeiliSearch! The goal of this document is to provide everything you need to know in order to contribute to MeiliSearch and its different integrations.
+First of all, thank you for contributing to meilisearch! The goal of this document is to provide everything you need to know in order to contribute to meilisearch and its different integrations.
 
 - [Assumptions](#assumptions)
 - [How to Contribute](#how-to-contribute)
@@ -11,8 +11,8 @@ First of all, thank you for contributing to MeiliSearch! The goal of this docume
 ## Assumptions
 
 1. **You're familiar with [GitHub](https://github.com) and the [Pull Request](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-requests)(PR) workflow.**
-2. **You've read the MeiliSearch [documentation](https://docs.meilisearch.com) and the [README](/README.md).**
-3. **You know about the [MeiliSearch community](https://docs.meilisearch.com/learn/what_is_meilisearch/contact.html). Please use this for help.**
+2. **You've read the meilisearch [documentation](https://docs.meilisearch.com) and the [README](/README.md).**
+3. **You know about the [meilisearch community](https://docs.meilisearch.com/learn/what_is_meilisearch/contact.html). Please use this for help.**
 
 ## How to Contribute
 
@@ -34,7 +34,7 @@ bundle install
 
 ### Tests <!-- omit in toc -->
 
-Optionally, set the credentials of the MeiliSearch instance as environment variables. The defaults are:
+Optionally, set the credentials of the meilisearch instance as environment variables. The defaults are:
 
 ```bash
 MEILISEARCH_HOST="http://127.0.0.1:7700"
@@ -45,7 +45,7 @@ Each PR should pass the tests to be accepted.
 
 ```bash
 # Tests
-docker pull getmeili/meilisearch:latest # Fetch the latest version of MeiliSearch image from Docker Hub
+docker pull getmeili/meilisearch:latest # Fetch the latest version of meilisearch image from Docker Hub
 docker run -p 7700:7700 getmeili/meilisearch:latest ./meilisearch --master-key=masterKey --no-analytics=true
 bundle exec rspec
 # Launch a single test in a specific file
@@ -75,7 +75,7 @@ bundle exec rubocop --auto-gen-config
 
 ### Playground <!-- omit in toc -->
 
-First, you need to run a MeiliSearch instance:
+First, you need to run a meilisearch instance:
 
 ```bash
 docker run -p 7700:7700 getmeili/meilisearch:latest ./meilisearch --no-analytics=true
@@ -92,7 +92,7 @@ bundle exec rails db:seed
 bundle exec rails webpacker:install
 bundle exec rails server
 ```
- ⚠️ Set your MeiliSearch credentials by modifying the file [`playground/config/initializers/meilisearch.rb`](/playground/config/initializers/meilisearch.rb)
+ ⚠️ Set your meilisearch credentials by modifying the file [`playground/config/initializers/meilisearch.rb`](/playground/config/initializers/meilisearch.rb)
 
 ## Git Guidelines
 
@@ -123,7 +123,7 @@ Some notes on GitHub PRs:
 
 ## Release Process (for internal team only)
 
-MeiliSearch tools follow the [Semantic Versioning Convention](https://semver.org/).
+meilisearch tools follow the [Semantic Versioning Convention](https://semver.org/).
 
 ### Automation to Rebase and Merge the PRs <!-- omit in toc -->
 
