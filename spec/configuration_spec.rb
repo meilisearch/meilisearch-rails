@@ -61,7 +61,7 @@ describe MeiliSearch::Configuration do
     end
   end
 
-  context 'when use MeiliSearch without configuration' do
+  context 'when use Meilisearch without configuration' do
     around do |example|
       config = MeiliSearch.configuration
       MeiliSearch.configuration = nil
@@ -74,7 +74,7 @@ describe MeiliSearch::Configuration do
     it 'raise NotConfigured error' do
       expect do
         MeiliSearch.configuration
-      end.to raise_error(MeiliSearch::NotConfigured, /Please configure MeiliSearch/)
+      end.to raise_error(MeiliSearch::NotConfigured, /Please configure Meilisearch/)
     end
   end
 end

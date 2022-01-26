@@ -2,7 +2,7 @@ begin
   require 'will_paginate/collection'
 rescue LoadError
   raise(MeiliSearch::BadConfiguration,
-        "MeiliSearch: Please add 'will_paginate' to your Gemfile to use will_paginate pagination backend")
+        "Meilisearch: Please add 'will_paginate' to your Gemfile to use will_paginate pagination backend")
 end
 
 module MeiliSearch

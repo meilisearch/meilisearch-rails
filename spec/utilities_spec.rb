@@ -10,7 +10,7 @@ describe MeiliSearch::Utilities do
     MeiliSearch.instance_variable_set :@included_in, included_in
   end
 
-  it 'gets the models where MeiliSearch module was included' do
+  it 'gets the models where Meilisearch module was included' do
     expect(described_class.get_model_classes - [Dummy, DummyChild, DummyGrandChild]).to be_empty
   end
 end

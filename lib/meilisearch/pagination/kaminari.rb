@@ -1,6 +1,6 @@
 unless defined? Kaminari
   raise(MeiliSearch::BadConfiguration,
-        "MeiliSearch: Please add 'kaminari' to your Gemfile to use kaminari pagination backend")
+        "Meilisearch: Please add 'kaminari' to your Gemfile to use kaminari pagination backend")
 end
 
 require 'kaminari/models/array_extension'
