@@ -1,11 +1,11 @@
 <p align="center">
-  <img src="https://res.cloudinary.com/meilisearch/image/upload/v1587402338/SDKs/meilisearch_rails.svg" alt="MeiliSearch-Rails" width="200" height="200" />
+  <img src="https://res.cloudinary.com/meilisearch/image/upload/v1587402338/SDKs/meilisearch_rails.svg" alt="meilisearch-Rails" width="200" height="200" />
 </p>
 
-<h1 align="center">MeiliSearch Rails</h1>
+<h1 align="center">meilisearch Rails</h1>
 
 <h4 align="center">
-  <a href="https://github.com/meilisearch/MeiliSearch">MeiliSearch</a> |
+  <a href="https://github.com/meilisearch/meilisearch">meilisearch</a> |
   <a href="https://docs.meilisearch.com">Documentation</a> |
   <a href="https://slack.meilisearch.com">Slack</a> |
   <a href="https://roadmap.meilisearch.com/tabs/1-under-consideration">Roadmap</a> |
@@ -19,21 +19,21 @@
   <a href="https://app.bors.tech/repositories/33032"><img src="https://bors.tech/images/badge_small.svg" alt="Bors enabled"></a>
 </p>
 
-<p align="center">⚡ The MeiliSearch integration for Ruby on Rails 💎</p>
+<p align="center">⚡ The meilisearch integration for Ruby on Rails 💎</p>
 
-**MeiliSearch Rails** is the MeiliSearch integration for Ruby on Rails developers.
+**meilisearch Rails** is the meilisearch integration for Ruby on Rails developers.
 
-**MeiliSearch** is an open-source search engine. [Discover what MeiliSearch is!](https://github.com/meilisearch/MeiliSearch)
+**meilisearch** is an open-source search engine. [Discover what meilisearch is!](https://github.com/meilisearch/meilisearch)
 
 ## Table of Contents <!-- omit in toc -->
 
 - [📖 Documentation](#-documentation)
-- [🤖 Compatibility with MeiliSearch](#-compatibility-with-meilisearch)
+- [🤖 Compatibility with meilisearch](#-compatibility-with-meilisearch)
 - [🚀 Getting Started](#-getting-started)
 - [⚙️ Settings](#️-settings)
 - [🔍 Custom search](#-custom-search)
 - [🪛 Options](#-options)
-  - [MeiliSearch configuration & environment](#meilisearch-configuration--environment)
+  - [meilisearch configuration & environment](#meilisearch-configuration--environment)
   - [Index configuration](#index-configuration)
     - [Custom attribute definition](#custom-attribute-definition)
     - [Custom primary key](#custom-primary-key)
@@ -54,11 +54,11 @@
 
 The whole usage of this gem is detailed in this README.
 
-To learn more about MeiliSearch, check out our [Documentation](https://docs.meilisearch.com/learn/tutorials/getting_started.html) or our [API References](https://docs.meilisearch.com/reference/api/).
+To learn more about meilisearch, check out our [Documentation](https://docs.meilisearch.com/learn/tutorials/getting_started.html) or our [API References](https://docs.meilisearch.com/reference/api/).
 
-## 🤖 Compatibility with MeiliSearch
+## 🤖 Compatibility with meilisearch
 
-This package only guarantees the compatibility with the [version v0.25.0 of MeiliSearch](https://github.com/meilisearch/MeiliSearch/releases/tag/v0.25.0).
+This package only guarantees the compatibility with the [version v0.25.0 of meilisearch](https://github.com/meilisearch/meilisearch/releases/tag/v0.25.0).
 
 ## 🔧 Installation <!-- omit in toc -->
 
@@ -76,18 +76,18 @@ source 'https://rubygems.org'
 gem 'meilisearch-rails'
 ```
 
-### Run MeiliSearch <!-- omit in toc -->
+### Run meilisearch <!-- omit in toc -->
 
-There are many easy ways to [download and run a MeiliSearch instance](https://docs.meilisearch.com/reference/features/installation.html#download-and-launch).
+There are many easy ways to [download and run a meilisearch instance](https://docs.meilisearch.com/reference/features/installation.html#download-and-launch).
 
 For example, if you use Docker:
 
 ```bash
-docker pull getmeili/meilisearch:latest # Fetch the latest version of MeiliSearch image from Docker Hub
+docker pull getmeili/meilisearch:latest # Fetch the latest version of meilisearch image from Docker Hub
 docker run -it --rm -p 7700:7700 getmeili/meilisearch:latest ./meilisearch --master-key=masterKey
 ```
 
-NB: you can also download MeiliSearch from **Homebrew** or **APT**.
+NB: you can also download meilisearch from **Homebrew** or **APT**.
 
 ## 🚀 Getting Started
 
@@ -96,9 +96,9 @@ NB: you can also download MeiliSearch from **Homebrew** or **APT**.
 Create a new file `config/initializers/meilisearch.rb` to setup your `MEILISEARCH_HOST` and `MEILISEARCH_API_KEY`
 
 ```ruby
-MeiliSearch.configuration = {
-  meilisearch_host: 'YourMeiliSearchHost', # example: http://localhost:7700
-  meilisearch_api_key: 'YourMeiliSearchAPIKey',
+meilisearch.configuration = {
+  meilisearch_host: 'YourmeilisearchHost', # example: http://localhost:7700
+  meilisearch_api_key: 'YourmeilisearchAPIKey',
 }
 ```
 
@@ -110,11 +110,11 @@ The following code will create a `Book` index and add search capabilities to you
 
 ```ruby
 class Book < ActiveRecord::Base
-  include MeiliSearch
+  include meilisearch
 
   meilisearch do
-    attribute :title, :author # only the attributes 'title', and 'author' will be sent to MeiliSearch
-    # all attributes will be sent to MeiliSearch if block is left empty
+    attribute :title, :author # only the attributes 'title', and 'author' will be sent to meilisearch
+    # all attributes will be sent to meilisearch if block is left empty
   end
 end
 ```
@@ -128,7 +128,7 @@ We **strongly recommend the use of front-end search** through our [JavaScript AP
 Search returns ORM-compliant objects reloaded from your database.
 
 ```ruby
-# MeiliSearch is typo-tolerant:
+# meilisearch is typo-tolerant:
 hits = Book.search('harry pottre')
 hits.each do |hit|
   puts hit.title
@@ -146,9 +146,9 @@ This gem supports:
 Specify the `:pagination_backend` in the configuration file:
 
 ```ruby
-MeiliSearch.configuration = {
-  meilisearch_host: 'YourMeiliSearchHost',
-  meilisearch_api_key: 'YourMeiliSearchAPIKey',
+meilisearch.configuration = {
+  meilisearch_host: 'YourmeilisearchHost',
+  meilisearch_api_key: 'YourmeilisearchAPIKey',
   pagination_backend: :kaminari #:will_paginate
 }
 ```
@@ -178,13 +178,13 @@ Book.search('harry potter', hitsPerPage: 10)
 
 #### Extra Configuration <!-- omit in toc -->
 
-Requests made to MeiliSearch may timeout and retry. To adapt the behavior to
+Requests made to meilisearch may timeout and retry. To adapt the behavior to
 your needs, you can change the parameters during configuration:
 
 ```ruby
-MeiliSearch.configuration = {
-  meilisearch_host: 'YourMeiliSearchHost',
-  meilisearch_api_key: 'YourMeiliSearchAPIKey',
+meilisearch.configuration = {
+  meilisearch_host: 'YourmeilisearchHost',
+  meilisearch_api_key: 'YourmeilisearchAPIKey',
   timeout: 2,
   max_retries: 1,
 }
@@ -196,7 +196,7 @@ You can configure the index settings by adding them inside the `meilisearch` blo
 
 ```ruby
 class Book < ApplicationRecord
-  include MeiliSearch
+  include meilisearch
 
   meilisearch do
     searchable_attributes [:title, :author, :publisher, :description]
@@ -234,7 +234,7 @@ Book.search('Harry', attributesToHighlight: ['*'])
 
 ## 🪛 Options
 
-### MeiliSearch configuration & environment
+### meilisearch configuration & environment
 
 #### Custom index_uid <!-- omit in toc -->
 
@@ -242,7 +242,7 @@ By default, the **index_uid** will be the class name, e.g. `Book`. You can custo
 
 ```ruby
 class Book < ActiveRecord::Base
-  include MeiliSearch
+  include meilisearch
 
   meilisearch index_uid: 'MyCustomUID' do
   end
@@ -255,7 +255,7 @@ You can suffix the index UID with the current Rails environment using the follow
 
 ```ruby
 class Book < ActiveRecord::Base
-  include MeiliSearch
+  include meilisearch
 
   meilisearch per_environment: true do # The index UID will be "Book_#{Rails.env}"
   end
@@ -272,7 +272,7 @@ You can add a custom attribute by using the `add_attribute` option or by using a
 
 ```ruby
 class Author < ApplicationRecord
-  include MeiliSearch
+  include meilisearch
 
   meilisearch do
     attribute :first_name, :last_name
@@ -304,7 +304,7 @@ Note that the primary key must have a **unique value**.
 
 ```ruby
 class Book < ActiveRecord::Base
-  include MeiliSearch
+  include meilisearch
 
   meilisearch primary_key: 'ISBN' do
   end
@@ -317,7 +317,7 @@ As soon as you use those constraints, `add_documents` and `delete_documents` cal
 
 ```ruby
 class Book < ActiveRecord::Base
-  include MeiliSearch
+  include meilisearch
 
   meilisearch if: :published?, unless: :premium? do
   end
@@ -341,7 +341,7 @@ You can index a record in several indexes using the `add_index` option:
 
 ```ruby
 class Book < ActiveRecord::Base
-  include MeiliSearch
+  include meilisearch
 
   PUBLIC_INDEX_UID = 'Books'
   SECURED_INDEX_UID = 'PrivateBooks'
@@ -369,7 +369,7 @@ You may want to share an index between several models. You'll need to ensure you
 
 ```ruby
 class Cat < ActiveRecord::Base
-  include MeiliSearch
+  include meilisearch
 
   meilisearch index_uid: 'Animals', primary_key: :ms_id do
   end
@@ -381,7 +381,7 @@ class Cat < ActiveRecord::Base
 end
 
 class Dog < ActiveRecord::Base
-  include MeiliSearch
+  include meilisearch
 
   meilisearch index_uid: 'Animals', primary_key: :ms_id do
   end
@@ -399,7 +399,7 @@ You can configure the auto-indexing & auto-removal process to use a queue to per
 
 ```ruby
 class Book < ActiveRecord::Base
-  include MeiliSearch
+  include meilisearch
 
   meilisearch enqueue: true do # ActiveJob will be triggered using a `meilisearch` queue
   end
@@ -414,7 +414,7 @@ With **ActiveJob**:
 
 ```ruby
 class Book < ActiveRecord::Base
-  include MeiliSearch
+  include meilisearch
 
   meilisearch enqueue: :trigger_job do
     attribute :title, :author, :description
@@ -430,7 +430,7 @@ class MyActiveJob < ApplicationJob
     if remove
       # The record has likely already been removed from your database so we cannot
       # use ActiveRecord#find to load it.
-      # We access the underlying MeiliSearch index object.
+      # We access the underlying meilisearch index object.
       Book.index.delete_document(id)
     else
       # The record should be present.
@@ -444,7 +444,7 @@ With [**Sidekiq**](https://github.com/mperham/sidekiq):
 
 ```ruby
 class Book < ActiveRecord::Base
-  include MeiliSearch
+  include meilisearch
 
   meilisearch enqueue: :trigger_sidekiq_worker do
     attribute :title, :author, :description
@@ -460,7 +460,7 @@ class MySidekiqWorker
     if remove
       # The record has likely already been removed from your database so we cannot
       # use ActiveRecord#find to load it.
-      # We access the underlying MeiliSearch index object.
+      # We access the underlying meilisearch index object.
       Book.index.delete_document(id)
     else
       # The record should be present.
@@ -474,7 +474,7 @@ With [**DelayedJob**](https://github.com/collectiveidea/delayed_job):
 
 ```ruby
 class Book < ActiveRecord::Base
-  include MeiliSearch
+  include meilisearch
 
   meilisearch enqueue: :trigger_delayed_job do
     attribute :title, :author, :description
@@ -498,7 +498,7 @@ Extend a change to a related record.
 
 ```ruby
 class Author < ActiveRecord::Base
-  include MeiliSearch
+  include meilisearch
 
   has_many :books
   # If your association uses belongs_to
@@ -508,7 +508,7 @@ class Author < ActiveRecord::Base
 end
 
 class Book < ActiveRecord::Base
-  include MeiliSearch
+  include meilisearch
 
   belongs_to :author
   after_touch :index!
@@ -527,7 +527,7 @@ With **Sequel**, you can use the `touch` plugin to propagate changes.
 ```ruby
 # app/models/author.rb
 class Author < Sequel::Model
-  include MeiliSearch
+  include meilisearch
 
   one_to_many :books
 
@@ -549,7 +549,7 @@ end
 
 # app/models/book.rb
 class Book < Sequel::Model
-  include MeiliSearch
+  include meilisearch
 
   many_to_one :author
   after_touch :index!
@@ -572,7 +572,7 @@ You can strip all HTML tags from your attributes with the `sanitize` option.
 
 ```ruby
 class Book < ActiveRecord::Base
-  include MeiliSearch
+  include meilisearch
 
   meilisearch sanitize: true do
   end
@@ -585,7 +585,7 @@ You can force the UTF-8 encoding of all your attributes using the `force_utf8_en
 
 ```ruby
 class Book < ActiveRecord::Base
-  include MeiliSearch
+  include meilisearch
 
   meilisearch force_utf8_encoding: true do
   end
@@ -633,11 +633,11 @@ index = Book.index
 
 #### Exceptions <!-- omit in toc -->
 
-You can disable exceptions that could be raised while trying to reach MeiliSearch's API by using the `raise_on_failure` option:
+You can disable exceptions that could be raised while trying to reach meilisearch's API by using the `raise_on_failure` option:
 
 ```ruby
 class Book < ActiveRecord::Base
-  include MeiliSearch
+  include meilisearch
 
   # Only raise exceptions in development environment.
   meilisearch raise_on_failure: Rails.env.development? do
@@ -653,7 +653,7 @@ You can force indexing and removing to be synchronous by setting the following o
 
 ```ruby
 class Book < ActiveRecord::Base
-  include MeiliSearch
+  include meilisearch
 
   meilisearch synchronous: true do
   end
@@ -667,7 +667,7 @@ You can disable auto-indexing and auto-removing setting the following options:
 
 ```ruby
 class Book < ActiveRecord::Base
-  include MeiliSearch
+  include meilisearch
 
   meilisearch auto_index: false, auto_remove: false do
   end
@@ -695,4 +695,4 @@ The provided features and the code base is inspired by [algoliasearch-rails](htt
 
 <hr>
 
-**MeiliSearch** provides and maintains many **SDKs and Integration tools** like this one. We want to provide everyone with an **amazing search experience for any kind of project**. If you want to contribute, make suggestions, or just know what's going on right now, visit us in the [integration-guides](https://github.com/meilisearch/integration-guides) repository.
+**meilisearch** provides and maintains many **SDKs and Integration tools** like this one. We want to provide everyone with an **amazing search experience for any kind of project**. If you want to contribute, make suggestions, or just know what's going on right now, visit us in the [integration-guides](https://github.com/meilisearch/integration-guides) repository.
