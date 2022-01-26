@@ -14,8 +14,10 @@ require 'sequel'
 require 'active_model_serializers'
 require 'byebug'
 
-MeiliSearch.configuration = { meilisearch_host: ENV.fetch('MEILISEARCH_HOST', 'http://127.0.0.1:7700'),
-                              meilisearch_api_key: ENV.fetch('MEILISEARCH_API_KEY', 'masterKey') }
+MeiliSearch::Rails.configuration = {
+  meilisearch_host: ENV.fetch('MEILISEARCH_HOST', 'http://127.0.0.1:7700'),
+  meilisearch_api_key: ENV.fetch('MEILISEARCH_API_KEY', 'masterKey')
+}
 
 FileUtils.rm('data.sqlite3') if File.exist?('data.sqlite3')
 ActiveRecord::Base.logger = Logger.new($stdout)
@@ -153,7 +155,7 @@ ActiveRecord::Schema.define do
 end
 
 class Product < ActiveRecord::Base
-  include MeiliSearch
+  include MeiliSearch::Rails
 
   meilisearch auto_index: false,
               if: :published?, unless: ->(o) { o.href.blank? },
@@ -176,7 +178,7 @@ class Camera < Product
 end
 
 class Restaurant < ActiveRecord::Base
-  include MeiliSearch
+  include MeiliSearch::Rails
   meilisearch index_uid: safe_index_uid('Restaurant') do
     attributes_to_crop [:description]
     crop_length 10
@@ -184,13 +186,13 @@ class Restaurant < ActiveRecord::Base
 end
 
 class Movies < ActiveRecord::Base
-  include MeiliSearch
+  include MeiliSearch::Rails
   meilisearch index_uid: safe_index_uid('Movies') do
   end
 end
 
 class People < ActiveRecord::Base
-  include MeiliSearch
+  include MeiliSearch::Rails
 
   meilisearch synchronous: true, index_uid: safe_index_uid('MyCustomPeople'), primary_key: :card_number,
               auto_remove: false do
@@ -207,7 +209,7 @@ class People < ActiveRecord::Base
 end
 
 class Cat < ActiveRecord::Base
-  include MeiliSearch
+  include MeiliSearch::Rails
 
   meilisearch index_uid: safe_index_uid('animals'), id: :ms_id do
   end
@@ -220,7 +222,7 @@ class Cat < ActiveRecord::Base
 end
 
 class Dog < ActiveRecord::Base
-  include MeiliSearch
+  include MeiliSearch::Rails
 
   meilisearch index_uid: safe_index_uid('animals'), id: :ms_id do
   end
@@ -233,7 +235,7 @@ class Dog < ActiveRecord::Base
 end
 
 class Song < ActiveRecord::Base
-  include MeiliSearch
+  include MeiliSearch::Rails
 
   PUBLIC_INDEX_UID  = safe_index_uid('Songs')
   SECURED_INDEX_UID = safe_index_uid('PrivateSongs')
@@ -254,7 +256,7 @@ class Song < ActiveRecord::Base
 end
 
 class Fruit < ActiveRecord::Base
-  include MeiliSearch
+  include MeiliSearch::Rails
 
   # only raise exceptions in development env
   meilisearch raise_on_failure: true, index_uid: safe_index_uid('Fruit') do
@@ -263,7 +265,7 @@ class Fruit < ActiveRecord::Base
 end
 
 class Vegetable < ActiveRecord::Base
-  include MeiliSearch
+  include MeiliSearch::Rails
 
   meilisearch raise_on_failure: false, index_uid: safe_index_uid('Fruit') do
     attribute :name
@@ -271,7 +273,7 @@ class Vegetable < ActiveRecord::Base
 end
 
 class Color < ActiveRecord::Base
-  include MeiliSearch
+  include MeiliSearch::Rails
   attr_accessor :not_indexed
 
   meilisearch synchronous: true, index_uid: safe_index_uid('Color'), per_environment: true do
@@ -299,21 +301,21 @@ class Color < ActiveRecord::Base
 end
 
 class DisabledBoolean < ActiveRecord::Base
-  include MeiliSearch
+  include MeiliSearch::Rails
 
   meilisearch synchronous: true, disable_indexing: true, index_uid: safe_index_uid('DisabledBoolean') do
   end
 end
 
 class DisabledProc < ActiveRecord::Base
-  include MeiliSearch
+  include MeiliSearch::Rails
 
   meilisearch synchronous: true, disable_indexing: proc { true }, index_uid: safe_index_uid('DisabledProc') do
   end
 end
 
 class DisabledSymbol < ActiveRecord::Base
-  include MeiliSearch
+  include MeiliSearch::Rails
 
   meilisearch synchronous: true, disable_indexing: :truth, index_uid: safe_index_uid('DisabledSymbol') do
   end
@@ -331,7 +333,7 @@ end
 
 module Namespaced
   class Model < ActiveRecord::Base
-    include MeiliSearch
+    include MeiliSearch::Rails
 
     meilisearch synchronous: true, index_uid: safe_index_uid(ms_index_uid({})) do
       attribute :customAttr do
@@ -346,14 +348,14 @@ module Namespaced
 end
 
 class UniqUser < ActiveRecord::Base
-  include MeiliSearch
+  include MeiliSearch::Rails
 
   meilisearch synchronous: true, index_uid: safe_index_uid('UniqUser'), per_environment: true, id: :name do
   end
 end
 
 class NullableId < ActiveRecord::Base
-  include MeiliSearch
+  include MeiliSearch::Rails
 
   meilisearch synchronous: true, index_uid: safe_index_uid('NullableId'), per_environment: true, id: :custom_id,
               if: :never do
@@ -371,7 +373,7 @@ end
 class NestedItem < ActiveRecord::Base
   has_many :children, class_name: 'NestedItem', foreign_key: 'parent_id'
 
-  include MeiliSearch
+  include MeiliSearch::Rails
 
   meilisearch synchronous: true, index_uid: safe_index_uid('NestedItem'), per_environment: true, unless: :hidden do
     attribute :nb_children
@@ -383,7 +385,7 @@ class NestedItem < ActiveRecord::Base
 end
 
 class Task < ActiveRecord::Base
-  include MeiliSearch
+  include MeiliSearch::Rails
 
   meilisearch synchronous: true, index_uid: safe_index_uid('Task') do
   end
@@ -392,7 +394,7 @@ end
 class SequelBook < Sequel::Model(SEQUEL_DB)
   plugin :active_model
 
-  include MeiliSearch
+  include MeiliSearch::Rails
 
   meilisearch synchronous: true, index_uid: safe_index_uid('SequelBook'), per_environment: true, sanitize: true do
     add_attribute :test
@@ -440,7 +442,7 @@ describe 'SequelBook' do
 end
 
 class MongoDocument < ActiveRecord::Base
-  include MeiliSearch
+  include MeiliSearch::Rails
 
   meilisearch index_uid: safe_index_uid('MongoDocument') do
   end
@@ -455,7 +457,7 @@ class MongoDocument < ActiveRecord::Base
 end
 
 class Book < ActiveRecord::Base
-  include MeiliSearch
+  include MeiliSearch::Rails
 
   meilisearch synchronous: true, index_uid: safe_index_uid('SecuredBook'), per_environment: true, sanitize: true do
     searchable_attributes [:name]
@@ -477,7 +479,7 @@ class Book < ActiveRecord::Base
 end
 
 class Ebook < ActiveRecord::Base
-  include MeiliSearch
+  include MeiliSearch::Rails
   attr_accessor :current_time, :published_at
 
   meilisearch synchronous: true, index_uid: safe_index_uid('eBooks') do
@@ -494,7 +496,7 @@ class Ebook < ActiveRecord::Base
 end
 
 class EncodedString < ActiveRecord::Base
-  include MeiliSearch
+  include MeiliSearch::Rails
 
   meilisearch synchronous: true, force_utf8_encoding: true, index_uid: safe_index_uid('EncodedString') do
     attribute :value do
@@ -505,7 +507,7 @@ end
 
 unless OLD_RAILS
   class EnqueuedDocument < ActiveRecord::Base
-    include MeiliSearch
+    include MeiliSearch::Rails
 
     include GlobalID::Identification
 
@@ -524,7 +526,7 @@ unless OLD_RAILS
   end
 
   class DisabledEnqueuedDocument < ActiveRecord::Base
-    include MeiliSearch
+    include MeiliSearch::Rails
 
     meilisearch(enqueue: proc { |_record| raise 'enqueued' },
                 index_uid: safe_index_uid('EnqueuedDocument'),
@@ -535,7 +537,7 @@ unless OLD_RAILS
 end
 
 class MisconfiguredBlock < ActiveRecord::Base
-  include MeiliSearch
+  include MeiliSearch::Rails
 end
 
 if defined?(ActiveModel::Serializer)
@@ -544,7 +546,7 @@ if defined?(ActiveModel::Serializer)
   end
 
   class SerializedDocument < ActiveRecord::Base
-    include MeiliSearch
+    include MeiliSearch::Rails
 
     meilisearch index_uid: safe_index_uid('SerializedDocument') do
       use_serializer SerializedDocumentSerializer
@@ -701,7 +703,7 @@ describe 'NestedItem' do
     i2 = NestedItem.create hidden: true
 
     i1.children << NestedItem.create(hidden: true) << NestedItem.create(hidden: true)
-    NestedItem.where(id: [i1.id, i2.id]).reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
+    NestedItem.where(id: [i1.id, i2.id]).reindex!(MeiliSearch::Rails::IndexSettings::DEFAULT_BATCH_SIZE, true)
 
     result = NestedItem.index.get_document(i1.id)
     expect(result['nb_children']).to eq(2)
@@ -757,7 +759,7 @@ describe 'Colors' do
       Color.create!(name: 'blue', short_name: 'b', hex: 0xFF0000)
     end
     expect(Color.search('blue').size).to eq(1)
-    Color.reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
+    Color.reindex!(MeiliSearch::Rails::IndexSettings::DEFAULT_BATCH_SIZE, true)
     expect(Color.search('blue').size).to eq(2)
   end
 
@@ -790,10 +792,10 @@ describe 'Colors' do
 
   it 'uses the specified scope' do
     Color.clear_index!(true)
-    Color.where(name: 'red').reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
+    Color.where(name: 'red').reindex!(MeiliSearch::Rails::IndexSettings::DEFAULT_BATCH_SIZE, true)
     expect(Color.search('').size).to eq(3)
     Color.clear_index!(true)
-    Color.where(id: Color.first.id).reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
+    Color.where(id: Color.first.id).reindex!(MeiliSearch::Rails::IndexSettings::DEFAULT_BATCH_SIZE, true)
     expect(Color.search('').size).to eq(1)
   end
 
@@ -869,7 +871,7 @@ describe 'An imaginary store' do
 
     @products_in_database = Product.all
 
-    Product.reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
+    Product.reindex!(MeiliSearch::Rails::IndexSettings::DEFAULT_BATCH_SIZE, true)
     sleep 5
   end
 
@@ -886,7 +888,7 @@ describe 'An imaginary store' do
     Product.clear_index!(true)
     results = Product.raw_search('')
     expect(results['hits'].size).to be(0)
-    Product.reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
+    Product.reindex!(MeiliSearch::Rails::IndexSettings::DEFAULT_BATCH_SIZE, true)
     results_after_reindexing = Product.raw_search('')
     expect(results_after_reindexing['hits'].size).not_to be(0)
     expect(results_before_clearing['hits'].size).to be(results_after_reindexing['hits'].size)
@@ -1088,8 +1090,8 @@ end
 describe 'Kaminari' do
   before(:all) do
     require 'kaminari'
-    MeiliSearch.configuration = { meilisearch_host: ENV.fetch('MEILISEARCH_HOST', 'http://127.0.0.1:7700'),
-                                  meilisearch_api_key: ENV.fetch('MEILISEARCH_API_KEY', 'masterKey'), pagination_backend: :kaminari }
+    MeiliSearch::Rails.configuration = { meilisearch_host: ENV.fetch('MEILISEARCH_HOST', 'http://127.0.0.1:7700'),
+                                         meilisearch_api_key: ENV.fetch('MEILISEARCH_API_KEY', 'masterKey'), pagination_backend: :kaminari }
     Restaurant.clear_index!(true)
 
     10.times do
@@ -1100,7 +1102,7 @@ describe 'Kaminari' do
       )
     end
 
-    Restaurant.reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
+    Restaurant.reindex!(MeiliSearch::Rails::IndexSettings::DEFAULT_BATCH_SIZE, true)
     sleep 5
   end
 
@@ -1133,7 +1135,7 @@ end
 describe 'Will_paginate' do
   before(:all) do
     require 'will_paginate'
-    MeiliSearch.configuration = {
+    MeiliSearch::Rails.configuration = {
       meilisearch_host: ENV.fetch('MEILISEARCH_HOST', 'http://127.0.0.1:7700'),
       meilisearch_api_key: ENV.fetch('MEILISEARCH_API_KEY', 'masterKey'), pagination_backend: :will_paginate
     }
@@ -1141,7 +1143,7 @@ describe 'Will_paginate' do
 
     10.times { Movies.create(title: Faker::Movie.title) }
 
-    Movies.reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
+    Movies.reindex!(MeiliSearch::Rails::IndexSettings::DEFAULT_BATCH_SIZE, true)
     sleep 5
   end
 
@@ -1175,8 +1177,8 @@ end
 
 describe 'attributes_to_crop' do
   before(:all) do
-    MeiliSearch.configuration = { meilisearch_host: ENV.fetch('MEILISEARCH_HOST', 'http://127.0.0.1:7700'),
-                                  meilisearch_api_key: ENV.fetch('MEILISEARCH_API_KEY', 'masterKey') }
+    MeiliSearch::Rails.configuration = { meilisearch_host: ENV.fetch('MEILISEARCH_HOST', 'http://127.0.0.1:7700'),
+                                         meilisearch_api_key: ENV.fetch('MEILISEARCH_API_KEY', 'masterKey') }
     10.times do
       Restaurant.create(
         name: Faker::Restaurant.name,
@@ -1185,7 +1187,7 @@ describe 'attributes_to_crop' do
       )
     end
 
-    Restaurant.reindex!(MeiliSearch::IndexSettings::DEFAULT_BATCH_SIZE, true)
+    Restaurant.reindex!(MeiliSearch::Rails::IndexSettings::DEFAULT_BATCH_SIZE, true)
     sleep 5
   end
 
@@ -1269,7 +1271,7 @@ describe 'People' do
   end
 
   it 'has the chosen field as custom primary key' do
-    index = MeiliSearch.client.fetch_index(safe_index_uid('MyCustomPeople'))
+    index = MeiliSearch::Rails.client.fetch_index(safe_index_uid('MyCustomPeople'))
     expect(index.primary_key).to eq('card_number')
   end
 
@@ -1311,7 +1313,7 @@ describe 'Animals' do
   it 'shares a single index' do
     Dog.create!(name: 'Toby')
     Cat.create!(name: 'Felix')
-    index = MeiliSearch.client.index(safe_index_uid('animals'))
+    index = MeiliSearch::Rails.client.index(safe_index_uid('animals'))
     index.wait_for_task(index.tasks['results'].first['uid'])
     docs = index.search('')
     expect(docs['hits'].size).to eq(2)
@@ -1324,7 +1326,7 @@ describe 'Songs' do
     Song.create!(name: 'Smoking hot', artist: 'Cigarettes before lunch', premium: true, released: true)
     Song.create!(name: 'Floor is lava', artist: 'Volcano', premium: true, released: false)
     Song.index.wait_for_task(Song.index.tasks['results'].first['uid'])
-    MeiliSearch.client.index(safe_index_uid('PrivateSongs')).wait_for_task(MeiliSearch.client.index(safe_index_uid('PrivateSongs')).tasks['results'].first['uid'])
+    MeiliSearch::Rails.client.index(safe_index_uid('PrivateSongs')).wait_for_task(MeiliSearch::Rails.client.index(safe_index_uid('PrivateSongs')).tasks['results'].first['uid'])
     results = Song.search('', index: safe_index_uid('Songs'))
     expect(results.size).to eq(1)
     raw_results = Song.raw_search('', index: safe_index_uid('Songs'))

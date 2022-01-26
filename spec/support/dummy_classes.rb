@@ -1,5 +1,5 @@
 class Dummy
-  include MeiliSearch
+  include MeiliSearch::Rails
 
   def self.model_name
     'Dummy'

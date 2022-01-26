@@ -36,13 +36,13 @@ RSpec.configure do |c|
 
   # Remove all indexes setup in this run in local or CI
   c.after(:suite) do
-    MeiliSearch.configuration = {
+    MeiliSearch::Rails.configuration = {
       meilisearch_host: ENV.fetch('MEILISEARCH_HOST', 'http://127.0.0.1:7700'),
       meilisearch_api_key: ENV.fetch('MEILISEARCH_API_KEY', 'masterKey')
     }
 
     safe_index_list.each do |index|
-      MeiliSearch.client.delete_index(index.uid)
+      MeiliSearch::Rails.client.delete_index(index.uid)
     end
   end
 end
@@ -57,7 +57,7 @@ end
 
 # get a list of safe indexes in local or CI
 def safe_index_list
-  list = MeiliSearch.client.indexes
+  list = MeiliSearch::Rails.client.indexes
   list = list.select { |index| index.uid.include?(SAFE_INDEX_PREFIX) }
   list.sort_by { |index| index.primary_key || '' }
 end
