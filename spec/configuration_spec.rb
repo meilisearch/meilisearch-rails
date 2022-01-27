@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe MeiliSearch::Configuration do
+describe MeiliSearch::Rails::Configuration do
   let(:configuration) do
     {
       meilisearch_host: 'http://localhost:7700',
@@ -12,12 +12,12 @@ describe MeiliSearch::Configuration do
     let(:client_double) { double MeiliSearch::Client }
 
     before do
-      allow(MeiliSearch).to receive(:configuration) { configuration }
+      allow(MeiliSearch::Rails).to receive(:configuration) { configuration }
       allow(MeiliSearch::Client).to receive(:new) { client_double }
     end
 
     it 'initializes a MeiliSearch::Client' do
-      expect(MeiliSearch.client).to eq(client_double)
+      expect(MeiliSearch::Rails.client).to eq(client_double)
 
       expect(MeiliSearch::Client)
         .to have_received(:new)
@@ -33,7 +33,7 @@ describe MeiliSearch::Configuration do
       end
 
       it 'defines a default value for meilisearch_host' do
-        expect(MeiliSearch.client).to eq(client_double)
+        expect(MeiliSearch::Rails.client).to eq(client_double)
 
         expect(MeiliSearch::Client)
           .to have_received(:new)
@@ -52,7 +52,7 @@ describe MeiliSearch::Configuration do
       end
 
       it 'forwards them to the client' do
-        expect(MeiliSearch.client).to eq(client_double)
+        expect(MeiliSearch::Rails.client).to eq(client_double)
 
         expect(MeiliSearch::Client)
           .to have_received(:new)
@@ -63,18 +63,18 @@ describe MeiliSearch::Configuration do
 
   context 'when use Meilisearch without configuration' do
     around do |example|
-      config = MeiliSearch.configuration
-      MeiliSearch.configuration = nil
+      config = MeiliSearch::Rails.configuration
+      MeiliSearch::Rails.configuration = nil
 
       example.run
 
-      MeiliSearch.configuration = config
+      MeiliSearch::Rails.configuration = config
     end
 
     it 'raise NotConfigured error' do
       expect do
-        MeiliSearch.configuration
-      end.to raise_error(MeiliSearch::NotConfigured, /Please configure Meilisearch/)
+        MeiliSearch::Rails.configuration
+      end.to raise_error(MeiliSearch::Rails::NotConfigured, /Please configure Meilisearch/)
     end
   end
 end

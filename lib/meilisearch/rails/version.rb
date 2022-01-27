@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
 module MeiliSearch
-  VERSION = '0.4.1'
+  module Rails
+    VERSION = '0.4.1'
+  end
 end

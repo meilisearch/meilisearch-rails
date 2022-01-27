@@ -50,7 +50,7 @@ docker run -p 7700:7700 getmeili/meilisearch:latest ./meilisearch --master-key=m
 bundle exec rspec
 # Launch a single test in a specific file
 bundle exec rspec spec/integration_spec.rb -e 'should include _formatted object'
-# Launch tests in a specific folder or file 
+# Launch tests in a specific folder or file
 bundle exec rspec spec/integration_spec.rb
 ```
 
@@ -139,10 +139,10 @@ _[Read more about this](https://github.com/meilisearch/integration-guides/blob/m
 
 ⚠️ Before doing anything, make sure you got through the guide about [Releasing an Integration](https://github.com/meilisearch/integration-guides/blob/main/resources/integration-release.md).
 
-Make a PR modifying the file [`lib/meilisearch/version.rb`](/lib/meilisearch/version.rb) with the right version.
+Make a PR modifying the file [`lib/meilisearch/version.rb`](/lib/meilisearch/rails/version.rb) with the right version.
 
 ```ruby
-VERSION = 'X.X.X' 
+VERSION = 'X.X.X'
 ```
 
 Once the changes are merged on `main`, you can publish the current draft release via the [GitHub interface](https://github.com/meilisearch/meilisearch-rails/releases): on this page, click on `Edit` (related to the draft release) > update the description (be sure you apply [these recommandations](https://github.com/meilisearch/integration-guides/blob/main/resources/integration-release.md#writting-the-release-description)) > when you are ready, click on `Publish release`.

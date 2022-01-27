@@ -1,10 +1,10 @@
-require File.join(File.dirname(__FILE__), 'lib', 'meilisearch', 'version')
+require File.join(File.dirname(__FILE__), 'lib', 'meilisearch', 'rails', 'version')
 
 require 'date'
 
 Gem::Specification.new do |s|
   s.name = 'meilisearch-rails'
-  s.version = MeiliSearch::VERSION
+  s.version = MeiliSearch::Rails::VERSION
 
   s.required_rubygems_version = Gem::Requirement.new('>= 0') if s.respond_to? :required_rubygems_version=
   s.authors = ['Meili']
