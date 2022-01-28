@@ -48,3 +48,23 @@ jobs:
       run: bundle install --with test
     - name: Run linter
       run: bundle exec rubocop lib/ spec/
+
+  smoke-test:
+    name: smoke-test
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 2.7.2
+      - name: Meilisearch (latest) setup with Docker
+        run: docker run -d -p 7700:7700 getmeili/meilisearch:latest ./meilisearch --master-key=masterKey --no-analytics=true
+
+      - name: Install ruby dependencies
+        working-directory: ./playground
+        run: bundle install --without test
+
+      - name: Run smoke tests
+        working-directory: ./playground
+        run: bundle exec rake db:setup meilisearch:reindex meilisearch:clear_indexes
