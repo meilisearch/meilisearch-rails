@@ -22,6 +22,6 @@ If applicable, add screenshots or logs to help explain your problem.
 
 **Environment (please complete the following information):**
 - OS: [e.g. Debian GNU/Linux]
-- Meilisearch version: [e.g. v.0.20.0]
+- Meilisearch server version: [e.g. v.0.20.0]
 - meilisearch-rails version: [e.g v0.1.0]
 - Rails version: [e.g. 6.1.3.2]
