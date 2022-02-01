@@ -1,7 +1,8 @@
 status = [
   'integration-tests (Rails 5.2)',
   'integration-tests (Rails 6.1)',
-  'linter-check'
+  'linter-check',
+  'smoke-test'
 ]
 # 1 hour timeout
 timeout-sec = 3600
