@@ -279,6 +279,7 @@ class Color < ActiveRecord::Base
   meilisearch synchronous: true, index_uid: safe_index_uid('Color'), per_environment: true do
     searchable_attributes [:name]
     filterable_attributes ['short_name']
+    sortable_attributes [:name]
     ranking_rules [
       'words',
       'typo',
@@ -828,6 +829,18 @@ describe 'Colors' do
     facets = Color.search('bl', { filter: ['short_name = bla'] })
     expect(facets.size).to eq(1)
     expect(facets).to include(black)
+  end
+
+  it 'searches with sorting' do
+    Color.delete_all
+
+    blue = Color.create!(name: 'blue', short_name: 'blu', hex: 0x0000FF)
+    black = Color.create!(name: 'black', short_name: 'bla', hex: 0x000000)
+    green = Color.create!(name: 'green', short_name: 'gre', hex: 0x00FF00)
+
+    facets = Color.search('*', { sort: ['name:asc'] })
+
+    expect(facets).to eq([black, blue, green])
   end
 end
 

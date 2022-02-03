@@ -50,6 +50,7 @@ module MeiliSearch
       OPTIONS = %i[
         searchableAttributes
         filterableAttributes
+        sortableAttributes
         displayedAttributes
         distinctAttribute
         synonyms
