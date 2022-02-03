@@ -18,7 +18,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        rails-version: [5.2, 6.1]
+        ruby-version: ["2.7", "3.0", "3.1"]
+        rails-version: [5.2, 6.1, 7.0]
+        exclude:
+          - ruby-version: "3.0"
+            rails-version: 5.2
+          - ruby-version: "3.1"
+            rails-version: 5.2
     env:
       RAILS_VERSION: ${{ matrix.rails-version }}
     name: integration-tests (Rails ${{ matrix.rails-version }})
@@ -27,9 +33,8 @@ jobs:
     - name: Set up Ruby
       uses: ruby/setup-ruby@v1
       with:
-        ruby-version: 2.6
-    - name: Install dependencies
-      run: bundle install
+        ruby-version: ${{ matrix.ruby-version }}
+        bundler-cache: true
     - name: Meilisearch (latest) setup with Docker
       run: docker run -d -p 7700:7700 getmeili/meilisearch:latest ./meilisearch --master-key=masterKey --no-analytics=true
     - name: Run tests
