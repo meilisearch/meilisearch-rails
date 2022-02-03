@@ -835,7 +835,9 @@ describe 'Colors' do
     blue = Color.create!(name: 'blue', short_name: 'blu', hex: 0x0000FF)
     black = Color.create!(name: 'black', short_name: 'bla', hex: 0x000000)
     green = Color.create!(name: 'green', short_name: 'gre', hex: 0x00FF00)
+
     facets = Color.search('*', { sort: ['name:asc'] })
+
     expect(facets).to eq([black, blue, green])
   end
 end
