@@ -53,7 +53,7 @@ jobs:
         BUNDLE_WITH: test
       with:
         ruby-version: 2.6
-        bundler_cache: true
+        bundler-cache: true
     - name: Run linter
       run: bundle exec rubocop lib/ spec/
 
@@ -66,10 +66,12 @@ jobs:
         uses: ruby/setup-ruby@v1
         env:
           BUNDLE_WITHOUT: test
+          BUNDLE_GEMFILE: ./playground/Gemfile
         with:
           ruby-version: 2.7.2
           bundler-cache: true
       - name: Meilisearch (latest) setup with Docker
         run: docker run -d -p 7700:7700 getmeili/meilisearch:latest ./meilisearch --master-key=masterKey --no-analytics=true
       - name: Run smoke tests
+        working-directory: ./playground
         run: bundle exec rake db:setup meilisearch:reindex meilisearch:clear_indexes
