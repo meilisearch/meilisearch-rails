@@ -201,6 +201,7 @@ class Book < ApplicationRecord
   meilisearch do
     searchable_attributes [:title, :author, :publisher, :description]
     filterable_attributes [:genre]
+    sortable_attributes [:title]
     ranking_rules [
       'proximity',
       'typo',
@@ -231,6 +232,17 @@ Book.search('Harry', attributesToHighlight: ['*'])
 ```
 👉 Don't forget that `attributes_to_highlight`, `attributes_to_crop`, and
 `crop_length` can be set up in the `meilisearch` block of your model.
+
+## 🔍 Sorted search
+
+As an example of how to use the sort option, here is how you could achieve
+returning all books sorted by title in ascending order:
+
+```ruby
+Book.search('*', sort: ['title:asc'])
+```
+
+👉 Don't forget to set up the `sortable_attributes` option in the `meilisearch` block of your model.
 
 ## 🪛 Options
 
