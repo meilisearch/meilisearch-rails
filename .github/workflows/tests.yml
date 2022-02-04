@@ -27,7 +27,7 @@ jobs:
             rails-version: 5.2
     env:
       RAILS_VERSION: ${{ matrix.rails-version }}
-    name: integration-tests (Rails ${{ matrix.rails-version }})
+    name: integration-tests (Rails ${{ matrix.rails-version }} with Ruby ${{ matrix.ruby-version }})
     steps:
     - uses: actions/checkout@v2
     - name: Set up Ruby
