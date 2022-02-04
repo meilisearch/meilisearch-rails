@@ -25,6 +25,8 @@ jobs:
             rails-version: 5.2
           - ruby-version: "3.1"
             rails-version: 5.2
+          - ruby-version: "2.6"
+            rails-version: 7.0
     env:
       RAILS_VERSION: ${{ matrix.rails-version }}
     name: integration-tests (Rails ${{ matrix.rails-version }} with Ruby ${{ matrix.ruby-version }})
