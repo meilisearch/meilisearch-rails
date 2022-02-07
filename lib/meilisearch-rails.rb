@@ -157,13 +157,7 @@ module MeiliSearch
         attributes.merge!(attributes_to_hash(@additional_attributes, document)) if @additional_attributes
 
         if @options[:sanitize]
-          sanitizer = begin
-            ::HTML::FullSanitizer.new
-          rescue NameError
-            # from rails 4.2
-            ::Rails::Html::FullSanitizer.new
-          end
-          attributes = sanitize_attributes(attributes, sanitizer)
+          attributes = sanitize_attributes(attributes)
         end
 
         attributes = encode_attributes(attributes) if @options[:force_utf8_encoding]
@@ -171,14 +165,14 @@ module MeiliSearch
         attributes
       end
 
-      def sanitize_attributes(value, sanitizer)
+      def sanitize_attributes(value)
         case value
         when String
-          sanitizer.sanitize(value)
+          ActionView::Base.full_sanitizer.sanitize(value)
         when Hash
-          value.each { |key, val| value[key] = sanitize_attributes(val, sanitizer) }
+          value.each { |key, val| value[key] = sanitize_attributes(val) }
         when Array
-          value.map { |item| sanitize_attributes(item, sanitizer) }
+          value.map { |item| sanitize_attributes(item) }
         else
           value
         end
