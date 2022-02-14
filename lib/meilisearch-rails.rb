@@ -224,7 +224,7 @@ module MeiliSearch
     if defined?(::ActiveJob::Base)
       # lazy load the ActiveJob class to ensure the
       # queue is initialized before using it
-      autoload :MSJob, 'meilisearch/ms_job'
+      autoload :MSJob, 'meilisearch/rails/ms_job'
     end
 
     # this class wraps an MeiliSearch::Index document ensuring all raised exceptions
