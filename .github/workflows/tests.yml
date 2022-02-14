@@ -74,4 +74,6 @@ jobs:
         run: docker run -d -p 7700:7700 getmeili/meilisearch:latest ./meilisearch --master-key=masterKey --no-analytics=true
       - name: Run smoke tests
         working-directory: ./playground
-        run: bundle exec rake db:setup meilisearch:reindex meilisearch:clear_indexes
+        run: |
+          bundle install
+          bundle exec rake db:setup meilisearch:reindex meilisearch:clear_indexes
