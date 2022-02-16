@@ -46,7 +46,7 @@ Each PR should pass the tests to be accepted.
 ```bash
 # Tests
 docker pull getmeili/meilisearch:latest # Fetch the latest version of Meilisearch image from Docker Hub
-docker run -p 7700:7700 getmeili/meilisearch:latest ./meilisearch --master-key=masterKey --no-analytics=true
+docker run -p 7700:7700 getmeili/meilisearch:latest ./meilisearch --master-key=masterKey --no-analytics
 bundle exec rspec
 # Launch a single test in a specific file
 bundle exec rspec spec/integration_spec.rb -e 'should include _formatted object'
@@ -78,7 +78,7 @@ bundle exec rubocop --auto-gen-config
 First, you need to run a Meilisearch instance:
 
 ```bash
-docker run -p 7700:7700 getmeili/meilisearch:latest ./meilisearch --no-analytics=true
+docker run -p 7700:7700 getmeili/meilisearch:latest ./meilisearch --no-analytics
 ```
 
 To test directly your changes in `meilisearch-rails`, you can run the Rails playground:
