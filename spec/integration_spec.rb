@@ -584,20 +584,20 @@ end
 
 describe 'Settings change detection' do
   it 'detects settings changes' do
-    expect(Color.send(:meilisearch_settings_changed?, nil, {})).to eq(true)
-    expect(Color.send(:meilisearch_settings_changed?, {}, { 'searchableAttributes' => ['name'] })).to eq(true)
+    expect(Color.send(:meilisearch_settings_changed?, nil, {})).to be(true)
+    expect(Color.send(:meilisearch_settings_changed?, {}, { 'searchableAttributes' => ['name'] })).to be(true)
     expect(Color.send(:meilisearch_settings_changed?, { 'searchableAttributes' => ['name'] },
-                      { 'searchableAttributes' => %w[name hex] })).to eq(true)
+                      { 'searchableAttributes' => %w[name hex] })).to be(true)
     expect(Color.send(:meilisearch_settings_changed?, { 'searchableAttributes' => ['name'] },
-                      { 'rankingRules' => ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness', 'hex:asc'] })).to eq(true)
+                      { 'rankingRules' => ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness', 'hex:asc'] })).to be(true)
   end
 
   it 'does not detect settings changes' do
-    expect(Color.send(:meilisearch_settings_changed?, {}, {})).to eq(false)
+    expect(Color.send(:meilisearch_settings_changed?, {}, {})).to be(false)
     expect(Color.send(:meilisearch_settings_changed?, { 'searchableAttributes' => ['name'] },
-                      { searchableAttributes: ['name'] })).to eq(false)
+                      { searchableAttributes: ['name'] })).to be(false)
     expect(Color.send(:meilisearch_settings_changed?,
-                      { 'searchableAttributes' => ['name'], 'rankingRules' => ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness', 'hex:asc'] }, { 'rankingRules' => ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness', 'hex:asc'] })).to eq(false)
+                      { 'searchableAttributes' => ['name'], 'rankingRules' => ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness', 'hex:asc'] }, { 'rankingRules' => ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness', 'hex:asc'] })).to be(false)
   end
 end
 
@@ -605,17 +605,17 @@ describe 'Attributes change detection' do
   it 'detects attribute changes' do
     color = Color.new name: 'dark-blue', short_name: 'blue'
 
-    expect(Color.ms_must_reindex?(color)).to eq(true)
+    expect(Color.ms_must_reindex?(color)).to be(true)
     color.save
-    expect(Color.ms_must_reindex?(color)).to eq(false)
+    expect(Color.ms_must_reindex?(color)).to be(false)
 
     color.hex = 123_456
-    expect(Color.ms_must_reindex?(color)).to eq(false)
+    expect(Color.ms_must_reindex?(color)).to be(false)
 
     color.not_indexed = 'strstr'
-    expect(Color.ms_must_reindex?(color)).to eq(false)
+    expect(Color.ms_must_reindex?(color)).to be(false)
     color.name = 'red'
-    expect(Color.ms_must_reindex?(color)).to eq(true)
+    expect(Color.ms_must_reindex?(color)).to be(true)
     color.delete
   end
 
@@ -628,7 +628,7 @@ describe 'Attributes change detection' do
       color.save
       color.not_indexed = 'strstr'
       color.save
-      expect(color.instance_variable_get('@ms_must_reindex')).to eq(true)
+      expect(color.instance_variable_get('@ms_must_reindex')).to be(true)
     end
     expect(color.instance_variable_get('@ms_must_reindex')).to be_nil
     color.delete
@@ -636,12 +636,12 @@ describe 'Attributes change detection' do
 
   it 'detects change with ms_dirty? method' do
     ebook = Ebook.new name: 'My life', author: 'Myself', premium: false, released: true
-    expect(Ebook.ms_must_reindex?(ebook)).to eq(true) # Because it's defined in ms_dirty? method
+    expect(Ebook.ms_must_reindex?(ebook)).to be(true) # Because it's defined in ms_dirty? method
     ebook.current_time = 10
     ebook.published_at = 8
-    expect(Ebook.ms_must_reindex?(ebook)).to eq(true)
+    expect(Ebook.ms_must_reindex?(ebook)).to be(true)
     ebook.published_at = 12
-    expect(Ebook.ms_must_reindex?(ebook)).to eq(false)
+    expect(Ebook.ms_must_reindex?(ebook)).to be(false)
   end
 end
 
@@ -651,7 +651,7 @@ describe 'Namespaced::Model' do
   end
 
   it 'has an index name without :: hierarchy' do
-    expect(Namespaced::Model.index_uid.end_with?('Namespaced_Model')).to eq(true)
+    expect(Namespaced::Model.index_uid.end_with?('Namespaced_Model')).to be(true)
   end
 
   it 'uses the block to determine attribute\'s value' do
@@ -731,7 +731,7 @@ describe 'Colors' do
   it 'is synchronous' do
     c = Color.new
     c.valid?
-    expect(c.send(:ms_synchronous?)).to eq(true)
+    expect(c.send(:ms_synchronous?)).to be(true)
   end
 
   it 'auto indexes' do
