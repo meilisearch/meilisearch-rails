@@ -58,7 +58,7 @@ To learn more about Meilisearch, check out our [Documentation](https://docs.meil
 
 ## 🤖 Compatibility with Meilisearch
 
-This package only guarantees the compatibility with the [version v0.25.0 of Meilisearch](https://github.com/meilisearch/meilisearch/releases/tag/v0.25.0).
+This package only guarantees the compatibility with the [version v0.26.0 of Meilisearch](https://github.com/meilisearch/meilisearch/releases/tag/v0.26.0).
 
 ## 🔧 Installation <!-- omit in toc -->
 
