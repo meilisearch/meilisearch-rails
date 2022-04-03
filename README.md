@@ -458,16 +458,16 @@ With [**Sidekiq**](https://github.com/mperham/sidekiq):
 class Book < ActiveRecord::Base
   include MeiliSearch::Rails
 
-  meilisearch enqueue: :trigger_sidekiq_worker do
+  meilisearch enqueue: :trigger_sidekiq_job do
     attribute :title, :author, :description
   end
 
-  def self.trigger_sidekiq_worker(record, remove)
-    MySidekiqWorker.perform_async(record.id, remove)
+  def self.trigger_sidekiq_job(record, remove)
+    MySidekiqJob.perform_async(record.id, remove)
   end
 end
 
-class MySidekiqWorker
+class MySidekiqJob
   def perform(id, remove)
     if remove
       # The record has likely already been removed from your database so we cannot
