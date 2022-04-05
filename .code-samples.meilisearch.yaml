@@ -1,0 +1,25 @@
+landing_getting_started_1: |-
+  # Create an initializer file like `config/initializers/meilisearch.rb`
+  MeiliSearch::Rails.configuration = {
+    meilisearch_host: 'http://127.0.0.1:7700',
+    meilisearch_api_key: 'masterKey',
+  }
+
+  # Add Meilisearch to your ActiveRecord model
+  class Movie < ActiveRecord::Base
+    include MeiliSearch::Rails
+
+    meilisearch index_uid: 'movies' do
+      attribute :title
+    end
+  end
+
+  # Inserting data in your DB table will automatically update your Meilisearch index
+  Movie.create([
+    { title: 'Carol' },
+    { title: 'Wonder Woman' },
+    { title: 'Life of Pi' },
+    { title: 'Mad Max: Fury Road' },
+    { title: 'Moana' },
+    { title: 'Philadelphia' }
+  ])
