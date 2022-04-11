@@ -674,6 +674,7 @@ module MeiliSearch
           [options[:if], options[:unless]].each do |condition|
             case condition
             when nil
+              return false
             when String, Symbol
               return true if ms_attribute_changed?(document, condition)
             else
