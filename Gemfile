@@ -6,9 +6,9 @@ gem 'meilisearch', '~> 0.18.0'
 gem 'rubysl', '~> 2.0', platform: :rbx if defined?(RUBY_ENGINE) && RUBY_ENGINE == 'rbx'
 
 group :development do
-  gem 'rubocop', '~> 1.22'
-  gem 'rubocop-rails'
-  gem 'rubocop-rspec'
+  gem 'rubocop', '1.27.0'
+  gem 'rubocop-rails', '2.13.2'
+  gem 'rubocop-rspec', '2.9.0'
 end
 
 group :test do
