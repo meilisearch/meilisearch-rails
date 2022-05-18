@@ -38,7 +38,7 @@ jobs:
         ruby-version: ${{ matrix.ruby-version }}
         bundler-cache: true
     - name: Meilisearch (latest) setup with Docker
-      run: docker run -d -p 7700:7700 getmeili/meilisearch:latest ./meilisearch --master-key=masterKey --no-analytics
+      run: docker run -d -p 7700:7700 getmeili/meilisearch:latest meilisearch --master-key=masterKey --no-analytics
     - name: Run tests
       run: bundle exec rspec
 
@@ -71,7 +71,7 @@ jobs:
           ruby-version: 2.7.2
           bundler-cache: true
       - name: Meilisearch (latest) setup with Docker
-        run: docker run -d -p 7700:7700 getmeili/meilisearch:latest ./meilisearch --master-key=masterKey --no-analytics
+        run: docker run -d -p 7700:7700 getmeili/meilisearch:latest meilisearch --master-key=masterKey --no-analytics
       - name: Run smoke tests
         working-directory: ./playground
         run: |
