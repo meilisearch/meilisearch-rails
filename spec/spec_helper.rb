@@ -1,15 +1,14 @@
+require 'bundler/setup'
+
 require 'simplecov'
 SimpleCov.start do
   add_filter %r{^/spec/}
   minimum_coverage 86.70
 end
 
-require 'rubygems'
-require 'bundler'
 require 'timeout'
 require 'dotenv/load'
 require 'faker'
-Bundler.setup :test
 
 $LOAD_PATH.unshift(File.dirname(__FILE__))
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
