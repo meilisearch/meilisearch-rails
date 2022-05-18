@@ -1,4 +1,6 @@
-source 'http://rubygems.org'
+source 'https://rubygems.org'
+
+gemspec
 
 gem 'rubysl', '~> 2.0', platform: :rbx if defined?(RUBY_ENGINE) && RUBY_ENGINE == 'rbx'
 
