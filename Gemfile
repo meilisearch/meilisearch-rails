@@ -1,8 +1,5 @@
 source 'http://rubygems.org'
 
-gem 'json', '~> 2.5', '>= 2.5.1'
-gem 'meilisearch', '~> 0.18.0'
-
 gem 'rubysl', '~> 2.0', platform: :rbx if defined?(RUBY_ENGINE) && RUBY_ENGINE == 'rbx'
 
 group :development do

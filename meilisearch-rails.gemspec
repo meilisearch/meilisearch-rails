@@ -31,6 +31,7 @@ Gem::Specification.new do |s|
   ]
 
   s.required_ruby_version = '>= 2.6.0'
-  s.add_dependency('json', ['>= 1.5.1'])
-  s.add_dependency('meilisearch', ['>= 0.15.4'])
+
+  s.add_dependency('json', ['~> 2'])
+  s.add_dependency('meilisearch', ['~> 0.18'])
 end
