@@ -8,7 +8,7 @@ services:
     image: ruby:2.6
     tty: true
     stdin_open: true
-    working_dir: /home/app
+    working_dir: /home/package
     environment:
       - MEILISEARCH_HOST=http://meilisearch:7700
       - MEILISEARCH_PORT=7700
@@ -21,15 +21,13 @@ services:
       - "3001:3000"
     volumes:
       - bundle:/vendor/bundle
-      - ./:/home/app
-      - ../meilisearch-ruby:/home/meilisearch-ruby
+      - ./:/home/package
+      # - ../meilisearch-ruby:/home/meilisearch-ruby
 
   meilisearch:
-    image: getmeili/meilisearch:v0.26.1
-    tty: true
-    stdin_open: true
+    image: getmeili/meilisearch:latest
     ports:
       - "7700"
-    # Uncomment this to run the test suite
     environment:
       - MEILI_MASTER_KEY=masterKey
+      - MEILI_NO_ANALYTICS=true

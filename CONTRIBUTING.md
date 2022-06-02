@@ -28,6 +28,14 @@ First of all, thank you for contributing to Meilisearch! The goal of this docume
 
 ### Setup <!-- omit in toc -->
 
+You can set up your local environment natively or using `docker`, check out the [`docker-compose.yml`](/docker-compose.yml).
+
+Example of running all the checks with docker:
+```bash
+docker-compose run --rm package bash -c "bundle install && bundle exec rspec && bundle exec rubocop"
+```
+
+To install dependencies:
 ```bash
 bundle install
 ```
