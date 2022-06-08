@@ -319,6 +319,10 @@ module MeiliSearch
 
         attr_accessor :formatted
 
+        if options.key?(:per_environment)
+          raise BadConfiguration, ':per_environment option should be defined globally on MeiliSearch::Rails.configuration block.'
+        end
+
         if options[:synchronous] == true
           if defined?(::Sequel) && self < Sequel::Model
             class_eval do
@@ -653,8 +657,11 @@ module MeiliSearch
 
       def ms_index_uid(options = nil)
         options ||= meilisearch_options
+        global_options ||= MeiliSearch::Rails.configuration
+
         name = options[:index_uid] || model_name.to_s.gsub('::', '_')
-        name = "#{name}_#{::Rails.env}" if options[:per_environment]
+        name = "#{name}_#{::Rails.env}" if global_options[:per_environment]
+
         name
       end
 

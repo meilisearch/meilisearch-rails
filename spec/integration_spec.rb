@@ -16,7 +16,8 @@ require 'byebug'
 
 MeiliSearch::Rails.configuration = {
   meilisearch_host: ENV.fetch('MEILISEARCH_HOST', 'http://127.0.0.1:7700'),
-  meilisearch_api_key: ENV.fetch('MEILISEARCH_API_KEY', 'masterKey')
+  meilisearch_api_key: ENV.fetch('MEILISEARCH_API_KEY', 'masterKey'),
+  per_environment: true
 }
 
 FileUtils.rm('data.sqlite3') if File.exist?('data.sqlite3')
@@ -276,7 +277,7 @@ class Color < ActiveRecord::Base
   include MeiliSearch::Rails
   attr_accessor :not_indexed
 
-  meilisearch synchronous: true, index_uid: safe_index_uid('Color'), per_environment: true do
+  meilisearch synchronous: true, index_uid: safe_index_uid('Color') do
     searchable_attributes [:name]
     filterable_attributes ['short_name']
     sortable_attributes [:name]
@@ -351,14 +352,14 @@ end
 class UniqUser < ActiveRecord::Base
   include MeiliSearch::Rails
 
-  meilisearch synchronous: true, index_uid: safe_index_uid('UniqUser'), per_environment: true, id: :name do
+  meilisearch synchronous: true, index_uid: safe_index_uid('UniqUser'), id: :name do
   end
 end
 
 class NullableId < ActiveRecord::Base
   include MeiliSearch::Rails
 
-  meilisearch synchronous: true, index_uid: safe_index_uid('NullableId'), per_environment: true, id: :custom_id,
+  meilisearch synchronous: true, index_uid: safe_index_uid('NullableId'), id: :custom_id,
               if: :never do
   end
 
@@ -376,7 +377,7 @@ class NestedItem < ActiveRecord::Base
 
   include MeiliSearch::Rails
 
-  meilisearch synchronous: true, index_uid: safe_index_uid('NestedItem'), per_environment: true, unless: :hidden do
+  meilisearch synchronous: true, index_uid: safe_index_uid('NestedItem'), unless: :hidden do
     attribute :nb_children
   end
 
@@ -397,7 +398,7 @@ class SequelBook < Sequel::Model(SEQUEL_DB)
 
   include MeiliSearch::Rails
 
-  meilisearch synchronous: true, index_uid: safe_index_uid('SequelBook'), per_environment: true, sanitize: true do
+  meilisearch synchronous: true, index_uid: safe_index_uid('SequelBook'), sanitize: true do
     add_attribute :test
     add_attribute :test2
 
@@ -460,14 +461,14 @@ end
 class Book < ActiveRecord::Base
   include MeiliSearch::Rails
 
-  meilisearch synchronous: true, index_uid: safe_index_uid('SecuredBook'), per_environment: true, sanitize: true do
+  meilisearch synchronous: true, index_uid: safe_index_uid('SecuredBook'), sanitize: true do
     searchable_attributes [:name]
 
-    add_index safe_index_uid('BookAuthor'), per_environment: true do
+    add_index safe_index_uid('BookAuthor') do
       searchable_attributes [:author]
     end
 
-    add_index safe_index_uid('Book'), per_environment: true, if: :public? do
+    add_index safe_index_uid('Book'), if: :public? do
       searchable_attributes [:name]
     end
   end
@@ -651,7 +652,7 @@ describe 'Namespaced::Model' do
   end
 
   it 'has an index name without :: hierarchy' do
-    expect(Namespaced::Model.index_uid.end_with?('Namespaced_Model')).to be(true)
+    expect(Namespaced::Model.index_uid.include?('Namespaced_Model')).to be(true)
   end
 
   it 'uses the block to determine attribute\'s value' do
