@@ -170,10 +170,10 @@ Then, as soon as you use the `search` method, the returning results will be pagi
 <%= will_paginate @hits %> # if using will_paginate
 ```
 
-The **number of hits per page defaults to 20**, you can customize it by adding the `hitsPerPage` parameter to your search:
+The **number of hits per page defaults to 20**, you can customize it by adding the `hits_per_page` parameter to your search:
 
 ```ruby
-Book.search('harry potter', hitsPerPage: 10)
+Book.search('harry potter', hits_per_page: 10)
 ```
 
 #### Extra Configuration <!-- omit in toc -->
@@ -228,7 +228,7 @@ Check the dedicated section of the documentation, for more information on the [s
 All the supported options are described in the [search parameters](https://docs.meilisearch.com/reference/features/search_parameters.html) section of the documentation.
 
 ```ruby
-Book.search('Harry', attributesToHighlight: ['*'])
+Book.search('Harry', attributes_to_highlight: ['*'])
 ```
 👉 Don't forget that `attributes_to_highlight`, `attributes_to_crop`, and
 `crop_length` can be set up in the `meilisearch` block of your model.
@@ -256,8 +256,7 @@ By default, the **index_uid** will be the class name, e.g. `Book`. You can custo
 class Book < ActiveRecord::Base
   include MeiliSearch::Rails
 
-  meilisearch index_uid: 'MyCustomUID' do
-  end
+  meilisearch index_uid: 'MyCustomUID'
 end
 ```
 
@@ -318,8 +317,7 @@ Note that the primary key must have a **unique value**.
 class Book < ActiveRecord::Base
   include MeiliSearch::Rails
 
-  meilisearch primary_key: 'ISBN' do
-  end
+  meilisearch primary_key: 'ISBN'
 end
 ```
 #### Conditional indexing
@@ -331,8 +329,7 @@ As soon as you use those constraints, `add_documents` and `delete_documents` cal
 class Book < ActiveRecord::Base
   include MeiliSearch::Rails
 
-  meilisearch if: :published?, unless: :premium? do
-  end
+  meilisearch if: :published?, unless: :premium?
 
   def published?
     # [...]
@@ -369,6 +366,7 @@ class Book < ActiveRecord::Base
   end
 
   private
+
   def public?
     released? && !premium?
   end
@@ -383,10 +381,10 @@ You may want to share an index between several models. You'll need to ensure you
 class Cat < ActiveRecord::Base
   include MeiliSearch::Rails
 
-  meilisearch index_uid: 'Animals', primary_key: :ms_id do
-  end
+  meilisearch index_uid: 'Animals', primary_key: :ms_id
 
   private
+
   def ms_id
     "cat_#{primary_key}" # ensure the cats & dogs primary_keys are not conflicting
   end
@@ -395,10 +393,10 @@ end
 class Dog < ActiveRecord::Base
   include MeiliSearch::Rails
 
-  meilisearch index_uid: 'Animals', primary_key: :ms_id do
-  end
+  meilisearch index_uid: 'Animals', primary_key: :ms_id
 
   private
+
   def ms_id
     "dog_#{primary_key}" # ensure the cats & dogs primary_keys are not conflicting
   end
@@ -413,8 +411,7 @@ You can configure the auto-indexing & auto-removal process to use a queue to per
 class Book < ActiveRecord::Base
   include MeiliSearch::Rails
 
-  meilisearch enqueue: true do # ActiveJob will be triggered using a `meilisearch` queue
-  end
+  meilisearch enqueue: true # ActiveJob will be triggered using a `meilisearch` queue
 end
 ```
 
@@ -586,8 +583,7 @@ You can strip all HTML tags from your attributes with the `sanitize` option.
 class Book < ActiveRecord::Base
   include MeiliSearch::Rails
 
-  meilisearch sanitize: true do
-  end
+  meilisearch sanitize: true
 end
 ```
 
@@ -599,8 +595,7 @@ You can force the UTF-8 encoding of all your attributes using the `force_utf8_en
 class Book < ActiveRecord::Base
   include MeiliSearch::Rails
 
-  meilisearch force_utf8_encoding: true do
-  end
+  meilisearch force_utf8_encoding: true
 end
 ```
 
@@ -652,8 +647,7 @@ class Book < ActiveRecord::Base
   include MeiliSearch::Rails
 
   # Only raise exceptions in development environment.
-  meilisearch raise_on_failure: Rails.env.development? do
-  end
+  meilisearch raise_on_failure: Rails.env.development?
 end
 ```
 
@@ -667,8 +661,7 @@ You can force indexing and removing to be synchronous by setting the following o
 class Book < ActiveRecord::Base
   include MeiliSearch::Rails
 
-  meilisearch synchronous: true do
-  end
+  meilisearch synchronous: true
 end
 ```
 🚨 This is only recommended for testing purposes, the gem will call the `wait_for_task` method that will stop your code execution until the asynchronous task has been processed by MeilSearch.
@@ -681,8 +674,7 @@ You can disable auto-indexing and auto-removing setting the following options:
 class Book < ActiveRecord::Base
   include MeiliSearch::Rails
 
-  meilisearch auto_index: false, auto_remove: false do
-  end
+  meilisearch auto_index: false, auto_remove: false
 end
 ```
 
