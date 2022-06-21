@@ -105,7 +105,7 @@ module MeiliSearch
       end
 
       def sequel?(document)
-        defined?(::Sequel) && document.class < ::Sequel::Model
+        defined?(::Sequel::Model) && document.class < ::Sequel::Model
       end
 
       def active_record?(document)
@@ -324,7 +324,7 @@ module MeiliSearch
         end
 
         if options[:synchronous] == true
-          if defined?(::Sequel) && self < Sequel::Model
+          if defined?(::Sequel::Model) && self < Sequel::Model
             class_eval do
               copy_after_validation = instance_method(:after_validation)
               define_method(:after_validation) do |*args|
@@ -356,7 +356,7 @@ module MeiliSearch
           end
         end
         unless options[:auto_index] == false
-          if defined?(::Sequel) && self < Sequel::Model
+          if defined?(::Sequel::Model) && self < Sequel::Model
             class_eval do
               copy_after_validation = instance_method(:after_validation)
               copy_before_save = instance_method(:before_save)
@@ -403,7 +403,7 @@ module MeiliSearch
           end
         end
         unless options[:auto_remove] == false
-          if defined?(::Sequel) && self < Sequel::Model
+          if defined?(::Sequel::Model) && self < Sequel::Model
             class_eval do
               copy_after_destroy = instance_method(:after_destroy)
 
@@ -828,7 +828,7 @@ module MeiliSearch
       def ms_find_in_batches(batch_size, &block)
         if (defined?(::ActiveRecord) && ancestors.include?(::ActiveRecord::Base)) || respond_to?(:find_in_batches)
           find_in_batches(batch_size: batch_size, &block)
-        elsif defined?(::Sequel) && self < Sequel::Model
+        elsif defined?(::Sequel::Model) && self < Sequel::Model
           dataset.extension(:pagination).each_page(batch_size, &block)
         else
           # don't worry, mongoid has its own underlying cursor/streaming mechanism
@@ -910,7 +910,7 @@ module MeiliSearch
         # ms_must_reindex flag is reset after every commit as part. If we must reindex at any point in
         # a transaction, keep flag set until it is explicitly unset
         @ms_must_reindex ||=
-          if defined?(::Sequel) && is_a?(Sequel::Model)
+          if defined?(::Sequel::Model) && is_a?(Sequel::Model)
             new? || self.class.ms_must_reindex?(self)
           else
             new_record? || self.class.ms_must_reindex?(self)
