@@ -262,19 +262,7 @@ end
 
 #### Index UID according to the environment <!-- omit in toc -->
 
-You can suffix the index UID with the current Rails environment using one of the following options:
-
-By defining directly in your model:
-
-```ruby
-class Book < ActiveRecord::Base
-  include MeiliSearch::Rails
-
-  meilisearch per_environment: true
-end
-```
-
-Or setting it globally:
+You can suffix the index UID with the current Rails environment by setting it globally:
 
 ```ruby
 MeiliSearch::Rails.configuration = {
