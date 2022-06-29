@@ -272,7 +272,7 @@ MeiliSearch::Rails.configuration = {
 }
 ```
 
-Both options will make your index name look like this `"Book_#{Rails.env}"`.
+This way your index UID will look like this `"Book_#{Rails.env}"`.
 
 ### Index configuration
 
