@@ -43,6 +43,7 @@
     - [Relations](#relations)
     - [Sanitize attributes](#sanitize-attributes)
     - [UTF-8 encoding](#utf-8-encoding)
+    - [Eager loading](#eager-loading)
   - [Manual operations](#manual-operations)
     - [Indexing & deletion](#indexing--deletion)
     - [Access the underlying index object](#access-the-underlying-index-object)
@@ -609,6 +610,20 @@ class Book < ActiveRecord::Base
   include MeiliSearch::Rails
 
   meilisearch force_utf8_encoding: true
+end
+```
+
+#### Eager loading
+
+You can eager load associations using `meilisearch_import` scope.
+
+```ruby
+class Author < ActiveRecord::Base
+  include MeiliSearch::Rails
+
+  has_many :books
+
+  scope :meilisearch_import, -> { includes(:books) }
 end
 ```
 

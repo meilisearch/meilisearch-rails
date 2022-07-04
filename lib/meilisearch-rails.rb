@@ -827,7 +827,8 @@ module MeiliSearch
 
       def ms_find_in_batches(batch_size, &block)
         if (defined?(::ActiveRecord) && ancestors.include?(::ActiveRecord::Base)) || respond_to?(:find_in_batches)
-          find_in_batches(batch_size: batch_size, &block)
+          scope = respond_to?(:meilisearch_import) ? meilisearch_import : all
+          scope.find_in_batches(batch_size: batch_size, &block)
         elsif defined?(::Sequel::Model) && self < Sequel::Model
           dataset.extension(:pagination).each_page(batch_size, &block)
         else
