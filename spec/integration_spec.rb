@@ -743,7 +743,7 @@ describe 'Colors' do
   end
 
   it 'returns facets distribution' do
-    results = Color.search('', { facetsDistribution: ['short_name'] })
+    results = Color.search('', { facets: ['short_name'] })
     expect(results.raw_answer).not_to be_nil
     expect(results.facets_distribution).not_to be_nil
     expect(results.facets_distribution.size).to eq(1)
@@ -753,7 +753,7 @@ describe 'Colors' do
   it 'is raw searchable' do
     results = Color.raw_search('blue')
     expect(results['hits'].size).to eq(1)
-    expect(results['nbHits']).to eq(1)
+    expect(results['estimatedTotalHits']).to eq(1)
   end
 
   it 'is able to temporarily disable auto-indexing' do

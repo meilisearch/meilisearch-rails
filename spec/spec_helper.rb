@@ -58,7 +58,7 @@ end
 
 # get a list of safe indexes in local or CI
 def safe_index_list
-  list = MeiliSearch::Rails.client.indexes
+  list = MeiliSearch::Rails.client.indexes['results']
   list = list.select { |index| index.uid.include?(SAFE_INDEX_PREFIX) }
   list.sort_by { |index| index.primary_key || '' }
 end

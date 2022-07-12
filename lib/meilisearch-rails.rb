@@ -282,7 +282,7 @@ module MeiliSearch
         case method.to_s
         when 'search'
           # some attributes are required
-          { 'hits' => [], 'hitsPerPage' => 0, 'page' => 0, 'facetsDistribution' => {}, 'error' => e }
+          { 'hits' => [], 'hitsPerPage' => 0, 'page' => 0, 'facetDistribution' => {}, 'error' => e }
         else
           # empty answer
           { 'error' => e }
@@ -460,7 +460,7 @@ module MeiliSearch
             end
             last_task = index.add_documents(documents)
           end
-          index.wait_for_task(last_task['uid']) if last_task && (synchronous || options[:synchronous])
+          index.wait_for_task(last_task['taskUid']) if last_task && (synchronous || options[:synchronous])
         end
         nil
       end
@@ -476,7 +476,7 @@ module MeiliSearch
 
           index = SafeIndex.new(ms_index_uid(options), true, options)
           task = index.update_settings(final_settings)
-          index.wait_for_task(task['uid']) if synchronous
+          index.wait_for_task(task['taskUid']) if synchronous
         end
       end
 
@@ -486,7 +486,7 @@ module MeiliSearch
 
           index = ms_ensure_init(options, settings)
           task = index.add_documents(documents.map { |d| settings.get_attributes(d).merge ms_pk(options) => ms_primary_key_of(d, options) })
-          index.wait_for_task(task['uid']) if synchronous || options[:synchronous]
+          index.wait_for_task(task['taskUid']) if synchronous || options[:synchronous]
         end
       end
 
@@ -583,7 +583,7 @@ module MeiliSearch
         end
 
         def ms_facets_distribution
-          @ms_json['facetsDistribution']
+          @ms_json['facetDistribution']
         end
 
         private
@@ -605,8 +605,8 @@ module MeiliSearch
         end
 
         # Returns raw json hits as follows:
-        # {"hits"=>[{"id"=>"13", "href"=>"apple", "name"=>"iphone"}], "offset"=>0, "limit"=>|| 20, "nbHits"=>1,
-        #  "exhaustiveNbHits"=>false, "processingTimeMs"=>0, "query"=>"iphone"}
+        # {"hits"=>[{"id"=>"13", "href"=>"apple", "name"=>"iphone"}], "offset"=>0, "limit"=>|| 20, "estimatedTotalHits"=>1,
+        #  "processingTimeMs"=>0, "query"=>"iphone"}
         json = ms_raw_search(query, params)
 
         # Returns the ids of the hits: 13
