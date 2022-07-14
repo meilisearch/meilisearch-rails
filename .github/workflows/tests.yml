@@ -68,7 +68,7 @@ jobs:
           BUNDLE_WITHOUT: test
           BUNDLE_GEMFILE: ./playground/Gemfile
         with:
-          ruby-version: 2.7.2
+          ruby-version: 2.6.9
           bundler-cache: true
       - name: Meilisearch (latest) setup with Docker
         run: docker run -d -p 7700:7700 getmeili/meilisearch:latest meilisearch --master-key=masterKey --no-analytics
