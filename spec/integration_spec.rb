@@ -110,6 +110,13 @@ ActiveRecord::Schema.define do
     t.integer :parent_id
     t.boolean :hidden
   end
+  create_table :posts do |t|
+    t.string :title
+  end
+  create_table :comments do |t|
+    t.integer :post_id
+    t.string :body
+  end
   create_table :mongo_documents do |t|
     t.string :name
   end
@@ -384,6 +391,23 @@ class NestedItem < ActiveRecord::Base
   def nb_children
     children.count
   end
+end
+
+class Post < ActiveRecord::Base
+  has_many :comments
+
+  include MeiliSearch::Rails
+
+  meilisearch synchronous: true do
+    attribute :comments do
+      comments.map(&:body)
+    end
+  end
+
+  scope :meilisearch_import, -> { includes(:comments) }
+end
+
+class Comment < ActiveRecord::Base
 end
 
 class Task < ActiveRecord::Base
@@ -721,6 +745,28 @@ describe 'NestedItem' do
 
     result = NestedItem.raw_search('')
     expect(result['hits'].size).to eq(2)
+  end
+end
+
+describe 'Posts' do
+  before(:all) do
+    Post.clear_index!(true)
+  end
+
+  it 'eagerly loads associations' do
+    post1 = Post.new(title: 'foo')
+    post1.comments << Comment.new(body: 'one')
+    post1.comments << Comment.new(body: 'two')
+    post1.save!
+
+    post2 = Post.new(title: 'bar')
+    post2.comments << Comment.new(body: 'three')
+    post2.comments << Comment.new(body: 'four')
+    post2.save!
+
+    assert_queries(2) do
+      Post.reindex!
+    end
   end
 end
 
