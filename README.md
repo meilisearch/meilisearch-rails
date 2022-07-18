@@ -30,6 +30,7 @@
 - [📖 Documentation](#-documentation)
 - [🤖 Compatibility with Meilisearch](#-compatibility-with-meilisearch)
 - [🚀 Getting Started](#-getting-started)
+- [Compatibility](#-compatibility)
 - [⚙️ Settings](#️-settings)
 - [🔍 Custom search](#-custom-search)
 - [🪛 Options](#-options)
@@ -190,6 +191,10 @@ MeiliSearch::Rails.configuration = {
   max_retries: 1,
 }
 ```
+
+## Compatibility
+
+If your model already has methods that meilisearch-rails defines such as `search` and `index`, they will not be redefined. You can target the meilisearch-rails-defined methods by prefixing with `ms_`, e.g. `Book.ms_search('harry potter')`.
 
 ## ⚙️ Settings
 
