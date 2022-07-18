@@ -5,7 +5,7 @@ volumes:
 
 services:
   package:
-    image: ruby:2.6
+    build: .
     tty: true
     stdin_open: true
     working_dir: /home/package
