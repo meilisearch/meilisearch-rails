@@ -236,7 +236,7 @@ module MeiliSearch
         @raise_on_failure = raise_on_failure.nil? || raise_on_failure
 
         SafeIndex.log_or_throw(nil, @raise_on_failure) do
-          client.create_index(index_uid, { primaryKey: primary_key })
+          client.create_index(index_uid, { primary_key: primary_key })
         end
 
         @index = client.index(index_uid)
