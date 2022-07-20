@@ -233,9 +233,13 @@ module MeiliSearch
       def initialize(index_uid, raise_on_failure, options)
         client = MeiliSearch::Rails.client
         primary_key = options[:primary_key] || MeiliSearch::Rails::IndexSettings::DEFAULT_PRIMARY_KEY
-        client.create_index(index_uid, { primaryKey: primary_key })
-        @index = client.index(index_uid)
         @raise_on_failure = raise_on_failure.nil? || raise_on_failure
+
+        SafeIndex.log_or_throw(nil, @raise_on_failure) do
+          client.create_index(index_uid, { primary_key: primary_key })
+        end
+
+        @index = client.index(index_uid)
       end
 
       ::MeiliSearch::Index.instance_methods(false).each do |m|
@@ -273,7 +277,7 @@ module MeiliSearch
 
       def self.log_or_throw(method, raise_on_failure, &block)
         yield
-      rescue ::MeiliSearch::ApiError => e
+      rescue ::MeiliSearch::TimeoutError, ::MeiliSearch::ApiError => e
         raise e if raise_on_failure
 
         # log the error
