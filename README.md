@@ -318,15 +318,33 @@ end
 
 By default, the primary key is based on your record's id. You can change this behavior by specifying the `primary_key:` option.
 
-Note that the primary key must have a **unique value**.
+Note that the primary key must return a **unique value** otherwise your data could be overwritten.
 
 ```ruby
 class Book < ActiveRecord::Base
   include MeiliSearch::Rails
 
-  meilisearch primary_key: 'ISBN'
+  meilisearch primary_key: :isbn # isbn is a column in your table definition.
 end
 ```
+
+You can also set the `primary_key` as a method, this method will be evaluated in runtime, and its return 
+will be used as the reference to the document when Meilisearch needs it.
+
+```rb
+class Book < ActiveRecord::Base
+  include MeiliSearch::Rails
+
+  meilisearch primary_key: :my_custom_ms_id
+
+  private
+
+  def my_custom_ms_id
+    "isbn_#{primary_key}" # ensure this return is unique, otherwise you'll lose data.
+  end
+end
+```
+
 #### Conditional indexing
 
 You can control if a record must be indexed by using the `if:` or `unless:` options.<br>

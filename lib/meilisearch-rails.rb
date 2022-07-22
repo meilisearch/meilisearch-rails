@@ -613,15 +613,29 @@ module MeiliSearch
         #  "processingTimeMs"=>0, "query"=>"iphone"}
         json = ms_raw_search(query, params)
 
-        # Returns the ids of the hits: 13
-        hit_ids = json['hits'].map { |hit| hit[ms_pk(meilisearch_options).to_s] }
-
         # condition_key gets the primary key of the document; looks for "id" on the options
         condition_key = if defined?(::Mongoid::Document) && include?(::Mongoid::Document)
                           ms_primary_key_method.in
                         else
                           ms_primary_key_method
                         end
+
+        # The condition_key must be a valid column otherwise, the `.where` below will not work
+        # Since we provide a way to customize the primary_key value, `ms_pk(meilisearch_options)` may not
+        # respond with a valid database column. The blocks below prevent that from happening.
+        has_virtual_column_as_pk = if defined?(::Sequel::Model) && self < Sequel::Model
+                                     meilisearch_options[:type].columns.map(&:to_s).exclude?(condition_key.to_s)
+                                   else
+                                     meilisearch_options[:type].columns.map(&:name).map(&:to_s).exclude?(condition_key.to_s)
+                                   end
+
+        condition_key = meilisearch_options[:type].primary_key if has_virtual_column_as_pk
+
+        hit_ids = if has_virtual_column_as_pk
+                    json['hits'].map { |hit| hit[condition_key] }
+                  else
+                    json['hits'].map { |hit| hit[ms_pk(meilisearch_options).to_s] }
+                  end
 
         # meilisearch_options[:type] refers to the Model name (e.g. Product)
         # results_by_id creates a hash with the primaryKey of the document (id) as the key and doc itself as the value
