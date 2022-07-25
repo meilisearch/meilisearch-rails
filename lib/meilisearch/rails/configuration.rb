@@ -11,6 +11,26 @@ module MeiliSearch
         @_config = configuration
       end
 
+      def deactivate!
+        if block_given?
+          @_config.merge!(active: false)
+
+          yield
+
+          @_config.merge!(active: true)
+        else
+          @_config.merge!(active: false)
+        end
+      end
+
+      def activate!
+        @_config.merge!(active: true)
+      end
+
+      def active?
+        configuration.fetch(:active, true)
+      end
+
       def client
         ::MeiliSearch::Client.new(
           configuration[:meilisearch_host] || 'http://localhost:7700',
