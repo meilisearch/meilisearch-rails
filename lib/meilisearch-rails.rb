@@ -1,5 +1,5 @@
 require 'meilisearch'
-
+require 'meilisearch/rails/null_object'
 require 'meilisearch/rails/version'
 require 'meilisearch/rails/utilities'
 require 'meilisearch/rails/errors'
@@ -249,7 +249,10 @@ module MeiliSearch
             args[0].delete(:attributesToCrop) if args[0][:attributesToCrop]
             args[0].delete(:cropLength) if args[0][:cropLength]
           end
+
           SafeIndex.log_or_throw(m, @raise_on_failure) do
+            return MeiliSearch::Rails.black_hole unless MeiliSearch::Rails.active?
+
             @index.send(m, *args, &block)
           end
         end
@@ -550,7 +553,7 @@ module MeiliSearch
 
           index = ms_ensure_init(options, settings)
           synchronous || options[:synchronous] ? index.delete_all_documents! : index.delete_all_documents
-          @ms_indexes[settings] = nil
+          @ms_indexes[MeiliSearch::Rails.active?][settings] = nil
         end
         nil
       end
@@ -720,16 +723,16 @@ module MeiliSearch
       def ms_ensure_init(options = nil, settings = nil, index_settings = nil)
         raise ArgumentError, 'No `meilisearch` block found in your model.' if meilisearch_settings.nil?
 
-        @ms_indexes ||= {}
+        @ms_indexes ||= {true => {}, false => {}}
 
         options ||= meilisearch_options
         settings ||= meilisearch_settings
 
-        return @ms_indexes[settings] if @ms_indexes[settings]
+        return @ms_indexes[MeiliSearch::Rails.active?][settings] if @ms_indexes[MeiliSearch::Rails.active?][settings]
 
-        @ms_indexes[settings] = SafeIndex.new(ms_index_uid(options), meilisearch_options[:raise_on_failure], meilisearch_options)
+        @ms_indexes[MeiliSearch::Rails.active?][settings] = SafeIndex.new(ms_index_uid(options), meilisearch_options[:raise_on_failure], meilisearch_options)
 
-        current_settings = @ms_indexes[settings].settings(getVersion: 1) rescue nil # if the index doesn't exist
+        current_settings = @ms_indexes[MeiliSearch::Rails.active?][settings].settings(getVersion: 1) rescue nil # if the index doesn't exist
 
         index_settings ||= settings.to_settings
         index_settings = options[:primary_settings].to_settings.merge(index_settings) if options[:inherit]
@@ -737,10 +740,10 @@ module MeiliSearch
         options[:check_settings] = true if options[:check_settings].nil?
 
         if !ms_indexing_disabled?(options) && options[:check_settings] && meilisearch_settings_changed?(current_settings, index_settings)
-          @ms_indexes[settings].update_settings(index_settings)
+          @ms_indexes[MeiliSearch::Rails.active?][settings].update_settings(index_settings)
         end
 
-        @ms_indexes[settings]
+        @ms_indexes[MeiliSearch::Rails.active?][settings]
       end
 
       private

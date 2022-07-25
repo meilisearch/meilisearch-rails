@@ -31,7 +31,13 @@ module MeiliSearch
         configuration.fetch(:active, true)
       end
 
+      def black_hole
+        @black_hole ||= NullObject.instance
+      end
+
       def client
+        return black_hole unless active?
+
         ::MeiliSearch::Client.new(
           configuration[:meilisearch_host] || 'http://localhost:7700',
           configuration[:meilisearch_api_key],

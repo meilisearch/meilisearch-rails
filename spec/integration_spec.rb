@@ -1461,3 +1461,57 @@ context "when have a internal class defined in the app's scope" do
     end.not_to raise_error
   end
 end
+
+context 'when MeiliSearch calls are deactivated' do
+  it 'is active by default' do
+    expect(MeiliSearch::Rails).to be_active
+  end
+
+  describe '#deactivate!' do
+    context 'without block' do
+      it 'deactivates the requests and keep the state' do
+        MeiliSearch::Rails.deactivate!
+
+        expect(MeiliSearch::Rails).not_to be_active
+      end
+
+      it 'responds with a black hole' do
+        MeiliSearch::Rails.deactivate!
+
+        expect(MeiliSearch::Rails.client.foo.bar.now.nil.item.issue).to be_nil
+      end
+
+      it 'deactivates requests' do
+        MeiliSearch::Rails.deactivate!
+
+        expect {
+          Task.create(title: 'my task #1')
+          Task.search('task')
+        }.to_not raise_error
+      end
+    end
+
+    context 'with a block' do
+      it 'disables only around call' do
+        MeiliSearch::Rails.deactivate! do
+          expect(MeiliSearch::Rails).not_to be_active
+        end
+
+        expect(MeiliSearch::Rails).to be_active
+      end
+
+      it 'works even when the instance made calls earlier' do
+        Task.destroy_all
+        Task.create!(title: 'deactivated #1')
+
+        MeiliSearch::Rails.deactivate! do
+          # always 0 since the black hole will return the default values
+          expect(Task.search('deactivated').size).to eq(0)
+        end
+
+        expect(MeiliSearch::Rails).to be_active
+        expect(Task.search('#1').size).to eq(1)
+      end
+    end
+  end
+end
