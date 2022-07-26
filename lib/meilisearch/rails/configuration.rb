@@ -12,15 +12,13 @@ module MeiliSearch
       end
 
       def deactivate!
-        if block_given?
-          @_config.merge!(active: false)
+        @_config.merge!(active: false)
 
-          yield
+        return unless block_given?
 
-          @_config.merge!(active: true)
-        else
-          @_config.merge!(active: false)
-        end
+        yield
+
+        @_config.merge!(active: true)
       end
 
       def activate!

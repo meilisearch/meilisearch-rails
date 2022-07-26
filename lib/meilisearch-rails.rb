@@ -723,7 +723,7 @@ module MeiliSearch
       def ms_ensure_init(options = nil, settings = nil, index_settings = nil)
         raise ArgumentError, 'No `meilisearch` block found in your model.' if meilisearch_settings.nil?
 
-        @ms_indexes ||= {true => {}, false => {}}
+        @ms_indexes ||= { true => {}, false => {} }
 
         options ||= meilisearch_options
         settings ||= meilisearch_settings

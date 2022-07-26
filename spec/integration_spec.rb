@@ -1484,10 +1484,10 @@ context 'when MeiliSearch calls are deactivated' do
       it 'deactivates requests' do
         MeiliSearch::Rails.deactivate!
 
-        expect {
+        expect do
           Task.create(title: 'my task #1')
           Task.search('task')
-        }.to_not raise_error
+        end.not_to raise_error
       end
     end
 
