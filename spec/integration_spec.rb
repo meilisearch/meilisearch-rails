@@ -219,7 +219,7 @@ end
 class Cat < ActiveRecord::Base
   include MeiliSearch::Rails
 
-  meilisearch index_uid: safe_index_uid('animals'), id: :ms_id do
+  meilisearch index_uid: safe_index_uid('animals'), synchronous: true, primary_key: :ms_id do
   end
 
   private
@@ -232,7 +232,7 @@ end
 class Dog < ActiveRecord::Base
   include MeiliSearch::Rails
 
-  meilisearch index_uid: safe_index_uid('animals'), id: :ms_id do
+  meilisearch index_uid: safe_index_uid('animals'), synchronous: true, primary_key: :ms_id do
   end
 
   private
@@ -359,14 +359,14 @@ end
 class UniqUser < ActiveRecord::Base
   include MeiliSearch::Rails
 
-  meilisearch synchronous: true, index_uid: safe_index_uid('UniqUser'), id: :name do
+  meilisearch synchronous: true, index_uid: safe_index_uid('UniqUser'), primary_key: :name do
   end
 end
 
 class NullableId < ActiveRecord::Base
   include MeiliSearch::Rails
 
-  meilisearch synchronous: true, index_uid: safe_index_uid('NullableId'), id: :custom_id,
+  meilisearch synchronous: true, index_uid: safe_index_uid('NullableId'), primary_key: :custom_id,
               if: :never do
   end
 
@@ -1370,13 +1370,24 @@ describe 'People' do
 end
 
 describe 'Animals' do
+  it 'returns only the requested type' do
+    Dog.create!([{ name: 'Toby the Dog' }, { name: 'Felix the Dog' }])
+    Cat.create!([{ name: 'Toby the Cat' }, { name: 'Felix the Cat' }, { name: 'roar' }])
+
+    expect(Dog.count).to eq(2)
+    expect(Cat.count).to eq(3)
+
+    expect(Cat.search('felix').size).to eq(1)
+    expect(Cat.search('felix').first.name).to eq('Felix the Cat')
+    expect(Dog.search('toby').size).to eq(1)
+    expect(Dog.search('Toby').first.name).to eq('Toby the Dog')
+  end
+
   it 'shares a single index' do
-    Dog.create!(name: 'Toby')
-    Cat.create!(name: 'Felix')
-    index = MeiliSearch::Rails.client.index(safe_index_uid('animals'))
-    index.wait_for_task(index.tasks['results'].first['uid'])
-    docs = index.search('')
-    expect(docs['hits'].size).to eq(2)
+    cat_index = Cat.index.instance_variable_get('@index').uid
+    dog_index = Dog.index.instance_variable_get('@index').uid
+
+    expect(cat_index).to eq(dog_index)
   end
 end
 
