@@ -21,7 +21,7 @@ describe MeiliSearch::Rails::Configuration do
 
       expect(MeiliSearch::Client)
         .to have_received(:new)
-        .with('http://localhost:7700', 's3cr3tap1k3y', {})
+        .with('http://localhost:7700', 's3cr3tap1k3y', client_agents: 'Meilisearch Rails (v0.7.0)')
     end
 
     context 'without meilisearch_host' do
@@ -37,7 +37,7 @@ describe MeiliSearch::Rails::Configuration do
 
         expect(MeiliSearch::Client)
           .to have_received(:new)
-          .with('http://localhost:7700', 's3cr3tap1k3y', {})
+          .with('http://localhost:7700', 's3cr3tap1k3y', { client_agents: 'Meilisearch Rails (v0.7.0)' })
       end
     end
 
@@ -56,7 +56,7 @@ describe MeiliSearch::Rails::Configuration do
 
         expect(MeiliSearch::Client)
           .to have_received(:new)
-          .with('http://localhost:7700', 's3cr3tap1k3y', timeout: 2, max_retries: 1)
+          .with('http://localhost:7700', 's3cr3tap1k3y', client_agents: 'Meilisearch Rails (v0.7.0)', timeout: 2, max_retries: 1)
       end
     end
   end
