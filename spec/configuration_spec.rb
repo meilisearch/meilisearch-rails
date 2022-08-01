@@ -1,6 +1,8 @@
 require 'spec_helper'
 
 describe MeiliSearch::Rails::Configuration do
+  before { stub_const('MeiliSearch::Rails::VERSION', '0.0.1') }
+
   let(:configuration) do
     {
       meilisearch_host: 'http://localhost:7700',
@@ -21,7 +23,7 @@ describe MeiliSearch::Rails::Configuration do
 
       expect(MeiliSearch::Client)
         .to have_received(:new)
-        .with('http://localhost:7700', 's3cr3tap1k3y', {})
+        .with('http://localhost:7700', 's3cr3tap1k3y', client_agents: 'Meilisearch Rails (v0.0.1)')
     end
 
     context 'without meilisearch_host' do
@@ -37,7 +39,7 @@ describe MeiliSearch::Rails::Configuration do
 
         expect(MeiliSearch::Client)
           .to have_received(:new)
-          .with('http://localhost:7700', 's3cr3tap1k3y', {})
+          .with('http://localhost:7700', 's3cr3tap1k3y', { client_agents: 'Meilisearch Rails (v0.0.1)' })
       end
     end
 
@@ -56,7 +58,7 @@ describe MeiliSearch::Rails::Configuration do
 
         expect(MeiliSearch::Client)
           .to have_received(:new)
-          .with('http://localhost:7700', 's3cr3tap1k3y', timeout: 2, max_retries: 1)
+          .with('http://localhost:7700', 's3cr3tap1k3y', client_agents: 'Meilisearch Rails (v0.0.1)', timeout: 2, max_retries: 1)
       end
     end
   end
