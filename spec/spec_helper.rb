@@ -19,7 +19,8 @@ require 'meilisearch-rails'
 require 'rspec'
 require 'rails/all'
 
-require 'support/dummy_classes'
+OLD_RAILS = Gem.loaded_specs['rails'].version < Gem::Version.new('4.0')
+NEW_RAILS = Gem.loaded_specs['rails'].version >= Gem::Version.new('6.0')
 
 Dir["#{File.dirname(__FILE__)}/support/**/*.rb"].sort.each { |file| require file }
 
