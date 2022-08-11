@@ -21,7 +21,7 @@ require 'rails/all'
 
 require 'support/dummy_classes'
 
-Thread.current[:meilisearch_hosts] = nil
+Dir["#{File.dirname(__FILE__)}/support/**/*.rb"].sort.each { |file| require file }
 
 RSpec.configure do |c|
   c.mock_with :rspec
@@ -46,32 +46,4 @@ RSpec.configure do |c|
       MeiliSearch::Rails.client.delete_index(index.uid)
     end
   end
-end
-
-# A unique prefix for your test run in local or CI
-SAFE_INDEX_PREFIX = "rails_#{SecureRandom.hex(8)}".freeze
-
-# avoid concurrent access to the same index in local or CI
-def safe_index_uid(name)
-  "#{SAFE_INDEX_PREFIX}_#{name}"
-end
-
-# get a list of safe indexes in local or CI
-def safe_index_list
-  list = MeiliSearch::Rails.client.indexes['results']
-  list = list.select { |index| index.uid.include?(SAFE_INDEX_PREFIX) }
-  list.sort_by { |index| index.primary_key || '' }
-end
-
-def assert_queries(expected_count)
-  queries = []
-
-  ActiveSupport::Notifications.subscribe('sql.active_record') do |_name, _start, _finish, _id, payload|
-    queries << payload[:sql] unless %w[SCHEMA TRANSACTION].include?(payload[:name])
-  end
-
-  yield
-
-  ActiveSupport::Notifications.unsubscribe('sql.active_record')
-  expect(queries.size).to eq(expected_count), "#{queries.size} instead of #{expected_count} queries were executed. #{queries.inspect}"
 end
