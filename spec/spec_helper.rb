@@ -18,6 +18,11 @@ $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 require 'meilisearch-rails'
 require 'rspec'
 require 'rails/all'
+require 'sqlite3' unless defined?(JRUBY_VERSION)
+require 'logger'
+require 'sequel'
+require 'active_model_serializers'
+require 'byebug'
 
 OLD_RAILS = Gem.loaded_specs['rails'].version < Gem::Version.new('4.0')
 NEW_RAILS = Gem.loaded_specs['rails'].version >= Gem::Version.new('6.0')
