@@ -38,7 +38,7 @@ module MeiliSearch
       end
 
       def semaphore
-        @mutex ||= Mutex.new
+        @semaphore ||= Mutex.new
       end
 
       def client

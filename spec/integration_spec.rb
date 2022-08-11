@@ -1514,7 +1514,7 @@ context 'when MeiliSearch calls are deactivated' do
       end
 
       it 'works in multi-threaded environments' do
-        Threads.new(5, log: STDOUT).assert(20) do |i, r|
+        Threads.new(5, log: $stdout).assert(20) do |_i, _r|
           MeiliSearch::Rails.deactivate! do
             expect(MeiliSearch::Rails).not_to be_active
           end
