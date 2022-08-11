@@ -12,17 +12,21 @@ module MeiliSearch
       end
 
       def deactivate!
-        @_config.merge!(active: false)
+        semaphore.synchronize do
+          @_config.merge!(active: false)
 
-        return unless block_given?
+          return unless block_given?
 
-        yield
+          yield
 
-        @_config.merge!(active: true)
+          @_config.merge!(active: true)
+        end
       end
 
       def activate!
-        @_config.merge!(active: true)
+        semaphore.synchronize do
+          @_config.merge!(active: true)
+        end
       end
 
       def active?
@@ -31,6 +35,10 @@ module MeiliSearch
 
       def black_hole
         @black_hole ||= NullObject.instance
+      end
+
+      def semaphore
+        @mutex ||= Mutex.new
       end
 
       def client
