@@ -1512,6 +1512,16 @@ context 'when MeiliSearch calls are deactivated' do
         expect(MeiliSearch::Rails).to be_active
         expect(Task.search('#1').size).to eq(1)
       end
+
+      it 'works in multi-threaded environments' do
+        Threads.new(5, log: STDOUT).assert(20) do |i, r|
+          MeiliSearch::Rails.deactivate! do
+            expect(MeiliSearch::Rails).not_to be_active
+          end
+
+          expect(MeiliSearch::Rails).to be_active
+        end
+      end
     end
   end
 end

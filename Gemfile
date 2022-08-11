@@ -29,6 +29,7 @@ group :test do
   gem 'jdbc-sqlite3', platform: :jruby
   gem 'rspec', '~> 3.0'
   gem 'simplecov', require: 'false'
+  gem 'threads'
 
   gem 'byebug'
   gem 'dotenv', '~> 2.7', '>= 2.7.6'

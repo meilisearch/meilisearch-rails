@@ -11,6 +11,7 @@ end
 require 'timeout'
 require 'dotenv/load'
 require 'faker'
+require 'threads'
 
 $LOAD_PATH.unshift(File.dirname(__FILE__))
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
