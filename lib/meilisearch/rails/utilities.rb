@@ -42,10 +42,10 @@ module MeiliSearch
         end
 
         def indexable?(record, options)
-          if_passes = options[:if].blank? || constraint_passes?(record, options[:if])
-          unless_passes = options[:unless].blank? || !constraint_passes?(record, options[:unless])
+          return false unless options[:if].blank? || constraint_passes?(record, options[:if])
+          return false unless options[:unless].blank? || !constraint_passes?(record, options[:unless])
 
-          if_passes && unless_passes
+          true
         end
 
         private
@@ -60,9 +60,7 @@ module MeiliSearch
             # All constraints must pass
             constraint.all? { |inner_constraint| constraint_passes?(record, inner_constraint) }
           else
-            unless constraint.respond_to?(:call)
-              raise ArgumentError, "Unknown constraint type: #{constraint} (#{constraint.class})"
-            end
+            raise ArgumentError, "Unknown constraint type: #{constraint} (#{constraint.class})" unless constraint.respond_to?(:call)
 
             constraint.call(record)
           end
