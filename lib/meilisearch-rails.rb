@@ -342,7 +342,7 @@ module MeiliSearch
           end
         end
         if options[:enqueue]
-          raise ArgumentError, 'Cannot use a enqueue if the `synchronous` option if set' if options[:synchronous]
+          raise ArgumentError, 'Cannot use a enqueue if the `synchronous` option is set' if options[:synchronous]
 
           proc = if options[:enqueue] == true
                    proc do |record, remove|
@@ -902,6 +902,8 @@ module MeiliSearch
       end
 
       def ms_enqueue_index!(synchronous)
+        return unless indexable?
+
         if meilisearch_options[:enqueue]
           unless self.class.send(:ms_indexing_disabled?, meilisearch_options)
             meilisearch_options[:enqueue].call(self, false)
@@ -944,6 +946,31 @@ module MeiliSearch
         remove_instance_variable(:@ms_auto_indexing) if instance_variable_defined?(:@ms_auto_indexing)
         remove_instance_variable(:@ms_synchronous) if instance_variable_defined?(:@ms_synchronous)
         remove_instance_variable(:@ms_must_reindex) if instance_variable_defined?(:@ms_must_reindex)
+      end
+
+      def indexable?
+        if_passes = meilisearch_options[:if].blank? || constraint_passes?(meilisearch_options[:if])
+        unless_passes = meilisearch_options[:unless].blank? || !constraint_passes?(meilisearch_options[:unless])
+
+        if_passes && unless_passes
+      end
+
+      def constraint_passes?(constraint)
+        case constraint
+        when Symbol
+          self.send(constraint)
+        when String
+          self.send(constraint.to_sym)
+        when Enumerable
+          # All constraints must pass
+          constraint.all? { |inner_constraint| constraint_passes?(inner_constraint) }
+        else
+          unless constraint.respond_to?(:call)
+            raise ArgumentError, "Unknown constraint type: #{constraint} (#{constraint.class})"
+          end
+
+          constraint.call(self)
+        end
       end
     end
   end
