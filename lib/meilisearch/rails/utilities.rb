@@ -40,6 +40,33 @@ module MeiliSearch
             klass.ms_set_settings
           end
         end
+
+        def indexable?(record, options)
+          if_passes = options[:if].blank? || constraint_passes?(record, options[:if])
+          unless_passes = options[:unless].blank? || !constraint_passes?(record, options[:unless])
+
+          if_passes && unless_passes
+        end
+
+        private
+
+        def constraint_passes?(record, constraint)
+          case constraint
+          when Symbol
+            record.send(constraint)
+          when String
+            record.send(constraint.to_sym)
+          when Enumerable
+            # All constraints must pass
+            constraint.all? { |inner_constraint| constraint_passes?(record, inner_constraint) }
+          else
+            unless constraint.respond_to?(:call)
+              raise ArgumentError, "Unknown constraint type: #{constraint} (#{constraint.class})"
+            end
+
+            constraint.call(record)
+          end
+        end
       end
     end
   end

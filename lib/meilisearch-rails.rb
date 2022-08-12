@@ -452,10 +452,10 @@ module MeiliSearch
           ms_find_in_batches(batch_size) do |group|
             if ms_conditional_index?(options)
               # delete non-indexable documents
-              ids = group.select { |d| !ms_indexable?(d, options) }.map { |d| ms_primary_key_of(d, options) }
+              ids = group.select { |d| !Utilities.indexable?(d, options) }.map { |d| ms_primary_key_of(d, options) }
               index.delete_documents(ids.select(&:present?))
               # select only indexable documents
-              group = group.select { |d| ms_indexable?(d, options) }
+              group = group.select { |d| Utilities.indexable?(d, options) }
             end
             documents = group.map do |d|
               attributes = settings.get_attributes(d)
@@ -502,7 +502,7 @@ module MeiliSearch
 
           primary_key = ms_primary_key_of(document, options)
           index = ms_ensure_init(options, settings)
-          if ms_indexable?(document, options)
+          if Utilities.indexable?(document, options)
             raise ArgumentError, 'Cannot index a record without a primary key' if primary_key.blank?
 
             doc = settings.get_attributes(document)
@@ -802,31 +802,6 @@ module MeiliSearch
         options[:if].present? || options[:unless].present?
       end
 
-      def ms_indexable?(document, options = nil)
-        options ||= meilisearch_options
-        if_passes = options[:if].blank? || ms_constraint_passes?(document, options[:if])
-        unless_passes = options[:unless].blank? || !ms_constraint_passes?(document, options[:unless])
-        if_passes && unless_passes
-      end
-
-      def ms_constraint_passes?(document, constraint)
-        case constraint
-        when Symbol
-          document.send(constraint)
-        when String
-          document.send(constraint.to_sym)
-        when Enumerable
-          # All constraints must pass
-          constraint.all? { |inner_constraint| ms_constraint_passes?(document, inner_constraint) }
-        else
-          unless constraint.respond_to?(:call)
-            raise ArgumentError, "Unknown constraint type: #{constraint} (#{constraint.class})"
-          end
-
-          constraint.call(document)
-        end
-      end
-
       def ms_indexing_disabled?(options = nil)
         options ||= meilisearch_options
         constraint = options[:disable_indexing] || options['disable_indexing']
@@ -902,7 +877,7 @@ module MeiliSearch
       end
 
       def ms_enqueue_index!(synchronous)
-        return unless indexable?
+        return unless Utilities.indexable?(self, meilisearch_options)
 
         if meilisearch_options[:enqueue]
           unless self.class.send(:ms_indexing_disabled?, meilisearch_options)
@@ -946,31 +921,6 @@ module MeiliSearch
         remove_instance_variable(:@ms_auto_indexing) if instance_variable_defined?(:@ms_auto_indexing)
         remove_instance_variable(:@ms_synchronous) if instance_variable_defined?(:@ms_synchronous)
         remove_instance_variable(:@ms_must_reindex) if instance_variable_defined?(:@ms_must_reindex)
-      end
-
-      def indexable?
-        if_passes = meilisearch_options[:if].blank? || constraint_passes?(meilisearch_options[:if])
-        unless_passes = meilisearch_options[:unless].blank? || !constraint_passes?(meilisearch_options[:unless])
-
-        if_passes && unless_passes
-      end
-
-      def constraint_passes?(constraint)
-        case constraint
-        when Symbol
-          self.send(constraint)
-        when String
-          self.send(constraint.to_sym)
-        when Enumerable
-          # All constraints must pass
-          constraint.all? { |inner_constraint| constraint_passes?(inner_constraint) }
-        else
-          unless constraint.respond_to?(:call)
-            raise ArgumentError, "Unknown constraint type: #{constraint} (#{constraint.class})"
-          end
-
-          constraint.call(self)
-        end
       end
     end
   end
