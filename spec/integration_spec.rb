@@ -560,6 +560,19 @@ unless OLD_RAILS
       attributes [:name]
     end
   end
+<<<<<<< Updated upstream
+=======
+
+  class ConditionallyEnqueuedDocument < ActiveRecord::Base
+    include MeiliSearch::Rails
+
+    meilisearch(enqueue: true,
+                index_uid: safe_index_uid('ConditionallyEnqueuedDocument'),
+                if: :is_public) do
+      attributes %i[name is_public]
+    end
+  end
+>>>>>>> Stashed changes
 end
 
 class MisconfiguredBlock < ActiveRecord::Base
@@ -667,6 +680,18 @@ describe 'Attributes change detection' do
     expect(Ebook.ms_must_reindex?(ebook)).to be(true)
     ebook.published_at = 12
     expect(Ebook.ms_must_reindex?(ebook)).to be(false)
+  end
+end
+
+describe 'Conditional indexation' do
+  before { allow(MeiliSearch::Rails::MSJob).to receive(:perform_later).and_return(nil) }
+
+  it 'indexes or removes from index based on :if/:unless conditional value' do
+    doc = ConditionallyEnqueuedDocument.create!(is_public: true, name: 'title')
+    expect(MeiliSearch::Rails::MSJob).to have_received(:perform_later).with(doc, 'ms_index!')
+
+    doc.update!(is_public: false)
+    expect(MeiliSearch::Rails::MSJob).to have_received(:perform_later).with(doc, 'ms_remove_from_index!')
   end
 end
 
