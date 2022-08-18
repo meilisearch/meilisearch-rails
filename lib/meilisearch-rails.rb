@@ -599,12 +599,12 @@ module MeiliSearch
 
       def ms_search(query, params = {})
         if MeiliSearch::Rails.configuration[:pagination_backend]
-
           page = params[:page].nil? ? params[:page] : params[:page].to_i
           hits_per_page = params[:hitsPerPage].nil? ? params[:hitsPerPage] : params[:hitsPerPage].to_i
+          hits_per_page ||= params[:hits_per_page].nil? ? params[:hits_per_page] : params[:hits_per_page].to_i
 
-          params.delete(:page)
-          params.delete(:hitsPerPage)
+          %i[page hitsPerPage hits_per_page].each { |param| params.delete(param) }
+
           params[:limit] = 200
         end
 

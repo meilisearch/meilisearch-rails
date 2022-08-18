@@ -1170,23 +1170,34 @@ describe 'Kaminari' do
     hits = Restaurant.search ''
     expect(hits.total_count).to eq(Restaurant.raw_search('')['hits'].size)
 
-    p1 = Restaurant.search '', page: 1, hitsPerPage: 1
+    p1 = Restaurant.search '', page: 1, hits_per_page: 1
     expect(p1.size).to eq(1)
     expect(p1[0]).to eq(hits[0])
     expect(p1.total_count).to eq(Restaurant.raw_search('')['hits'].count)
 
-    p2 = Restaurant.search '', page: 2, hitsPerPage: 1
+    p2 = Restaurant.search '', page: 2, hits_per_page: 1
     expect(p2.size).to eq(1)
     expect(p2[0]).to eq(hits[1])
     expect(p2.total_count).to eq(Restaurant.raw_search('')['hits'].count)
   end
 
+  it 'respects both camelCase and snake_case options' do
+    expect(Restaurant.count).to be > 1
+
+    # TODO: deprecate all camelcase attributes on v1.
+    %i[hits_per_page hitsPerPage].each do |method|
+      restaurants = Restaurant.search '', { page: 1, method => 1 }
+
+      expect(restaurants.size).to eq(1)
+    end
+  end
+
   it 'does not return error if pagination params are strings' do
-    p1 = Restaurant.search '', page: '1', hitsPerPage: '1'
+    p1 = Restaurant.search '', page: '1', hits_per_page: '1'
     expect(p1.size).to eq(1)
     expect(p1.total_count).to eq(Restaurant.raw_search('')['hits'].count)
 
-    p2 = Restaurant.search '', page: '2', hitsPerPage: '1'
+    p2 = Restaurant.search '', page: '2', hits_per_page: '1'
     expect(p2.size).to eq(1)
     expect(p2.total_count).to eq(Restaurant.raw_search('')['hits'].count)
   end
@@ -1208,29 +1219,29 @@ describe 'Will_paginate' do
   end
 
   it 'paginates' do
-    hits = Movies.search '', hitsPerPage: 2
+    hits = Movies.search '', hits_per_page: 2
     expect(hits.per_page).to eq(2)
     expect(hits.total_pages).to eq(5)
     expect(hits.total_entries).to eq(Movies.raw_search('')['hits'].count)
   end
 
   it 'returns most relevant elements in the first page' do
-    hits = Movies.search '', hitsPerPage: 2
+    hits = Movies.search '', hits_per_page: 2
     raw_hits = Movies.raw_search ''
     expect(hits[0]['id']).to eq(raw_hits['hits'][0]['id'].to_i)
 
-    hits = Movies.search '', hitsPerPage: 2, page: 2
+    hits = Movies.search '', hits_per_page: 2, page: 2
     raw_hits = Movies.raw_search ''
     expect(hits[0]['id']).to eq(raw_hits['hits'][2]['id'].to_i)
   end
 
   it 'does not return error if pagination params are strings' do
-    hits = Movies.search '', hitsPerPage: '5'
+    hits = Movies.search '', hits_per_page: '5'
     expect(hits.per_page).to eq(5)
     expect(hits.total_pages).to eq(2)
     expect(hits.current_page).to eq(1)
 
-    hits = Movies.search '', hitsPerPage: '5', page: '2'
+    hits = Movies.search '', hits_per_page: '5', page: '2'
     expect(hits.current_page).to eq(2)
   end
 end
