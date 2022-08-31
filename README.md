@@ -256,7 +256,7 @@ Book.search('*', sort: ['title:asc'])
 
 #### Deactivate Meilisearch in certain moments
 
-By default HTTP connections to the Meilisearch URL is always active, but sometimes you want to disable the HTTP requests in a particular moment or environment
+By default HTTP connections to the Meilisearch URL is always active, but sometimes you want to disable the HTTP requests in a particular moment or environment.<br>
 you have multiple ways to achieve this.
 
 By adding `active: false` in the configuration initializer:
