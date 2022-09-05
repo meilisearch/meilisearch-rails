@@ -254,6 +254,42 @@ Book.search('*', sort: ['title:asc'])
 
 ### Meilisearch configuration & environment
 
+#### Deactivate Meilisearch in certain moments
+
+By default HTTP connections to the Meilisearch URL is always active, but sometimes you want to disable the HTTP requests in a particular moment or environment.<br>
+you have multiple ways to achieve this.
+
+By adding `active: false` in the configuration initializer:
+
+```ruby
+MeiliSearch::Rails.configuration = {
+  meilisearch_host: 'YourMeilisearchHost',
+  meilisearch_api_key: 'YourMeilisearchAPIKey',
+  active: false
+}
+```
+
+Or you can disable programmatically:
+
+```ruby
+MeiliSearch::Rails.deactivate! # all the following HTTP calls will be dismissed.
+
+# or you can pass a block to it:
+
+MeiliSearch::Rails.deactivate! do
+  # every Meilisearch call here will be dismissed, no error will be raised.
+  # after the block, Meilisearch state will be active. 
+end
+```
+
+You can also activate if you deactivated earlier:
+
+```ruby
+MeiliSearch::Rails.activate!
+```
+
+:warning: These calls are persistent, so prefer to use the method with the block. This way, you will not forget to activate it afterward.
+
 #### Custom index_uid <!-- omit in toc -->
 
 By default, the **index_uid** will be the class name, e.g. `Book`. You can customize the index_uid by using the `index_uid:` option.

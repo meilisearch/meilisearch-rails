@@ -11,7 +11,39 @@ module MeiliSearch
         @_config = configuration
       end
 
+      def deactivate!
+        semaphore.synchronize do
+          @_config.merge!(active: false)
+
+          return unless block_given?
+
+          yield
+
+          @_config.merge!(active: true)
+        end
+      end
+
+      def activate!
+        semaphore.synchronize do
+          @_config.merge!(active: true)
+        end
+      end
+
+      def active?
+        configuration.fetch(:active, true)
+      end
+
+      def black_hole
+        @black_hole ||= NullObject.instance
+      end
+
+      def semaphore
+        @semaphore ||= Mutex.new
+      end
+
       def client
+        return black_hole unless active?
+
         ::MeiliSearch::Client.new(
           configuration[:meilisearch_host] || 'http://localhost:7700',
           configuration[:meilisearch_api_key],
