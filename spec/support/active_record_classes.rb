@@ -124,6 +124,10 @@ ActiveRecord::Schema.define do
       t.string :name
     end
   end
+  create_table :conditionally_enqueued_documents do |t|
+    t.string :name
+    t.boolean :is_public
+  end
   create_table :misconfigured_blocks do |t|
     t.string :name
   end
@@ -471,6 +475,20 @@ unless OLD_RAILS
                 index_uid: safe_index_uid('EnqueuedDocument'),
                 disable_indexing: true) do
       attributes [:name]
+    end
+  end
+
+  class ConditionallyEnqueuedDocument < ActiveRecord::Base
+    include MeiliSearch::Rails
+
+    meilisearch(enqueue: true,
+                index_uid: safe_index_uid('ConditionallyEnqueuedDocument'),
+                if: :should_index?) do
+      attributes %i[name is_public]
+    end
+
+    def should_index?
+      is_public
     end
   end
 end

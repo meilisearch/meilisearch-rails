@@ -759,6 +759,31 @@ unless OLD_RAILS
       end.not_to raise_error
     end
   end
+
+  describe 'ConditionallyEnqueuedDocument' do
+    before { allow(MeiliSearch::Rails::MSJob).to receive(:perform_later).and_return(nil) }
+
+    it 'does not try to enqueue an index job when :if option resolves to false' do
+      doc = ConditionallyEnqueuedDocument.create! name: 'test', is_public: false
+
+      expect(MeiliSearch::Rails::MSJob).not_to have_received(:perform_later).with(doc, 'ms_index!')
+    end
+
+    it 'enqueues an index job when :if option resolves to true' do
+      doc = ConditionallyEnqueuedDocument.create! name: 'test', is_public: true
+
+      expect(MeiliSearch::Rails::MSJob).to have_received(:perform_later).with(doc, 'ms_index!')
+    end
+
+    it 'does enqueue a remove_from_index despite :if option' do
+      doc = ConditionallyEnqueuedDocument.create!(name: 'test', is_public: true)
+      expect(MeiliSearch::Rails::MSJob).to have_received(:perform_later).with(doc, 'ms_index!')
+
+      doc.destroy!
+
+      expect(MeiliSearch::Rails::MSJob).to have_received(:perform_later).with(doc, 'ms_remove_from_index!')
+    end
+  end
 end
 
 describe 'Misconfigured Block' do
