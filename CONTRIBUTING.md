@@ -58,7 +58,7 @@ bundle install
 Optionally, set the credentials of the Meilisearch instance as environment variables. The defaults are:
 
 ```bash
-MEILISEARCH_HOST="http://127.0.0.1:7700"
+MEILISEARCH_URL="http://127.0.0.1:7700"
 MEILISEARCH_API_KEY="masterKey"
 ```
 
