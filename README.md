@@ -95,7 +95,7 @@ NB: you can also download Meilisearch from **Homebrew** or **APT**.
 
 #### Configuration <!-- omit in toc -->
 
-Create a new file `config/initializers/meilisearch.rb` to setup your `MEILISEARCH_URL` and `MEILISEARCH_API_KEY`
+Create a new file `config/initializers/meilisearch.rb` to setup your `MEILISEARCH_HOST` and `MEILISEARCH_API_KEY`
 
 ```ruby
 MeiliSearch::Rails.configuration = {

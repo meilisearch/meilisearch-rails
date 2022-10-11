@@ -45,7 +45,7 @@ RSpec.configure do |c|
   # Remove all indexes setup in this run in local or CI
   c.after(:suite) do
     MeiliSearch::Rails.configuration = {
-      meilisearch_url: ENV.fetch('MEILISEARCH_URL', 'http://127.0.0.1:7700'),
+      meilisearch_url: ENV.fetch('MEILISEARCH_HOST', 'http://127.0.0.1:7700'),
       meilisearch_api_key: ENV.fetch('MEILISEARCH_API_KEY', 'masterKey')
     }
 
