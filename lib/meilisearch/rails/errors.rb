@@ -7,7 +7,7 @@ module MeiliSearch
     class NotConfigured < StandardError
       def message
         'Please configure Meilisearch. Set MeiliSearch::Rails.configuration = ' \
-          "{meilisearch_host: 'YOUR_MEILISEARCH_HOST', meilisearch_api_key: 'YOUR_API_KEY'}"
+          "{meilisearch_url: 'YOUR_MEILISEARCH_URL', meilisearch_api_key: 'YOUR_API_KEY'}"
       end
     end
   end

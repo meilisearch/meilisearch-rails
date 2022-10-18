@@ -589,7 +589,7 @@ end
 describe 'Kaminari' do
   before(:all) do
     require 'kaminari'
-    MeiliSearch::Rails.configuration = { meilisearch_host: ENV.fetch('MEILISEARCH_HOST', 'http://127.0.0.1:7700'),
+    MeiliSearch::Rails.configuration = { meilisearch_url: ENV.fetch('MEILISEARCH_HOST', 'http://127.0.0.1:7700'),
                                          meilisearch_api_key: ENV.fetch('MEILISEARCH_API_KEY', 'masterKey'), pagination_backend: :kaminari }
     Restaurant.clear_index!(true)
 
@@ -646,7 +646,7 @@ describe 'Will_paginate' do
   before(:all) do
     require 'will_paginate'
     MeiliSearch::Rails.configuration = {
-      meilisearch_host: ENV.fetch('MEILISEARCH_HOST', 'http://127.0.0.1:7700'),
+      meilisearch_url: ENV.fetch('MEILISEARCH_HOST', 'http://127.0.0.1:7700'),
       meilisearch_api_key: ENV.fetch('MEILISEARCH_API_KEY', 'masterKey'), pagination_backend: :will_paginate
     }
     Movies.clear_index!(true)
@@ -687,7 +687,7 @@ end
 
 describe 'attributes_to_crop' do
   before(:all) do
-    MeiliSearch::Rails.configuration = { meilisearch_host: ENV.fetch('MEILISEARCH_HOST', 'http://127.0.0.1:7700'),
+    MeiliSearch::Rails.configuration = { meilisearch_url: ENV.fetch('MEILISEARCH_HOST', 'http://127.0.0.1:7700'),
                                          meilisearch_api_key: ENV.fetch('MEILISEARCH_API_KEY', 'masterKey') }
     10.times do
       Restaurant.create(

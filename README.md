@@ -99,7 +99,7 @@ Create a new file `config/initializers/meilisearch.rb` to setup your `MEILISEARC
 
 ```ruby
 MeiliSearch::Rails.configuration = {
-  meilisearch_host: 'YourMeilisearchHost', # example: http://localhost:7700
+  meilisearch_url: 'YourMeilisearchUrl', # example: http://localhost:7700
   meilisearch_api_key: 'YourMeilisearchAPIKey',
 }
 ```
@@ -149,7 +149,7 @@ Specify the `:pagination_backend` in the configuration file:
 
 ```ruby
 MeiliSearch::Rails.configuration = {
-  meilisearch_host: 'YourMeilisearchHost',
+  meilisearch_url: 'YourMeilisearchUrl',
   meilisearch_api_key: 'YourMeilisearchAPIKey',
   pagination_backend: :kaminari #:will_paginate
 }
@@ -185,7 +185,7 @@ your needs, you can change the parameters during configuration:
 
 ```ruby
 MeiliSearch::Rails.configuration = {
-  meilisearch_host: 'YourMeilisearchHost',
+  meilisearch_url: 'YourMeilisearchUrl',
   meilisearch_api_key: 'YourMeilisearchAPIKey',
   timeout: 2,
   max_retries: 1,
@@ -263,7 +263,7 @@ By adding `active: false` in the configuration initializer:
 
 ```ruby
 MeiliSearch::Rails.configuration = {
-  meilisearch_host: 'YourMeilisearchHost',
+  meilisearch_url: 'YourMeilisearchUrl',
   meilisearch_api_key: 'YourMeilisearchAPIKey',
   active: false
 }
@@ -308,7 +308,7 @@ You can suffix the index UID with the current Rails environment by setting it gl
 
 ```ruby
 MeiliSearch::Rails.configuration = {
-  meilisearch_host: 'YourMeilisearchHost',
+  meilisearch_url: 'YourMeilisearchUrl',
   meilisearch_api_key: 'YourMeilisearchAPIKey',
   per_environment: true
 }
