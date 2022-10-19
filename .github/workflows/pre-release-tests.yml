@@ -21,7 +21,7 @@ jobs:
       RAILS_VERSION: ${{ matrix.rails-version }}
     name: integration-tests-against-rc (Rails ${{ matrix.rails-version }})
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
