@@ -59,6 +59,7 @@ module MeiliSearch
         attributesToHighlight
         attributesToCrop
         cropLength
+        pagination
       ].freeze
 
       OPTIONS.each do |option|

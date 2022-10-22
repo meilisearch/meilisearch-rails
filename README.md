@@ -223,6 +223,7 @@ class Book < ApplicationRecord
     attributes_to_highlight ['*']
     attributes_to_crop [:description]
     crop_length 10
+    pagination maxTotalHits: 1000
   end
 end
 ```

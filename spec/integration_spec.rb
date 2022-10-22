@@ -640,6 +640,10 @@ describe 'Kaminari' do
     expect(p2.size).to eq(1)
     expect(p2.total_count).to eq(Restaurant.raw_search('')['hits'].count)
   end
+
+  it 'The number of records that can be retrieved is limited to maxTotalHits' do
+    expect(Restaurant.search('*').size).to eq(5)
+  end
 end
 
 describe 'Will_paginate' do
@@ -660,7 +664,7 @@ describe 'Will_paginate' do
   it 'paginates' do
     hits = Movies.search '', hits_per_page: 2
     expect(hits.per_page).to eq(2)
-    expect(hits.total_pages).to eq(5)
+    expect(hits.total_pages).to eq(3)
     expect(hits.total_entries).to eq(Movies.raw_search('')['hits'].count)
   end
 
@@ -677,11 +681,15 @@ describe 'Will_paginate' do
   it 'does not return error if pagination params are strings' do
     hits = Movies.search '', hits_per_page: '5'
     expect(hits.per_page).to eq(5)
-    expect(hits.total_pages).to eq(2)
+    expect(hits.total_pages).to eq(1)
     expect(hits.current_page).to eq(1)
 
     hits = Movies.search '', hits_per_page: '5', page: '2'
     expect(hits.current_page).to eq(2)
+  end
+
+  it 'The number of records that can be retrieved is limited to maxTotalHits' do
+    expect(Movies.search('*').size).to eq(5)
   end
 end
 
