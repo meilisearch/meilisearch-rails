@@ -23,13 +23,13 @@
 
 **Meilisearch Rails** is the Meilisearch integration for Ruby on Rails developers.
 
-**Meilisearch** is an open-source search engine. [Discover what Meilisearch is!](https://github.com/meilisearch/meilisearch)
+**Meilisearch** is an open-source search engine. [Learn more about Meilisearch.](https://github.com/meilisearch/meilisearch)
 
 ## Table of Contents <!-- omit in toc -->
 
 - [📖 Documentation](#-documentation)
 - [🤖 Compatibility with Meilisearch](#-compatibility-with-meilisearch)
-- [🚀 Getting Started](#-getting-started)
+- [🚀 Getting started](#-getting-started)
 - [Compatibility](#-compatibility)
 - [⚙️ Settings](#️-settings)
 - [🔍 Custom search](#-custom-search)
@@ -91,7 +91,7 @@ docker run -it --rm -p 7700:7700 getmeili/meilisearch:latest meilisearch --maste
 
 NB: you can also download Meilisearch from **Homebrew** or **APT**.
 
-## 🚀 Getting Started
+## 🚀 Getting started
 
 #### Configuration <!-- omit in toc -->
 
