@@ -200,7 +200,14 @@ module MeiliSearch
         settings = {}
         OPTIONS.each do |k|
           v = get_setting(k)
-          settings[k] = v unless v.nil?
+          next if v.nil?
+
+          settings[k] = case v
+                        when Hash
+                          v.transform_keys { |key| key.to_s.camelize(:lower) }
+                        else
+                          v
+                        end
         end
         settings
       end

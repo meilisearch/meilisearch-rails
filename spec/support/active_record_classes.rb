@@ -167,14 +167,14 @@ class Restaurant < ActiveRecord::Base
   meilisearch index_uid: safe_index_uid('Restaurant') do
     attributes_to_crop [:description]
     crop_length 10
-    pagination maxTotalHits: 5
+    pagination max_total_hits: 5
   end
 end
 
 class Movies < ActiveRecord::Base
   include MeiliSearch::Rails
   meilisearch index_uid: safe_index_uid('Movies') do
-    pagination maxTotalHits: 5
+    pagination max_total_hits: 5
   end
 end
 
