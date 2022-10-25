@@ -641,7 +641,7 @@ describe 'Kaminari' do
     expect(p2.total_count).to eq(Restaurant.raw_search('')['hits'].count)
   end
 
-  it 'The number of records that can be retrieved is limited to maxTotalHits' do
+  it 'returns records less than or equal to max_total_hits' do
     expect(Restaurant.search('*').size).to eq(5)
   end
 end
@@ -688,7 +688,7 @@ describe 'Will_paginate' do
     expect(hits.current_page).to eq(2)
   end
 
-  it 'The number of records that can be retrieved is limited to maxTotalHits' do
+  it 'returns records less than or equal to max_total_hits' do
     expect(Movies.search('*').size).to eq(5)
   end
 end
