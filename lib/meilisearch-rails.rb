@@ -62,6 +62,8 @@ module MeiliSearch
         pagination
       ].freeze
 
+      CAMELIZE_OPTIONS = %i[pagination].freeze
+
       OPTIONS.each do |option|
         define_method option do |value|
           instance_variable_set("@#{option}", value)
@@ -202,8 +204,7 @@ module MeiliSearch
           v = get_setting(k)
           next if v.nil?
 
-          settings[k] = case v
-                        when Hash
+          settings[k] = if CAMELIZE_OPTIONS.include?(k) && v.is_a?(Hash)
                           v.transform_keys { |key| key.to_s.camelize(:lower) }
                         else
                           v

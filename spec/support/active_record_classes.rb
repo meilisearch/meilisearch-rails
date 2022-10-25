@@ -149,8 +149,9 @@ class Product < ActiveRecord::Base
 
     synonyms({
                iphone: %w[applephone iBidule],
-               apple: ['pomme'],
-               samsung: ['galaxy']
+               pomme: ['apple'],
+               samsung: ['galaxy'],
+               m_b_p: ['macbookpro']
              })
   end
 

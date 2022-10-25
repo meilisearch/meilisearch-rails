@@ -358,6 +358,7 @@ describe 'An imaginary store' do
     # Apple products
     @iphone = Product.create!(name: 'iphone', href: 'apple', tags: ['awesome', 'poor reception'],
                               description: 'Puts even more features at your fingertips')
+    @macbook = Product.create!(name: 'macbookpro', href: 'apple')
 
     # Unindexed products
     @sekrit = Product.create!(name: 'super sekrit', href: 'amazon', release_date: Time.now + 1.day)
@@ -432,7 +433,7 @@ describe 'An imaginary store' do
 
     it 'narrows the results by searching across multiple fields' do
       results = Product.search('apple iphone')
-      expect(results.size).to eq(1)
+      expect(results.size).to eq(2)
       expect(results).to include(@iphone)
     end
 
@@ -499,6 +500,7 @@ describe 'An imaginary store' do
 
     it 'finds using synonyms' do
       expect(Product.search('pomme').size).to eq(Product.search('apple').size)
+      expect(Product.search('m_b_p').size).to eq(Product.search('macbookpro').size)
     end
   end
 end
