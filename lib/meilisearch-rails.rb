@@ -59,7 +59,10 @@ module MeiliSearch
         attributesToHighlight
         attributesToCrop
         cropLength
+        pagination
       ].freeze
+
+      CAMELIZE_OPTIONS = %i[pagination].freeze
 
       OPTIONS.each do |option|
         define_method option do |value|
@@ -199,7 +202,13 @@ module MeiliSearch
         settings = {}
         OPTIONS.each do |k|
           v = get_setting(k)
-          settings[k] = v unless v.nil?
+          next if v.nil?
+
+          settings[k] = if CAMELIZE_OPTIONS.include?(k) && v.is_a?(Hash)
+                          v.transform_keys { |key| key.to_s.camelize(:lower) }
+                        else
+                          v
+                        end
         end
         settings
       end

@@ -358,6 +358,7 @@ describe 'An imaginary store' do
     # Apple products
     @iphone = Product.create!(name: 'iphone', href: 'apple', tags: ['awesome', 'poor reception'],
                               description: 'Puts even more features at your fingertips')
+    @macbook = Product.create!(name: 'macbookpro', href: 'apple')
 
     # Unindexed products
     @sekrit = Product.create!(name: 'super sekrit', href: 'amazon', release_date: Time.now + 1.day)
@@ -432,7 +433,7 @@ describe 'An imaginary store' do
 
     it 'narrows the results by searching across multiple fields' do
       results = Product.search('apple iphone')
-      expect(results.size).to eq(1)
+      expect(results.size).to eq(2)
       expect(results).to include(@iphone)
     end
 
@@ -499,6 +500,7 @@ describe 'An imaginary store' do
 
     it 'finds using synonyms' do
       expect(Product.search('pomme').size).to eq(Product.search('apple').size)
+      expect(Product.search('m_b_p').size).to eq(Product.search('macbookpro').size)
     end
   end
 end
@@ -640,6 +642,10 @@ describe 'Kaminari' do
     expect(p2.size).to eq(1)
     expect(p2.total_count).to eq(Restaurant.raw_search('')['hits'].count)
   end
+
+  it 'returns records less than or equal to max_total_hits' do
+    expect(Restaurant.search('*').size).to eq(5)
+  end
 end
 
 describe 'Will_paginate' do
@@ -660,7 +666,7 @@ describe 'Will_paginate' do
   it 'paginates' do
     hits = Movies.search '', hits_per_page: 2
     expect(hits.per_page).to eq(2)
-    expect(hits.total_pages).to eq(5)
+    expect(hits.total_pages).to eq(3)
     expect(hits.total_entries).to eq(Movies.raw_search('')['hits'].count)
   end
 
@@ -677,11 +683,15 @@ describe 'Will_paginate' do
   it 'does not return error if pagination params are strings' do
     hits = Movies.search '', hits_per_page: '5'
     expect(hits.per_page).to eq(5)
-    expect(hits.total_pages).to eq(2)
+    expect(hits.total_pages).to eq(1)
     expect(hits.current_page).to eq(1)
 
     hits = Movies.search '', hits_per_page: '5', page: '2'
     expect(hits.current_page).to eq(2)
+  end
+
+  it 'returns records less than or equal to max_total_hits' do
+    expect(Movies.search('*').size).to eq(5)
   end
 end
 
