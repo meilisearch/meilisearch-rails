@@ -2,12 +2,12 @@
 
 First of all, thank you for contributing to Meilisearch! The goal of this document is to provide everything you need to know in order to contribute to Meilisearch and its different integrations.
 
-- [Hacktoberfest](#hacktoberfest-2022)
+- [Hacktoberfest 2022](#hacktoberfest-2022)
 - [Assumptions](#assumptions)
 - [How to Contribute](#how-to-contribute)
 - [Development Workflow](#development-workflow)
 - [Git Guidelines](#git-guidelines)
-- [Release Process (for internal team only)](#release-process-for-internal-team-only)
+- [Release Process (for the internal team only)](#release-process-for-the-internal-team-only)
 
 ## Hacktoberfest 2022
 
@@ -45,12 +45,17 @@ You can set up your local environment natively or using `docker`, check out the 
 
 Example of running all the checks with docker:
 ```bash
-docker-compose run --rm package bash -c "bundle install && bundle exec rspec && bundle exec rubocop"
+docker compose run --rm package bash -c "bundle exec rspec && bundle exec rubocop"
 ```
 
 To install dependencies:
 ```bash
 bundle install
+```
+
+Rebuild the Docker image if you add new dependencies to the Gemfile:
+```bash
+docker compose build --no-cache 
 ```
 
 ### Tests <!-- omit in toc -->

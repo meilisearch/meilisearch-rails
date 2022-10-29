@@ -75,3 +75,5 @@ Gemfile.lock
 
 # Ignore editor files
 .idea
+
+.git/
