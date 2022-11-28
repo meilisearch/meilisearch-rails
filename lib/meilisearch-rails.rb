@@ -615,9 +615,11 @@ module MeiliSearch
           hits_per_page = params[:hitsPerPage].nil? ? params[:hitsPerPage] : params[:hitsPerPage].to_i
           hits_per_page ||= params[:hits_per_page].nil? ? params[:hits_per_page] : params[:hits_per_page].to_i
 
-          %i[page hitsPerPage hits_per_page].each { |param| params.delete(param) }
+          %i[page hitsPerPage hits_per_page].each do |key|
+            params[key] = params[key].to_i if params.key?(key)
+          end
 
-          params[:limit] = 200
+          params[:page] ||= 1
         end
 
         # Returns raw json hits as follows:
@@ -665,11 +667,7 @@ module MeiliSearch
           end
         end.compact
 
-        total_hits = json['hits'].length
-        hits_per_page ||= 20
-        page ||= 1
-
-        res = MeiliSearch::Rails::Pagination.create(results, total_hits, meilisearch_options.merge(page: page, per_page: hits_per_page))
+        res = Pagination.create(results, json['totalHits'], meilisearch_options.merge(page: json['page'], per_page: json['hitsPerPage']))
         res.extend(AdditionalMethods)
         res.send(:ms_init_raw_answer, json)
         res
