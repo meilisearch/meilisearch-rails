@@ -1,24 +1,29 @@
-# README
+## Meilisearch::Rails playground 
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+**Use Docker to setup your environment.**
 
-Things you may want to cover:
+Run all the setup commands in a instance of the container `docker-compose run --rm playground bash` then:
 
-* Ruby version
+- `bundle install`
+- `yarn install`
+- `bundle exec rails db:setup`
 
-* System dependencies
+To start the app use:
 
-* Configuration
+`docker-compose up playground`
 
-* Database creation
+Then check http://0.0.0.0:3000 
 
-* Database initialization
+You can run any other rails-related code in the container:
 
-* How to run the test suite
-
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-* ...
+```bash
+docker-compose run --rm playground bash
+root@49ebb83ca4bf:/home/app# bundle exec rails c
+Running via Spring preloader in process 28
+Loading development environment (Rails 6.1.7)
+irb(main):001:0> Book.count
+   (1.2ms)  SELECT sqlite_version(*)
+   (0.7ms)  SELECT COUNT(*) FROM "books"
+=> 50
+irb(main):002:0>
+```

@@ -2,6 +2,7 @@ version: "3.7"
 
 volumes:
   bundle:
+  play_bundle:
 
 services:
   package:
@@ -17,12 +18,28 @@ services:
       - meilisearch
     links:
       - meilisearch
-    ports:
-      - "3001:3000"
     volumes:
       - bundle:/vendor/bundle
       - ./:/home/package
       # - ../meilisearch-ruby:/home/meilisearch-ruby
+
+  playground:
+    build:
+      context: ./playground
+    environment:
+      - MEILISEARCH_HOST=http://meilisearch:7700
+      - BUNDLE_PATH=/vendor/bundle
+    depends_on:
+      - meilisearch
+    working_dir: /home/app
+    links:
+      - meilisearch
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./playground:/home/app
+      - ./:/home/meilisearch-rails
+      - play_bundle:/vendor/bundle
 
   meilisearch:
     image: getmeili/meilisearch:latest
