@@ -695,6 +695,27 @@ describe 'Will_paginate' do
   end
 end
 
+describe 'with pagination by pagy' do
+  before(:all) do
+    MeiliSearch::Rails.configuration = {
+      meilisearch_url: ENV.fetch('MEILISEARCH_HOST', 'http://127.0.0.1:7700'),
+      meilisearch_api_key: ENV.fetch('MEILISEARCH_API_KEY', 'masterKey'),
+      pagination_backend: :pagy
+    }
+  end
+
+  it 'has meaningful error when pagy is set as the pagination_backend' do
+    logger = double
+    allow(logger).to receive(:warning)
+    allow(::Rails).to receive(:logger).and_return(logger)
+
+    Movies.search('')
+
+    expect(logger).to have_received(:warning)
+      .with('[meilisearch-rails] Remove `pagination_backend: :pagy` from your initializer, `pagy` it is not required for `pagy`')
+  end
+end
+
 describe 'attributes_to_crop' do
   before(:all) do
     MeiliSearch::Rails.configuration = { meilisearch_url: ENV.fetch('MEILISEARCH_HOST', 'http://127.0.0.1:7700'),

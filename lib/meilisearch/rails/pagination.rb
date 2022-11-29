@@ -5,15 +5,28 @@ module MeiliSearch
       autoload :Kaminari, 'meilisearch/rails/pagination/kaminari'
 
       def self.create(results, total_hits, options = {})
-        return results if MeiliSearch::Rails.configuration[:pagination_backend].nil?
+        pagination_backend = MeiliSearch::Rails.configuration[:pagination_backend]
 
-        begin
-          backend = MeiliSearch::Rails.configuration[:pagination_backend].to_s.classify
+        if pagination_backend.nil? || (is_pagy = pagination_backend.to_s == 'pagy')
+          log_pagy_error if is_pagy
 
-          ::MeiliSearch::Rails::Pagination.const_get(backend).create(results, total_hits, options)
-        rescue NameError
-          raise(BadConfiguration, 'Unknown pagination backend')
+          return results
         end
+
+        load_pagination!(pagination_backend, results, total_hits, options)
+      end
+
+      def self.log_pagy_error
+        (::Rails.logger || Logger.new($stdout))
+          .warning('[meilisearch-rails] Remove `pagination_backend: :pagy` from your initializer, `pagy` it is not required for `pagy`')
+      end
+
+      def self.load_pagination!(pagination_backend, results, total_hits, options)
+        ::MeiliSearch::Rails::Pagination
+          .const_get(pagination_backend.to_s.classify)
+          .create(results, total_hits, options)
+      rescue NameError
+        raise(BadConfiguration, 'Invalid `pagination_backend:` configuration, check your initializer.')
       end
     end
   end
