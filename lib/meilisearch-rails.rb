@@ -615,7 +615,7 @@ module MeiliSearch
             params[key.to_s.underscore.to_sym] = params[key].to_i if params.key?(key)
           end
 
-          # It is required to activate the finite pagination in Meilisearch v0.30 (or newer), 
+          # It is required to activate the finite pagination in Meilisearch v0.30 (or newer),
           # to have at least `hits_per_page` defined or `page` in the search request.
           params[:page] ||= 1
         end
