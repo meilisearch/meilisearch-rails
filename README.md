@@ -35,6 +35,8 @@
 - [🔍 Custom search](#-custom-search)
 - [🪛 Options](#-options)
   - [Meilisearch configuration & environment](#meilisearch-configuration--environment)
+  - [Pagination with `kaminari` or `will_paginate`](#backend-pagination-with-kaminari-or-will_paginate-)
+  - [Pagination with `pagy`](#backend-pagination-with-pagy-)
   - [Index configuration](#index-configuration)
     - [Custom attribute definition](#custom-attribute-definition)
     - [Custom primary key](#custom-primary-key)
@@ -138,46 +140,6 @@ hits.each do |hit|
 end
 ```
 
-#### Backend Pagination <!-- omit in toc -->
-
-This gem supports:
-- [kaminari](https://github.com/amatsuda/kaminari)
-- [pagy](https://github.com/ddnexus/pagy)
-- [will_paginate](https://github.com/mislav/will_paginate).
-
-Specify the `:pagination_backend` in the configuration file:
-
-```ruby
-MeiliSearch::Rails.configuration = {
-  meilisearch_url: 'YourMeilisearchUrl',
-  meilisearch_api_key: 'YourMeilisearchAPIKey',
-  pagination_backend: :kaminari #:will_paginate
-}
-```
-
-Then, as soon as you use the `search` method, the returning results will be paginated:
-
-```ruby
-# controller
-@hits = Book.search('harry potter')
-
-# views
-<% @hits.each do |hit| %>
-  <%= hit.title %>
-  <%= hit.author %>
-<% end %>
-
-<%= paginate @hits %> # if using kaminari
-
-<%= will_paginate @hits %> # if using will_paginate
-```
-
-The **number of hits per page defaults to 20**, you can customize it by adding the `hits_per_page` parameter to your search:
-
-```ruby
-Book.search('harry potter', hits_per_page: 10)
-```
-
 #### Extra Configuration <!-- omit in toc -->
 
 Requests made to Meilisearch may timeout and retry. To adapt the behavior to
@@ -254,6 +216,89 @@ Book.search('*', sort: ['title:asc'])
 ## 🪛 Options
 
 ### Meilisearch configuration & environment
+
+### Backend Pagination with `kaminari` or `will_paginate` <!-- omit in toc -->
+
+This gem supports:
+- [kaminari](https://github.com/amatsuda/kaminari)
+- [will_paginate](https://github.com/mislav/will_paginate)
+
+Specify the `:pagination_backend` in the configuration file:
+
+```ruby
+MeiliSearch::Rails.configuration = {
+  meilisearch_url: 'YourMeilisearchUrl',
+  meilisearch_api_key: 'YourMeilisearchAPIKey',
+  pagination_backend: :kaminari # :will_paginate
+}
+```
+
+Then, as soon as you use the `search` method, the returning results will be paginated:
+
+```ruby
+# controller
+@hits = Book.search('harry potter')
+
+# views
+<% @hits.each do |hit| %>
+  <%= hit.title %>
+  <%= hit.author %>
+<% end %>
+
+<%= paginate @hits %> # if using kaminari
+
+<%= will_paginate @hits %> # if using will_paginate
+```
+
+The **number of hits per page defaults to 20**, you can customize it by adding the `hits_per_page` parameter to your search:
+
+```ruby
+Book.search('harry potter', hits_per_page: 10)
+```
+
+### Backend Pagination with `pagy` <!-- omit in toc -->
+
+This gem supports [pagy](https://github.com/ddnexus/pagy) to paginate your search results.
+
+To use `pagy` with your `meilisearch-rails` you need to:
+
+Add the `pagy` gem to your Gemfile.
+Create a new initializer `pagy.rb` with this:
+
+```rb
+# config/initializers/pagy.rb
+
+require 'pagy/extras/meilisearch'
+```
+
+Then in your model you must extend `Pagy::Meilisearch`:
+
+```rb
+class Book < ApplicationRecord
+  include MeiliSearch::Rails
+  extend Pagy::Meilisearch
+
+  meilisearch # ...
+end
+```
+
+And in your controller and view:
+
+```rb
+# controllers/books_controller.rb
+def search
+  hits = Book.pagy_search(params[:query])
+  @pagy, @hits = pagy_meilisearch(hits, items: 25)
+end
+
+
+# views/books/search.html.rb
+<%== pagy_nav(@pagy) %>
+```
+
+:warning: There is no need to set `pagination_backend` in the configuration block `MeiliSearch::Rails.configuration` for `pagy`.
+
+Check [`ddnexus/pagy`](https://ddnexus.github.io/pagy/extras/meilisearch) for more information.
 
 #### Deactivate Meilisearch in certain moments
 
