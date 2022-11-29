@@ -2,24 +2,11 @@
 
 First of all, thank you for contributing to Meilisearch! The goal of this document is to provide everything you need to know in order to contribute to Meilisearch and its different integrations.
 
-- [Hacktoberfest](#hacktoberfest-2022)
 - [Assumptions](#assumptions)
 - [How to Contribute](#how-to-contribute)
 - [Development Workflow](#development-workflow)
 - [Git Guidelines](#git-guidelines)
 - [Release Process (for internal team only)](#release-process-for-internal-team-only)
-
-## Hacktoberfest 2022
-
-It's [Hacktoberfest month](https://hacktoberfest.com)! 🥳
-
-Thanks so much for participating with Meilisearch this year!
-
-1. We will follow the quality standards set by the organizers of Hacktoberfest (see detail on their [website](https://hacktoberfest.com/participation/#spam)). Our reviewers will not consider any PR that doesn’t match that standard.
-2. PRs reviews will take place from Monday to Thursday, during usual working hours, CEST time. If you submit outside of these hours, there’s no need to panic; we will get around to your contribution.
-3. There will be no issue assignment as we don’t want people to ask to be assigned specific issues and never return, discouraging the volunteer contributors from opening a PR to fix this issue. We take the liberty to choose the PR that best fixes the issue, so we encourage you to get to it as soon as possible and do your best!
-
-You can check out the longer, more complete guideline documentation [here](https://github.com/meilisearch/.github/blob/main/Hacktoberfest_2022_contributors_guidelines.md).
 
 ## Assumptions
 
@@ -96,22 +83,25 @@ bundle exec rubocop --auto-gen-config
 
 ### Playground <!-- omit in toc -->
 
-First, you need to run a Meilisearch instance:
+Check the [playground's README](./playground/README.md) for more information.
+
+Use docker to run the playground environment:
 
 ```bash
-docker run -p 7700:7700 getmeili/meilisearch:latest meilisearch --no-analytics
+docker-compose up playground
 ```
 
-To test directly your changes in `meilisearch-rails`, you can run the Rails playground:
+It will use your local `meilisearch-rails` source code as the `meilisearch-rails` gem.
+And will get the same `meilisearch` instance running as the `package` service.
+
+#### Troubleshoot:
+
+If for some reason the app does not start open a `playground` console with `docker-compose run --rm playground bash` and run these administrative commands:
 
 ```bash
-cd playground
+yarn install
 bundle install
-bundle exec rails db:create
-bundle exec rails db:migrate
-bundle exec rails db:seed
-bundle exec rails webpacker:install
-bundle exec rails server
+bundle exec rails db:setup
 ```
  ⚠️ Set your Meilisearch credentials by modifying the file [`playground/config/initializers/meilisearch.rb`](/playground/config/initializers/meilisearch.rb)
 
