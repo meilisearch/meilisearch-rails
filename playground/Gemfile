@@ -58,6 +58,7 @@ gem 'faker', '~> 2.17'
 
 gem 'meilisearch-rails', path: '../'
 gem 'kaminari', '~> 1.2', '>= 1.2.1'
+gem 'bootstrap5-kaminari-views'
 gem 'will_paginate', '~> 3.3'
 gem 'pagy', '~> 5.10'
 

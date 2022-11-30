@@ -1,0 +1,38 @@
+<% content_for :title do %>Meilisearch Rails + Pagy<% end %>
+
+<div class="container-fluid">
+  <h1>Meilisearch Rails + Pagy</h1>
+
+  <div class="well">
+    A results page based on <code>Meilisearch Rails</code> + <code>pagy</code>.
+    <p>To see kaminari pagination go to <%= link_to 'kaminari', books_path %></p>
+
+  </div>
+
+  <div class="container my-4">
+    <div class="row">
+      <div class="col-sm-6 col-sm-offset-3 mx-auto">
+        <%= form_for Song.new, url: songs_path, method: 'get' do |f| %>
+          <%= text_field :song, :q, class: "form-control", value: params.dig(:song, :q) %>
+        <% end %>
+        <p>Press enter to search</p>
+      </div>
+    </div>
+  </div>
+
+  <% if @hits %>
+    <div class="container">
+      <h3 class="text-center"> Results</h3>
+      <%== pagy_bootstrap_nav(@pagy) %>
+
+      <% @hits.each do |hit| %>
+        <div class="card text-dark bg-light mb-3 mt-3 mx-auto" style="width: 28rem;">
+          <div class="card-body">
+            <h5 class="card-title"><%= hit.title %></h5>
+            <h6 class="card-subtitle mb-2 text-muted"><%= hit.author %> by <em style="font-size: 13px"><%= hit.writer %></em></h6>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>
