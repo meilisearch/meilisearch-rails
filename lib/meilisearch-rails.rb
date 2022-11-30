@@ -611,18 +611,15 @@ module MeiliSearch
 
       def ms_search(query, params = {})
         if MeiliSearch::Rails.configuration[:pagination_backend]
-          page = params[:page].nil? ? params[:page] : params[:page].to_i
-          hits_per_page = params[:hitsPerPage].nil? ? params[:hitsPerPage] : params[:hitsPerPage].to_i
-          hits_per_page ||= params[:hits_per_page].nil? ? params[:hits_per_page] : params[:hits_per_page].to_i
+          %i[page hitsPerPage hits_per_page].each do |key|
+            params[key.to_s.underscore.to_sym] = params[key].to_i if params.key?(key)
+          end
 
-          %i[page hitsPerPage hits_per_page].each { |param| params.delete(param) }
-
-          params[:limit] = 200
+          # It is required to activate the finite pagination in Meilisearch v0.30 (or newer),
+          # to have at least `hits_per_page` defined or `page` in the search request.
+          params[:page] ||= 1
         end
 
-        # Returns raw json hits as follows:
-        # {"hits"=>[{"id"=>"13", "href"=>"apple", "name"=>"iphone"}], "offset"=>0, "limit"=>|| 20, "estimatedTotalHits"=>1,
-        #  "processingTimeMs"=>0, "query"=>"iphone"}
         json = ms_raw_search(query, params)
 
         # condition_key gets the primary key of the document; looks for "id" on the options
@@ -665,11 +662,7 @@ module MeiliSearch
           end
         end.compact
 
-        total_hits = json['hits'].length
-        hits_per_page ||= 20
-        page ||= 1
-
-        res = MeiliSearch::Rails::Pagination.create(results, total_hits, meilisearch_options.merge(page: page, per_page: hits_per_page))
+        res = Pagination.create(results, json['totalHits'], meilisearch_options.merge(page: json['page'], per_page: json['hitsPerPage']))
         res.extend(AdditionalMethods)
         res.send(:ms_init_raw_answer, json)
         res
