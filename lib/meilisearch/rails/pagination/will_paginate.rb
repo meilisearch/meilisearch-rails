@@ -11,9 +11,7 @@ module MeiliSearch
       class WillPaginate
         def self.create(results, total_hits, options = {})
           ::WillPaginate::Collection.create(options[:page], options[:per_page], total_hits) do |pager|
-            start = (options[:page] - 1) * options[:per_page]
-            paginated_results = results[start, options[:per_page]]
-            pager.replace paginated_results
+            pager.replace results
           end
         end
       end
