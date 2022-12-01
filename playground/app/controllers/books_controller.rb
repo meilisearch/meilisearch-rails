@@ -3,11 +3,10 @@ class BooksController < ApplicationController
 
   # GET /books or /books.json
   def index
-    @books = Book.all
-  end
+    @q = params['book'] && params['book']['q']
+    @hits = Book.search('') if @q.blank?
 
-  # GET /books/1 or /books/1.json
-  def show
+    @hits = Book.search(@q, { hits_per_page: 2, page: (params['page'] || 1).to_i })
   end
 
   # GET /books/new
@@ -38,7 +37,7 @@ class BooksController < ApplicationController
   def update
     respond_to do |format|
       if @book.update(book_params)
-        format.html { redirect_to @book, notice: "Book was successfully updated." }
+        format.html { redirect_to books_url, notice: "Book was successfully updated." }
         format.json { render :show, status: :ok, location: @book }
       else
         format.html { render :edit, status: :unprocessable_entity }
