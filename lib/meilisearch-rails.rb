@@ -293,7 +293,7 @@ module MeiliSearch
         raise e if raise_on_failure
 
         # log the error
-        (::Rails.logger || Logger.new($stdout)).error("[meilisearch-rails] #{e.message}")
+        (::Rails.logger || Logger.new($stdout)).info("[meilisearch-rails] #{e.message}")
         # return something
         case method.to_s
         when 'search'
