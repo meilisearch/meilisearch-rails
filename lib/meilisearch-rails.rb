@@ -491,8 +491,10 @@ module MeiliSearch
           end
 
           index = SafeIndex.new(ms_index_uid(options), true, options)
-          task = index.update_settings(final_settings)
-          index.wait_for_task(task['taskUid']) if synchronous
+          if meilisearch_settings_changed?(index.settings, final_settings)
+            task = index.update_settings(final_settings)
+            index.wait_for_task(task['taskUid']) if synchronous
+          end
         end
       end
 
