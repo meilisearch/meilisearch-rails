@@ -795,6 +795,8 @@ module MeiliSearch
           if v.is_a?(Array) && prev_v.is_a?(Array)
             # compare array of strings, avoiding symbols VS strings comparison
             return true if (v.map(&:to_s) - prev_v.map(&:to_s)).length > 0
+          elsif v.is_a?(Hash) && prev_v.is_a?(Hash)
+            return meilisearch_settings_changed?(prev_v, v)
           elsif prev_v != v
             return true
           end
