@@ -55,12 +55,11 @@ describe 'Settings change detection' do
     expect(Color.send(:meilisearch_settings_changed?, { 'searchableAttributes' => ['name'] },
                       { 'rankingRules' => ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness', 'hex:asc'] })).to be(true)
     expect(Color.send(:meilisearch_settings_changed?,
-                      { "pagination" => { "maxTotalHits" => 1_000 } },
+                      { 'pagination' => { 'maxTotalHits' => 1_000 } },
                       {
-                        searchableAttributes: [:name, :hex],
-                        pagination: { maxTotalHits: 1_000 },
-                      },
-                     )).to be(true)
+                        searchableAttributes: %i[name hex],
+                        pagination: { maxTotalHits: 1_000 }
+                      })).to be(true)
   end
 
   it 'does not detect settings changes' do
@@ -70,17 +69,14 @@ describe 'Settings change detection' do
     expect(Color.send(:meilisearch_settings_changed?,
                       { 'searchableAttributes' => ['name'], 'rankingRules' => ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness', 'hex:asc'] }, { 'rankingRules' => ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness', 'hex:asc'] })).to be(false)
     expect(Color.send(:meilisearch_settings_changed?,
-                      { "searchableAttributes" => ['hex', 'name'] },
-                      { searchableAttributes: [:name, :hex] },
-                     )).to be(false)
+                      { 'searchableAttributes' => %w[hex name] },
+                      { searchableAttributes: %i[name hex] })).to be(false)
     expect(Color.send(:meilisearch_settings_changed?,
-                      { "searchableAttributes" => ['hex', 'name'] },
-                      { searchableAttributes: [:name, :hex] },
-                     )).to be(false)
+                      { 'searchableAttributes' => %w[hex name] },
+                      { searchableAttributes: %i[name hex] })).to be(false)
     expect(Color.send(:meilisearch_settings_changed?,
-                      { "pagination" => { "maxTotalHits" => 1_000 } },
-                      { pagination: { maxTotalHits: 1_000 } },
-                     )).to be(false)
+                      { 'pagination' => { 'maxTotalHits' => 1_000 } },
+                      { pagination: { maxTotalHits: 1_000 } })).to be(false)
   end
 end
 
