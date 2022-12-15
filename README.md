@@ -199,6 +199,13 @@ All the supported options are described in the [search parameters](https://docs.
 ```ruby
 Book.search('Harry', attributes_to_highlight: ['*'])
 ```
+
+Then it's possible to retrieve the highlighted value by using the `formatted` method available in the object.
+
+```ruby
+harry_book.formatted # => {"id"=>"1", "name"=>"<em>Harry</em> Potter", "description"=>…
+```
+
 👉 Don't forget that `attributes_to_highlight`, `attributes_to_crop`, and
 `crop_length` can be set up in the `meilisearch` block of your model.
 
