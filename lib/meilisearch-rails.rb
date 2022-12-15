@@ -569,6 +569,7 @@ module MeiliSearch
 
       def ms_raw_search(q, params = {})
         index_uid = params.delete(:index) || params.delete('index')
+        is_not_raw = params.delete(:_from_ms_search) || false
 
         unless meilisearch_settings.get_setting(:attributesToHighlight).nil?
           params[:attributesToHighlight] = meilisearch_settings.get_setting(:attributesToHighlight)
@@ -580,6 +581,10 @@ module MeiliSearch
           unless meilisearch_settings.get_setting(:cropLength).nil?
             params[:cropLength] = meilisearch_settings.get_setting(:cropLength)
           end
+        end
+
+        if is_not_raw && params[:attributesToHighlight].nil? && params[:attributesToCrop].nil? && params[:cropLength].nil?
+          params[:attributesToRetrieve] ||= [ms_pk(meilisearch_options).to_s, ms_find_pk].flatten
         end
 
         index = ms_index(index_uid)
@@ -620,31 +625,12 @@ module MeiliSearch
           params[:page] ||= 1
         end
 
+        params[:_from_ms_search] = true
+
         json = ms_raw_search(query, params)
 
-        # condition_key gets the primary key of the document; looks for "id" on the options
-        condition_key = if defined?(::Mongoid::Document) && include?(::Mongoid::Document)
-                          ms_primary_key_method.in
-                        else
-                          ms_primary_key_method
-                        end
-
-        # The condition_key must be a valid column otherwise, the `.where` below will not work
-        # Since we provide a way to customize the primary_key value, `ms_pk(meilisearch_options)` may not
-        # respond with a valid database column. The blocks below prevent that from happening.
-        has_virtual_column_as_pk = if defined?(::Sequel::Model) && self < Sequel::Model
-                                     meilisearch_options[:type].columns.map(&:to_s).exclude?(condition_key.to_s)
-                                   else
-                                     meilisearch_options[:type].columns.map(&:name).map(&:to_s).exclude?(condition_key.to_s)
-                                   end
-
-        condition_key = meilisearch_options[:type].primary_key if has_virtual_column_as_pk
-
-        hit_ids = if has_virtual_column_as_pk
-                    json['hits'].map { |hit| hit[condition_key] }
-                  else
-                    json['hits'].map { |hit| hit[ms_pk(meilisearch_options).to_s] }
-                  end
+        condition_key, valid_key_column = ms_find_pk
+        hit_ids = json['hits'].map { |hit| hit[valid_key_column] }
 
         # meilisearch_options[:type] refers to the Model name (e.g. Product)
         # results_by_id creates a hash with the primaryKey of the document (id) as the key and doc itself as the value
@@ -850,6 +836,29 @@ module MeiliSearch
 
         # We don't know if the attribute has changed, so conservatively assume it has
         true
+      end
+
+      def ms_find_pk
+        # condition_key gets the primary key of the document; looks for "id" on the options
+        condition_key = if defined?(::Mongoid::Document) && include?(::Mongoid::Document)
+                          ms_primary_key_method.in
+                        else
+                          ms_primary_key_method
+                        end
+
+        # The condition_key must be a valid column otherwise, the `.where` below will not work
+        # Since we provide a way to customize the primary_key value, `ms_pk(meilisearch_options)` may not
+        # respond with a valid database column. The blocks below prevent that from happening.
+        has_virtual_column_as_pk = if defined?(::Sequel::Model) && self < Sequel::Model
+                                     meilisearch_options[:type].columns.map(&:to_s).exclude?(condition_key.to_s)
+                                   else
+                                     meilisearch_options[:type].columns.map(&:name).map(&:to_s).exclude?(condition_key.to_s)
+                                   end
+
+        condition_key = meilisearch_options[:type].primary_key if has_virtual_column_as_pk
+        valid_key = has_virtual_column_as_pk ? condition_key : ms_pk(meilisearch_options).to_s
+
+        [condition_key, valid_key]
       end
     end
 
