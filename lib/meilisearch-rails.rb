@@ -658,6 +658,11 @@ module MeiliSearch
           o = results_by_id[hit[ms_pk(meilisearch_options).to_s].to_s]
           if o
             o.formatted = hit['_formatted']
+            o.formatted.map do |k, v|
+              next if o[k] == v
+
+              o.define_singleton_method("formatted_#{k}".to_sym, lambda { v })
+            end
             o
           end
         end.compact

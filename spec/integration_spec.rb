@@ -743,6 +743,30 @@ describe 'attributes_to_crop' do
   end
 end
 
+describe 'highlight attributes' do
+  before do
+    ['Locomotive Bar & Restaurant', 'Rails Bar & Restaurant'].map do |name|
+      Restaurant.create(
+        name: name,
+        kind: Faker::Restaurant.type,
+        description: Faker::Restaurant.description
+      )
+    end
+
+    Restaurant.reindex!(MeiliSearch::Rails::IndexSettings::DEFAULT_BATCH_SIZE, true)
+    sleep 0.5
+  end
+
+  it 'has convenience methods to highlight data' do
+    results = Restaurant.search('bar', { attributes_to_highlight: ['name'] })
+
+    expect(results[0]).to respond_to(:formatted_name)
+    expect(results[0].formatted_name).to eq('Locomotive <em>Bar</em>')
+    expect(results[1]).to respond_to(:formatted_name)
+    expect(results[1].formatted_name).to eq('<em>Bar</em>Restaurant')
+  end
+end
+
 describe 'Disabled' do
   before(:all) do
     DisabledBoolean.index.delete_all_documents!
