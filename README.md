@@ -200,7 +200,7 @@ All the supported options are described in the [search parameters](https://docs.
 Book.search('Harry', attributes_to_highlight: ['*'])
 ```
 
-Then it's possible to retrieve the highlighted value by using the `formatted` method available in the object.
+Then it's possible to retrieve the highlighted or cropped value by using the `formatted` method available in the object.
 
 ```ruby
 harry_book.formatted # => {"id"=>"1", "name"=>"<em>Harry</em> Potter", "description"=>…
