@@ -60,6 +60,10 @@ describe 'Settings change detection' do
                         searchableAttributes: %i[name hex],
                         pagination: { maxTotalHits: 1_000 }
                       })).to be(true)
+    expect(Color.send(:meilisearch_settings_changed?,
+                      { 'rankingRules' => ['words', 'typo'] },
+                      { rankingRules: ['typo', 'words']},
+                     )).to be(true)
   end
 
   it 'does not detect settings changes' do
