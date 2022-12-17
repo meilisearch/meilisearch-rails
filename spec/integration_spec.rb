@@ -61,9 +61,8 @@ describe 'Settings change detection' do
                         pagination: { maxTotalHits: 1_000 }
                       })).to be(true)
     expect(Color.send(:meilisearch_settings_changed?,
-                      { 'rankingRules' => ['words', 'typo'] },
-                      { rankingRules: ['typo', 'words']},
-                     )).to be(true)
+                      { 'rankingRules' => %w[words typo] },
+                      { rankingRules: %w[typo words] })).to be(true)
   end
 
   it 'does not detect settings changes' do

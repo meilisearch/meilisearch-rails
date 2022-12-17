@@ -308,7 +308,7 @@ module MeiliSearch
 
     # these are the class methods added when MeiliSearch is included
     module ClassMethods
-      ORDER_IMPORTANT_SETTINGS = %i[rankingRules]
+      ORDER_IMPORTANT_SETTINGS = %i[rankingRules].freeze
 
       def self.extended(base)
         class << base
@@ -803,8 +803,8 @@ module MeiliSearch
 
             if ORDER_IMPORTANT_SETTINGS.include?(k.to_sym)
               return true if v != prev_v
-            else
-              return true if (v - prev_v).length.positive?
+            elsif (v - prev_v).length.positive?
+              return true
             end
           elsif v.is_a?(Hash) && prev_v.is_a?(Hash)
             return meilisearch_settings_changed?(prev_v, v)
