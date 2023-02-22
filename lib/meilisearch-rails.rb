@@ -682,8 +682,13 @@ module MeiliSearch
         options ||= meilisearch_options
         global_options ||= MeiliSearch::Rails.configuration
 
-        name = options[:index_uid] || model_name.to_s.gsub('::', '_')
-        name = "#{name}_#{::Rails.env}" if global_options[:per_environment]
+        name = options[:index_uid] || model_name.to_s.gsub('::', '_').downcase
+        name = [].tap { |a|
+          a << gloabl_options[:per_app] if global_options[:per_app]
+          a << name
+          a << ::Rails.env if global_options[:per_environment]
+        }.join("_")
+        # name = "#{name}_#{::Rails.env}" if global_options[:per_environment]
 
         name
       end
