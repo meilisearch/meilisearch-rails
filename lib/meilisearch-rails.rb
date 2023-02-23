@@ -684,7 +684,7 @@ module MeiliSearch
 
         name = options[:index_uid] || model_name.to_s.gsub('::', '_').downcase
         name = [].tap { |a|
-          a << gloabl_options[:per_app] if global_options[:per_app]
+          a << global_options[:per_app] if global_options[:per_app]
           a << name
           a << ::Rails.env if global_options[:per_environment]
         }.join("_")
