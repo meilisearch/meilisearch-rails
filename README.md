@@ -185,6 +185,7 @@ class Book < ApplicationRecord
     attributes_to_highlight ['*']
     attributes_to_crop [:description]
     crop_length 10
+    faceting max_values_per_facet: 2000
     pagination max_total_hits: 1000
   end
 end
