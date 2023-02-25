@@ -59,10 +59,11 @@ module MeiliSearch
         attributesToHighlight
         attributesToCrop
         cropLength
+        faceting
         pagination
       ].freeze
 
-      CAMELIZE_OPTIONS = %i[pagination].freeze
+      CAMELIZE_OPTIONS = %i[faceting pagination].freeze
 
       OPTIONS.each do |option|
         define_method option do |value|
