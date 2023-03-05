@@ -682,7 +682,7 @@ module MeiliSearch
         options ||= meilisearch_options
         global_options ||= MeiliSearch::Rails.configuration
 
-        name = options[:index_uid] || model_name.to_s.gsub('::', '_').downcase
+        name = options[:index_uid] || model_name.to_s.gsub('::', '_')
         name = [].tap { |a|
           a << global_options[:index_uid_prefix] if global_options[:index_uid_prefix]
           a << name
