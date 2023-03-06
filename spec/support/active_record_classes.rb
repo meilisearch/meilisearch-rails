@@ -99,6 +99,7 @@ ActiveRecord::Schema.define do
     t.string :author
     t.boolean :premium
     t.boolean :released
+    t.string :genre
   end
   create_table :ebooks do |t|
     t.string :name
@@ -172,10 +173,11 @@ class Restaurant < ActiveRecord::Base
   end
 end
 
-class Movies < ActiveRecord::Base
+class Movie < ActiveRecord::Base
   include MeiliSearch::Rails
-  meilisearch index_uid: safe_index_uid('Movies') do
+  meilisearch index_uid: safe_index_uid('Movie') do
     pagination max_total_hits: 5
+    typo_tolerance enabled: false
   end
 end
 
@@ -408,6 +410,9 @@ class Book < ActiveRecord::Base
 
   meilisearch synchronous: true, index_uid: safe_index_uid('SecuredBook'), sanitize: true do
     searchable_attributes [:name]
+    typo_tolerance min_word_size_for_typos: { one_typo: 5, twoTypos: 8 }
+    filterable_attributes [:genre]
+    faceting max_values_per_facet: 3
 
     add_index safe_index_uid('BookAuthor') do
       searchable_attributes [:author]

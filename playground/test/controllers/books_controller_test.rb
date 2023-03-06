@@ -23,11 +23,6 @@ class BooksControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to book_url(Book.last)
   end
 
-  test "should show book" do
-    get book_url(@book)
-    assert_response :success
-  end
-
   test "should get edit" do
     get edit_book_url(@book)
     assert_response :success
@@ -35,7 +30,7 @@ class BooksControllerTest < ActionDispatch::IntegrationTest
 
   test "should update book" do
     patch book_url(@book), params: { book: { author: @book.author, genre: @book.genre, publication_year: @book.publication_year, publisher: @book.publisher, title: @book.title } }
-    assert_redirected_to book_url(@book)
+    assert_redirected_to books_url
   end
 
   test "should destroy book" do

@@ -60,9 +60,11 @@ module MeiliSearch
         attributesToCrop
         cropLength
         pagination
+        faceting
+        typoTolerance
       ].freeze
 
-      CAMELIZE_OPTIONS = %i[pagination].freeze
+      CAMELIZE_OPTIONS = %i[pagination faceting typoTolerance].freeze
 
       OPTIONS.each do |option|
         define_method option do |value|
@@ -198,6 +200,10 @@ module MeiliSearch
         instance_variable_get("@#{name}")
       end
 
+      def camelize_keys(hash)
+        hash.transform_keys { |key| key.to_s.camelize(:lower) }
+      end
+
       def to_settings
         settings = {}
         OPTIONS.each do |k|
@@ -205,7 +211,12 @@ module MeiliSearch
           next if v.nil?
 
           settings[k] = if CAMELIZE_OPTIONS.include?(k) && v.is_a?(Hash)
-                          v.transform_keys { |key| key.to_s.camelize(:lower) }
+                          v = camelize_keys(v)
+
+                          # camelize keys of nested hashes
+                          v.each do |key, value|
+                            v[key] = camelize_keys(value) if value.is_a?(Hash)
+                          end
                         else
                           v
                         end
