@@ -328,6 +328,10 @@ describe 'Colors' do
 
     expect(facets).to eq([black, blue, green])
   end
+
+  it 'has maxValuesPerFacet set' do
+    expect(Color.ms_index.get_settings.dig('faceting', 'maxValuesPerFacet')).to eq(20)
+  end
 end
 
 describe 'An imaginary store' do
