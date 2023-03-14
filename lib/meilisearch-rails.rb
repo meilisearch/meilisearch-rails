@@ -59,6 +59,7 @@ module MeiliSearch
         attributesToHighlight
         attributesToCrop
         cropLength
+        faceting
         pagination
         faceting
         typoTolerance

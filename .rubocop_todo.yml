@@ -102,6 +102,7 @@ RSpec/DescribeClass:
   Exclude:
     - 'spec/integration_spec.rb'
 
+
 # Offense count: 34
 # Configuration parameters: CountAsOne.
 RSpec/ExampleLength:
