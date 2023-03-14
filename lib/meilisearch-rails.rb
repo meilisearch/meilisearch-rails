@@ -683,13 +683,11 @@ module MeiliSearch
         global_options ||= MeiliSearch::Rails.configuration
 
         name = options[:index_uid] || model_name.to_s.gsub('::', '_').downcase
-        name = [].tap { |a|
+       [].tap do |a|
           a << global_options[:index_uid_prefix] if global_options[:index_uid_prefix]
           a << name
           a << ::Rails.env if global_options[:per_environment]
-        }.join("_")
-
-        name
+       end.join('_')
       end
 
       def ms_must_reindex?(document)
