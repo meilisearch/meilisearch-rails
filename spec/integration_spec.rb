@@ -144,18 +144,6 @@ describe 'Namespaced::Model' do
   end
 end
 
-# describe 'UniqUsers' do
-#   before(:all) do
-#     UniqUser.clear_index!(true)
-#   end
-
-#   it 'should not use the id field' do
-#     UniqUser.create name: 'fooBar'
-#     results = UniqUser.search('foo')
-#     expect(results.size).to eq(1)
-#   end
-# end
-
 describe 'NestedItem' do
   before(:all) do
     NestedItem.clear_index!(true)
@@ -590,6 +578,50 @@ describe 'Book' do
     index = Book.index(safe_index_uid('Book'))
     expect(index.uid).to eq("#{safe_index_uid('Book')}_#{Rails.env}")
   end
+
+  it 'searches with one typo min size' do
+    Book.create! name: 'The Lord of the Rings', author: 'me', premium: false, released: true
+    results = Book.search('Lrod')
+    expect(results.size).to eq(0)
+
+    results = Book.search('Rnigs')
+    expect(results.size).to eq(1)
+  end
+
+  it 'searches with two typo min size' do
+    Book.create! name: 'Dracula', author: 'me', premium: false, released: true
+    results = Book.search('Darclua')
+    expect(results.size).to eq(0)
+
+    Book.create! name: 'Frankenstein', author: 'me', premium: false, released: true
+    results = Book.search('Farnkenstien')
+    expect(results.size).to eq(1)
+  end
+
+  it 'returns facets using max values per facet' do
+    10.times do
+      Book.create! name: Faker::Book.title, author: Faker::Book.author, genre: Faker::Book.genre
+    end
+
+    genres = Book.distinct.pluck(:genre)
+
+    results = Book.search('', { facets: ['genre'] })
+
+    expect(genres.size).to be > 3
+    expect(results.facets_distribution['genre'].size).to eq(3)
+  end
+end
+
+describe 'Movie' do
+  before(:all) do
+    Movie.clear_index!(true)
+  end
+
+  it 'does not return any record with typo' do
+    Movie.create(title: 'Harry Potter')
+
+    expect(Movie.search('harry pottr', matching_strategy: 'all').size).to eq(0)
+  end
 end
 
 describe 'Kaminari' do
@@ -659,43 +691,43 @@ describe 'Will_paginate' do
       meilisearch_url: ENV.fetch('MEILISEARCH_HOST', 'http://127.0.0.1:7700'),
       meilisearch_api_key: ENV.fetch('MEILISEARCH_API_KEY', 'masterKey'), pagination_backend: :will_paginate
     }
-    Movies.clear_index!(true)
+    Movie.clear_index!(true)
 
-    10.times { Movies.create(title: Faker::Movie.title) }
+    10.times { Movie.create(title: Faker::Movie.title) }
 
-    Movies.reindex!(MeiliSearch::Rails::IndexSettings::DEFAULT_BATCH_SIZE, true)
+    Movie.reindex!(MeiliSearch::Rails::IndexSettings::DEFAULT_BATCH_SIZE, true)
     sleep 5
   end
 
   it 'paginates' do
-    hits = Movies.search '', hits_per_page: 2
+    hits = Movie.search '', hits_per_page: 2
     expect(hits.per_page).to eq(2)
     expect(hits.total_pages).to eq(3)
-    expect(hits.total_entries).to eq(Movies.raw_search('')['hits'].count)
+    expect(hits.total_entries).to eq(Movie.raw_search('')['hits'].count)
   end
 
   it 'returns most relevant elements in the first page' do
-    hits = Movies.search '', hits_per_page: 2
-    raw_hits = Movies.raw_search ''
+    hits = Movie.search '', hits_per_page: 2
+    raw_hits = Movie.raw_search ''
     expect(hits[0]['id']).to eq(raw_hits['hits'][0]['id'].to_i)
 
-    hits = Movies.search '', hits_per_page: 2, page: 2
-    raw_hits = Movies.raw_search ''
+    hits = Movie.search '', hits_per_page: 2, page: 2
+    raw_hits = Movie.raw_search ''
     expect(hits[0]['id']).to eq(raw_hits['hits'][2]['id'].to_i)
   end
 
   it 'does not return error if pagination params are strings' do
-    hits = Movies.search '', hits_per_page: '5'
+    hits = Movie.search '', hits_per_page: '5'
     expect(hits.per_page).to eq(5)
     expect(hits.total_pages).to eq(1)
     expect(hits.current_page).to eq(1)
 
-    hits = Movies.search '', hits_per_page: '5', page: '2'
+    hits = Movie.search '', hits_per_page: '5', page: '2'
     expect(hits.current_page).to eq(2)
   end
 
   it 'returns records less than or equal to max_total_hits' do
-    expect(Movies.search('*').size).to eq(5)
+    expect(Movie.search('*').size).to eq(5)
   end
 end
 
@@ -713,7 +745,7 @@ describe 'with pagination by pagy' do
     allow(logger).to receive(:warning)
     allow(::Rails).to receive(:logger).and_return(logger)
 
-    Movies.search('')
+    Movie.search('')
 
     expect(logger).to have_received(:warning)
       .with('[meilisearch-rails] Remove `pagination_backend: :pagy` from your initializer, `pagy` it is not required for `pagy`')
