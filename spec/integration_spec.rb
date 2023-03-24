@@ -610,6 +610,47 @@ describe 'Book' do
     expect(genres.size).to be > 3
     expect(results.facets_distribution['genre'].size).to eq(3)
   end
+
+  context 'with Marshal serialization' do
+    let(:found_books) { Book.search('*') }
+    let(:marshaled_books) { Marshal.dump(found_books) }
+
+    it 'returns all books in the marshaled format' do
+      # Perform the search and marshal the results
+      expect(marshaled_books).to be_present
+
+      # Load the marshaled data and check the content
+      loaded_books = Marshal.load(marshaled_books)
+      expect(loaded_books).to match_array(found_books)
+    end
+  end
+
+  context 'with Rails caching' do
+    let(:memory_store) { ActiveSupport::Cache.lookup_store(:memory_store) }
+    let(:cache) { Rails.cache }
+
+    let(:search_query) { '*' }
+    let(:cache_key) { "book_search:#{search_query}" }
+
+    before do
+      allow(Rails).to receive(:cache).and_return(memory_store)
+      Rails.cache.clear
+    end
+
+    it 'caches the search results' do
+      # Ensure the cache is empty before the test
+      expect(Rails.cache.read(cache_key)).to be_nil
+
+      # Perform the search and cache the results
+      Rails.cache.fetch(cache_key) do
+        Book.search(search_query)
+      end
+
+      # Check if the search result is cached
+      not_cached_books = Book.search(search_query)
+      expect(Rails.cache.read(cache_key)).to match_array(not_cached_books)
+    end
+  end
 end
 
 describe 'Movie' do
