@@ -123,7 +123,8 @@ class Book < ActiveRecord::Base
 end
 ```
 
-⚠️ Note that even if you want to use all the default options, you must declare an empty `meilisearch` block in your model.
+⚠️ Note that even if you want to use all the default options, you must declare an empty `meilisearch` block in your model.  
+⚠️ As soon as you configure your model, `meilisearch-rails` will keep your database data in sync with your Meilisearch instance using the ActiveRecord callbacks automatically. 
 
 #### Basic Backend Search <!-- omit in toc -->
 
