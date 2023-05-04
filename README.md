@@ -108,6 +108,8 @@ MeiliSearch::Rails.configuration = {
 
 The gem is compatible with [ActiveRecord](https://github.com/rails/rails/tree/master/activerecord), [Mongoid](https://github.com/mongoid/mongoid) and [Sequel](https://github.com/jeremyevans/sequel).
 
+⚠️ Note that even if you want to use all the default options, you must declare an empty `meilisearch` block in your model.  
+
 #### Add documents <!-- omit in toc -->
 
 The following code will create a `Book` index and add search capabilities to your `Book` model.
@@ -123,8 +125,9 @@ class Book < ActiveRecord::Base
 end
 ```
 
-⚠️ Note that even if you want to use all the default options, you must declare an empty `meilisearch` block in your model.  
-⚠️ As soon as you configure your model, `meilisearch-rails` will keep your database data in sync with your Meilisearch instance using the ActiveRecord callbacks automatically. 
+#### Automatic indexing
+
+As soon as you configure your model as mentioned above, `meilisearch-rails` will keep your database table data in sync with your Meilisearch instance using the `ActiveRecord` callbacks automatically.
 
 #### Basic Backend Search <!-- omit in toc -->
 
