@@ -10,7 +10,7 @@
   <a href="https://discord.meilisearch.com">Discord</a> |
   <a href="https://roadmap.meilisearch.com/tabs/1-under-consideration">Roadmap</a> |
   <a href="https://www.meilisearch.com">Website</a> |
-  <a href="https://docs.meilisearch.com/faq">FAQ</a>
+  <a href="https://www.meilisearch.com/docs/faq">FAQ</a>
 </h4>
 
 <p align="center">
@@ -58,7 +58,7 @@
 
 The whole usage of this gem is detailed in this README.
 
-To learn more about Meilisearch, check out our [Documentation](https://docs.meilisearch.com/learn/tutorials/getting_started.html) or our [API References](https://docs.meilisearch.com/reference/api/).
+To learn more about Meilisearch, check out our [Documentation](https://www.meilisearch.com/docs/learn/tutorials/getting_started.html) or our [API References](https://www.meilisearch.com/docs/reference/api/).
 
 ## 🤖 Compatibility with Meilisearch
 
@@ -82,7 +82,7 @@ gem 'meilisearch-rails'
 
 ### Run Meilisearch <!-- omit in toc -->
 
-There are many easy ways to [download and run a Meilisearch instance](https://docs.meilisearch.com/reference/features/installation.html#download-and-launch).
+There are many easy ways to [download and run a Meilisearch instance](https://www.meilisearch.com/docs/reference/features/installation.html#download-and-launch).
 
 For example, if you use Docker:
 
@@ -195,11 +195,11 @@ class Book < ApplicationRecord
 end
 ```
 
-Check the dedicated section of the documentation, for more information on the [settings](https://docs.meilisearch.com/reference/features/settings.html).
+Check the dedicated section of the documentation, for more information on the [settings](https://www.meilisearch.com/docs/reference/api/settings#settings_parameters).
 
 ## 🔍 Custom search
 
-All the supported options are described in the [search parameters](https://docs.meilisearch.com/reference/features/search_parameters.html) section of the documentation.
+All the supported options are described in the [search parameters](https://www.meilisearch.com/docs/reference/api/search#search-parameters) section of the documentation.
 
 ```ruby
 Book.search('Harry', attributes_to_highlight: ['*'])
