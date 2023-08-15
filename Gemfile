@@ -13,7 +13,7 @@ group :development do
 end
 
 group :test do
-  rails_version = ENV['RAILS_VERSION'] || '5.2'
+  rails_version = ENV['RAILS_VERSION'] || '6.1'
   sequel_version = ENV['SEQUEL_VERSION'] ? "~> #{ENV['SEQUEL_VERSION']}" : '>= 4.0'
 
   gem 'active_model_serializers'

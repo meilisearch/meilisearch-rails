@@ -75,7 +75,7 @@ This package guarantees compatibility with [version v1.x of Meilisearch](https:/
 
 ## 🔧 Installation <!-- omit in toc -->
 
-This package requires Ruby version 2.6.0 or later and Rails 5.2 or later.
+This package requires Ruby version 2.7.0 or later and Rails 6.1 or later. It may work in older versions but it is not officially supported.
 
 With `gem` in command line:
 ```bash
