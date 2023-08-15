@@ -1,11 +1,14 @@
 ENV['RAILS_ENV'] ||= 'test'
 
 require 'bundler/setup'
-
 require 'simplecov'
+require 'codecov'
+
 SimpleCov.start do
   add_filter %r{^/spec/}
   minimum_coverage 86.70
+
+  formatter SimpleCov::Formatter::Codecov if ENV['CI']
 end
 
 require 'timeout'
