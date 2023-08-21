@@ -49,19 +49,19 @@ end
 describe 'Settings change detection' do
   it 'detects settings changes' do
     expect(Color.send(:meilisearch_settings_changed?, nil, {})).to be(true)
-    expect(Color.send(:meilisearch_settings_changed?, {}, { 'searchableAttributes' => ['name'] })).to be(true)
-    expect(Color.send(:meilisearch_settings_changed?, { 'searchableAttributes' => ['name'] },
-                      { 'searchableAttributes' => %w[name hex] })).to be(true)
-    expect(Color.send(:meilisearch_settings_changed?, { 'searchableAttributes' => ['name'] },
-                      { 'rankingRules' => ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness', 'hex:asc'] })).to be(true)
+    expect(Color.send(:meilisearch_settings_changed?, {}, { 'searchable_attributes' => ['name'] })).to be(true)
+    expect(Color.send(:meilisearch_settings_changed?, { 'searchable_attributes' => ['name'] },
+                      { 'searchable_attributes' => %w[name hex] })).to be(true)
+    expect(Color.send(:meilisearch_settings_changed?, { 'searchable_attributes' => ['name'] },
+                      { 'ranking_rules' => ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness', 'hex:asc'] })).to be(true)
   end
 
   it 'does not detect settings changes' do
     expect(Color.send(:meilisearch_settings_changed?, {}, {})).to be(false)
-    expect(Color.send(:meilisearch_settings_changed?, { 'searchableAttributes' => ['name'] },
-                      { searchableAttributes: ['name'] })).to be(false)
+    expect(Color.send(:meilisearch_settings_changed?, { 'searchable_attributes' => ['name'] },
+                      { searchable_attributes: ['name'] })).to be(false)
     expect(Color.send(:meilisearch_settings_changed?,
-                      { 'searchableAttributes' => ['name'], 'rankingRules' => ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness', 'hex:asc'] }, { 'rankingRules' => ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness', 'hex:asc'] })).to be(false)
+                      { 'searchable_attributes' => ['name'], 'ranking_rules' => ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness', 'hex:asc'] }, { 'ranking_rules' => ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness', 'hex:asc'] })).to be(false)
   end
 end
 
@@ -536,7 +536,7 @@ describe 'Book' do
   it 'sanitizes attributes' do
     _hack = Book.create! name: '"><img src=x onerror=alert(1)> hack0r',
                          author: '<script type="text/javascript">alert(1)</script>', premium: true, released: true
-    b = Book.raw_search('hack', { attributesToHighlight: ['*'] })
+    b = Book.raw_search('hack', { attributes_to_highlight: ['*'] })
     expect(b['hits'].length).to eq(1)
     begin
       expect(b['hits'][0]['name']).to eq('"> hack0r').and_raise(StandardError)
