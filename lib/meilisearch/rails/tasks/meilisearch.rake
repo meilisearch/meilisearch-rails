@@ -19,4 +19,11 @@ namespace :meilisearch do
 
     MeiliSearch::Rails::Utilities.clear_all_indexes
   end
+
+  desc 'Create initializer file'
+  task install: :environment do
+    puts 'Creating initializer file'
+
+    copy_file "#{__dir__}/../templates/initializer.rb", 'config/initializers/meilisearch.rb'
+  end
 end
