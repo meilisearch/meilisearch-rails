@@ -110,9 +110,15 @@ Create a new file `config/initializers/meilisearch.rb` to setup your `MEILISEARC
 
 ```ruby
 MeiliSearch::Rails.configuration = {
-  meilisearch_url: 'YourMeilisearchUrl', # example: http://localhost:7700
-  meilisearch_api_key: 'YourMeilisearchAPIKey',
+  meilisearch_url: ENV.fetch('MEILISEARCH_HOST', 'http://localhost:7700'),
+  meilisearch_api_key: ENV.fetch('MEILISEARCH_API_KEY', 'YourMeilisearchAPIKey')
 }
+```
+
+Or you can run a rake task to create the initializer file for you:
+
+```bash
+bin/rails meilisearch:install
 ```
 
 The gem is compatible with [ActiveRecord](https://github.com/rails/rails/tree/master/activerecord), [Mongoid](https://github.com/mongoid/mongoid) and [Sequel](https://github.com/jeremyevans/sequel).
