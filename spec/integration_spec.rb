@@ -61,7 +61,7 @@ describe 'Settings change detection' do
     expect(Color.send(:meilisearch_settings_changed?, { 'searchable_attributes' => ['name'] },
                       { searchable_attributes: ['name'] })).to be(false)
     expect(Color.send(:meilisearch_settings_changed?,
-                      { 'searchable_attributes' => ['name'], 'ranking_rules' => ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness', 'hex:asc'] }, 
+                      { 'searchable_attributes' => ['name'], 'ranking_rules' => ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness', 'hex:asc'] },
                       { 'ranking_rules' => ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness', 'hex:asc'] })).to be(false)
   end
 end
