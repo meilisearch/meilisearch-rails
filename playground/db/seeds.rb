@@ -22,10 +22,12 @@ Song.destroy_all
   )
 end
 
+30.times { Author.create(name: Faker::Music::Hiphop.artist) }
+
 50.times do
   Song.create(
     title: Faker::Music::PearlJam.song,
-    author: Faker::Music::Hiphop.artist,
+    author: Author.all.sample,
     lyrics: Faker::Lorem.paragraphs(number: 10).join("\n"),
     writer: Faker::Music::PearlJam.musician,
   )

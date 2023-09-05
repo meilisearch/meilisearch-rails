@@ -4,7 +4,7 @@ class SongsController < ApplicationController
   def index
     @q = params['song'] && params['song']['q']
 
-    hits         = Song.pagy_search(@q)
-    @pagy, @hits = pagy_meilisearch(hits, items: 5)
+    hits         = Song.includes(:author).pagy_search(@q, limit: 100)
+    @pagy, @hits = pagy_meilisearch(hits, items: 1)
   end
 end
