@@ -48,23 +48,23 @@ module MeiliSearch
 
       # Meilisearch settings
       OPTIONS = %i[
-        searchableAttributes
-        filterableAttributes
-        sortableAttributes
-        displayedAttributes
-        distinctAttribute
+        searchable_attributes
+        filterable_attributes
+        sortable_attributes
+        displayed_attributes
+        distinct_attribute
         synonyms
-        stopWords
-        rankingRules
-        attributesToHighlight
-        attributesToCrop
-        cropLength
+        stop_words
+        ranking_rules
+        attributes_to_highlight
+        attributes_to_crop
+        crop_length
         pagination
         faceting
-        typoTolerance
+        typo_tolerance
       ].freeze
 
-      CAMELIZE_OPTIONS = %i[pagination faceting typoTolerance].freeze
+      CAMELIZE_OPTIONS = %i[pagination faceting typo_tolerance].freeze
 
       OPTIONS.each do |option|
         define_method option do |value|
@@ -265,9 +265,9 @@ module MeiliSearch
       ::MeiliSearch::Index.instance_methods(false).each do |m|
         define_method(m) do |*args, &block|
           if m == :update_settings
-            args[0].delete(:attributesToHighlight) if args[0][:attributesToHighlight]
-            args[0].delete(:attributesToCrop) if args[0][:attributesToCrop]
-            args[0].delete(:cropLength) if args[0][:cropLength]
+            args[0].delete(:attributes_to_highlight) if args[0][:attributes_to_highlight]
+            args[0].delete(:attributes_to_crop) if args[0][:attributes_to_crop]
+            args[0].delete(:crop_length) if args[0][:crop_length]
           end
 
           SafeIndex.log_or_throw(m, @raise_on_failure) do
@@ -581,15 +581,15 @@ module MeiliSearch
       def ms_raw_search(q, params = {})
         index_uid = params.delete(:index) || params.delete('index')
 
-        unless meilisearch_settings.get_setting(:attributesToHighlight).nil?
-          params[:attributesToHighlight] = meilisearch_settings.get_setting(:attributesToHighlight)
+        unless meilisearch_settings.get_setting(:attributes_to_highlight).nil?
+          params[:attributes_to_highlight] = meilisearch_settings.get_setting(:attributes_to_highlight)
         end
 
-        unless meilisearch_settings.get_setting(:attributesToCrop).nil?
-          params[:attributesToCrop] = meilisearch_settings.get_setting(:attributesToCrop)
+        unless meilisearch_settings.get_setting(:attributes_to_crop).nil?
+          params[:attributes_to_crop] = meilisearch_settings.get_setting(:attributes_to_crop)
 
-          unless meilisearch_settings.get_setting(:cropLength).nil?
-            params[:cropLength] = meilisearch_settings.get_setting(:cropLength)
+          unless meilisearch_settings.get_setting(:crop_length).nil?
+            params[:crop_length] = meilisearch_settings.get_setting(:crop_length)
           end
         end
 
