@@ -531,6 +531,18 @@ describe 'Book' do
     Book.index(safe_index_uid('Book')).delete_all_documents
   end
 
+  it 'returns array of tasks on #ms_index!' do
+    moby_dick = Book.create! name: 'Moby Dick', author: 'Herman Melville', premium: false, released: true
+
+    tasks = moby_dick.ms_index!
+
+    expect(tasks).to contain_exactly(
+      a_hash_including('uid'),
+      a_hash_including('taskUid'),
+      a_hash_including('taskUid')
+    )
+  end
+
   it 'indexes the book in 2 indexes of 3' do
     steve_jobs = Book.create! name: 'Steve Jobs', author: 'Walter Isaacson', premium: true, released: true
     results = Book.search('steve')
@@ -674,6 +686,14 @@ end
 describe 'Movie' do
   before(:all) do
     Movie.clear_index!(true)
+  end
+
+  it 'returns task hash on #ms_index!' do
+    movie = Movie.create(title: 'Harry Potter')
+
+    task = movie.ms_index!
+
+    expect(task).to have_key("taskUid")
   end
 
   it 'does not return any record with typo' do
@@ -882,6 +902,12 @@ unless OLD_RAILS
   end
 
   describe 'DisabledEnqueuedDocument' do
+    it 'returns nil #ms_index!' do
+      doc = DisabledEnqueuedDocument.create! name: 'test'
+
+      expect(doc.ms_index!).to be_nil
+    end
+
     it 'does not try to enqueue a job' do
       expect do
         DisabledEnqueuedDocument.create! name: 'test'
@@ -891,6 +917,7 @@ unless OLD_RAILS
 
   describe 'ConditionallyEnqueuedDocument' do
     before { allow(MeiliSearch::Rails::MSJob).to receive(:perform_later).and_return(nil) }
+
 
     it 'does not try to enqueue an index job when :if option resolves to false' do
       doc = ConditionallyEnqueuedDocument.create! name: 'test', is_public: false
