@@ -526,7 +526,7 @@ module MeiliSearch
       def ms_index!(document, synchronous = false)
         return if ms_without_auto_index_scope
 
-        ms_configurations.each do |options, settings|
+        tasks = ms_configurations.map do |options, settings|
           next if ms_indexing_disabled?(options)
 
           primary_key = ms_primary_key_of(document, options)
@@ -551,7 +551,12 @@ module MeiliSearch
             end
           end
         end
-        nil
+
+        if tasks.count <= 1
+          tasks.first
+        else
+          tasks
+        end
       end
 
       def ms_remove_from_index!(document, synchronous = false)
