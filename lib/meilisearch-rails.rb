@@ -249,6 +249,7 @@ module MeiliSearch
       # lazy load the ActiveJob class to ensure the
       # queue is initialized before using it
       autoload :MSJob, 'meilisearch/rails/ms_job'
+      autoload :MSCleanUpJob, 'meilisearch/rails/ms_clean_up_job'
     end
 
     # this class wraps an MeiliSearch::Index document ensuring all raised exceptions
