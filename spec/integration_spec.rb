@@ -628,6 +628,34 @@ describe 'Book' do
     expect(results.size).to eq(1)
   end
 
+  describe '#ms_entries' do
+    fit 'returns all 3 indexes for a public book' do
+      book = Book.create!(
+        name: 'Frankenstein', author: 'Mary Shelley',
+        premium: false, released: true
+      )
+
+      expect(book.ms_entries).to contain_exactly(
+        a_hash_including("index_uid" => safe_index_uid('SecuredBook')),
+        a_hash_including("index_uid" => safe_index_uid('BookAuthor')),
+        a_hash_including("index_uid" => safe_index_uid('Book')),
+      )
+    end
+
+    fit 'returns all 3 indexes for a non-public book' do
+      book = Book.create!(
+        name: 'Frankenstein', author: 'Mary Shelley',
+        premium: false, released: false
+      )
+
+      expect(book.ms_entries).to contain_exactly(
+        a_hash_including("index_uid" => safe_index_uid('SecuredBook')),
+        a_hash_including("index_uid" => safe_index_uid('BookAuthor')),
+        a_hash_including("index_uid" => safe_index_uid('Book')),
+      )
+    end
+  end
+
   it 'returns facets using max values per facet' do
     10.times do
       Book.create! name: Faker::Book.title, author: Faker::Book.author, genre: Faker::Book.genre
@@ -1033,6 +1061,19 @@ describe 'Animals' do
     dog_index = Dog.index.instance_variable_get('@index').uid
 
     expect(cat_index).to eq(dog_index)
+  end
+
+  describe '#ms_entries' do
+    fit 'returns the correct entry for each animal' do
+      toby_dog = Dog.create!(name: 'Toby the Dog')
+      taby_cat = Cat.create!(name: 'Taby the Cat')
+
+      expect(toby_dog.ms_entries).to contain_exactly(
+        a_hash_including('primary_key' => 'dog_1'))
+
+      expect(taby_cat.ms_entries).to contain_exactly(
+        a_hash_including('primary_key' => 'cat_1'))
+    end
   end
 end
 
