@@ -554,6 +554,19 @@ module MeiliSearch
         end.compact
       end
 
+      def ms_entries_for(document:, synchronous:)
+        primary_key = ms_primary_key_of(document)
+        raise ArgumentError, 'Cannot index a record without a primary key' if primary_key.blank?
+
+        ms_configurations.filter_map do |options, settings|
+          {
+            synchronous: synchronous || options[:synchronous],
+            index_uid: options[:index_uid],
+            primary_key: primary_key
+          }.with_indifferent_access unless ms_indexing_disabled?(options)
+        end
+      end
+
       def ms_remove_from_index!(document, synchronous = false)
         return if ms_without_auto_index_scope
 
@@ -929,6 +942,10 @@ module MeiliSearch
 
       def ms_synchronous?
         @ms_synchronous
+      end
+
+      def ms_entries(synchronous = false)
+        self.class.ms_entries_for(document: self, synchronous: synchronous || ms_synchronous?)
       end
 
       private
