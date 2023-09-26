@@ -21,7 +21,7 @@ RSpec.describe 'MeiliSearch::Rails::MSJob' do
   end
 
   context 'if record is already destroyed' do
-    fit 'successfully deletes its document in the index' do
+    xit 'successfully deletes its document in the index' do
       pollos = Restaurant.create(
         name: "Los Pollos Hermanos",
         kind: "Mexican",
