@@ -374,7 +374,11 @@ module MeiliSearch
 
           proc = if options[:enqueue] == true
                    proc do |record, remove|
-                     MSJob.perform_later(record, remove ? 'ms_remove_from_index!' : 'ms_index!')
+                     if remove
+                       MSCleanUpJob.perform_later(record.ms_entries)
+                     else
+                       MSJob.perform_later(record, 'ms_index!')
+                     end
                    end
                  elsif options[:enqueue].respond_to?(:call)
                    options[:enqueue]
@@ -446,7 +450,7 @@ module MeiliSearch
               end
             end
           elsif respond_to?(:after_destroy)
-            after_destroy { |searchable| searchable.ms_enqueue_remove_from_index!(ms_synchronous?) }
+            after_destroy_commit { |searchable| searchable.ms_enqueue_remove_from_index!(ms_synchronous?) }
           end
         end
 
