@@ -365,7 +365,6 @@ describe 'An imaginary store' do
     @products_in_database = Product.all
 
     Product.reindex!(MeiliSearch::Rails::IndexSettings::DEFAULT_BATCH_SIZE, true)
-    sleep 5
   end
 
   it 'is not synchronous' do
@@ -682,7 +681,6 @@ describe 'Kaminari' do
     end
 
     Restaurant.reindex!(MeiliSearch::Rails::IndexSettings::DEFAULT_BATCH_SIZE, true)
-    sleep 5
   end
 
   it 'paginates' do
@@ -738,7 +736,6 @@ describe 'Will_paginate' do
     10.times { Movie.create(title: Faker::Movie.title) }
 
     Movie.reindex!(MeiliSearch::Rails::IndexSettings::DEFAULT_BATCH_SIZE, true)
-    sleep 5
   end
 
   it 'paginates' do
@@ -807,7 +804,6 @@ describe 'attributes_to_crop' do
     end
 
     Restaurant.reindex!(MeiliSearch::Rails::IndexSettings::DEFAULT_BATCH_SIZE, true)
-    sleep 5
   end
 
   it 'includes _formatted object' do
