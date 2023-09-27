@@ -20,7 +20,7 @@ RSpec.describe 'MeiliSearch::Rails::MSCleanUpJob' do
     end
   end
 
-  fit 'removes record from all indexes' do
+  it 'removes record from all indexes' do
     indexes.each(&:delete_all_documents)
 
     record
@@ -37,21 +37,22 @@ RSpec.describe 'MeiliSearch::Rails::MSCleanUpJob' do
     end
   end
 
-  context 'if record is already destroyed' do
-    subject!(:record) do
+  context 'when record is already destroyed' do
+    subject(:record) do
       Restaurant.create(
         name: "Los Pollos Hermanos",
         kind: "Mexican",
         description: "Mexican chicken restaurant in Albuquerque, New Mexico.")
     end
 
-    fit 'successfully deletes its document in the index' do
+    it 'successfully deletes its document in the index' do
+      record
       Restaurant.index.wait_for_task(Restaurant.index.tasks['results'].first['uid'])
       expect(Restaurant.index.search("Pollos")['hits']).to be_one
 
       record.delete # does not run callbacks, unlike #destroy
 
-      job.perform_later(record_entries)
+      job.perform_later(record.ms_entries(true))
       expect { perform_enqueued_jobs }.not_to raise_error
 
       expect(Restaurant.index.search("Pollos")['hits']).to be_empty
