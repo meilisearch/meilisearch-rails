@@ -448,6 +448,9 @@ module MeiliSearch
             after_destroy { |searchable| searchable.ms_enqueue_remove_from_index!(ms_synchronous?) }
           end
         end
+
+
+        warn_searchable_missing_attributes
       end
 
       def ms_without_auto_index(&block)
@@ -861,6 +864,17 @@ module MeiliSearch
 
         # We don't know if the attribute has changed, so conservatively assume it has
         true
+      end
+
+      def warn_searchable_missing_attributes
+        if (searchables = meilisearch_settings.get_setting(:searchable_attributes)) &&
+          (attrs = meilisearch_settings.get_setting(:attributes)&.keys)
+          (searchables.map(&:to_s) - attrs.map(&:to_s)).each do |missing_searchable|
+            MeiliSearch::Rails.logger.warn(
+              "[meilisearch-rails] #{name}##{missing_searchable} declared in searchable_attributes but not in attributes. Please add it to attributes if it should be searchable."
+            )
+          end
+        end
       end
     end
 
