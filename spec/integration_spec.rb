@@ -782,7 +782,7 @@ describe 'with pagination by pagy' do
   it 'has meaningful error when pagy is set as the pagination_backend' do
     logger = double
     allow(logger).to receive(:warning)
-    allow(::Rails).to receive(:logger).and_return(logger)
+    allow(MeiliSearch::Rails).to receive(:logger).and_return(logger)
 
     Movie.search('')
 

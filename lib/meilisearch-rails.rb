@@ -39,6 +39,10 @@ module MeiliSearch
           include InstanceMethods
         end
       end
+
+      def logger
+        @logger ||= (::Rails.logger || Logger.new($stdout))
+      end
     end
 
     class IndexSettings
@@ -304,7 +308,7 @@ module MeiliSearch
         raise e if raise_on_failure
 
         # log the error
-        (::Rails.logger || Logger.new($stdout)).info("[meilisearch-rails] #{e.message}")
+        MeiliSearch::Rails.logger.info("[meilisearch-rails] #{e.message}")
         # return something
         case method.to_s
         when 'search'
