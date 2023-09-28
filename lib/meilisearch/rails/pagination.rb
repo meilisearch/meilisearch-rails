@@ -18,7 +18,7 @@ module MeiliSearch
 
       def self.log_pagy_error
         MeiliSearch::Rails.logger
-          .warning('[meilisearch-rails] Remove `pagination_backend: :pagy` from your initializer, `pagy` it is not required for `pagy`')
+          .warn('[meilisearch-rails] Remove `pagination_backend: :pagy` from your initializer, `pagy` it is not required for `pagy`')
       end
 
       def self.load_pagination!(pagination_backend, results, total_hits, options)
