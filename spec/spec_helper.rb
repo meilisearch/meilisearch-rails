@@ -56,7 +56,7 @@ RSpec.configure do |c|
     }
 
     safe_index_list.each do |index|
-      MeiliSearch::Rails.client.delete_index(index.uid)
+      MeiliSearch::Rails.client.delete_index(index)
     end
   end
 end
