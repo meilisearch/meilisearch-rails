@@ -472,7 +472,7 @@ unless OLD_RAILS
       EnqueuedDocument.first
     end
 
-    meilisearch enqueue: proc { |record| raise "enqueued #{record.id}" },
+    meilisearch enqueue: proc { |record| raise "enqueued #{record.name}" },
                 index_uid: safe_index_uid('EnqueuedDocument') do
       attributes [:name]
     end

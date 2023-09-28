@@ -525,7 +525,7 @@ describe 'MongoDocument' do
 end
 
 describe 'Book' do
-  before(:all) do
+  before(:each) do
     Book.clear_index!(true)
     Book.index(safe_index_uid('BookAuthor')).delete_all_documents
     Book.index(safe_index_uid('Book')).delete_all_documents
@@ -792,7 +792,12 @@ describe 'with pagination by pagy' do
   before(:all) { MeiliSearch::Rails.configuration[:pagination_backend] = :pagy }
   after(:all) { MeiliSearch::Rails.configuration[:pagination_backend] = nil }
 
+  before(:all) { MeiliSearch::Rails.configuration[:per_environment] = false }
+  after(:all) { MeiliSearch::Rails.configuration[:per_environment] = true }
+
   it 'has meaningful error when pagy is set as the pagination_backend' do
+    Movie.create(title: "Harry Potter").index!(true)
+
     logger = double
     allow(logger).to receive(:warning)
     allow(MeiliSearch::Rails).to receive(:logger).and_return(logger)
@@ -859,8 +864,8 @@ unless OLD_RAILS
   describe 'EnqueuedDocument' do
     it 'enqueues a job' do
       expect do
-        EnqueuedDocument.create! name: 'test'
-      end.to raise_error('enqueued 1')
+        EnqueuedDocument.create! name: 'hellraiser'
+      end.to raise_error('enqueued hellraiser')
     end
 
     it 'does not enqueue a job inside no index block' do
@@ -1000,6 +1005,9 @@ describe 'Animals' do
 end
 
 describe 'Songs' do
+  before(:all) { MeiliSearch::Rails.configuration[:per_environment] = false }
+  after(:all) { MeiliSearch::Rails.configuration[:per_environment] = true }
+
   it 'targets multiple indices' do
     Song.create!(name: 'Coconut nut', artist: 'Smokey Mountain', premium: false, released: true) # Only song supposed to be added to Songs index
     Song.create!(name: 'Smoking hot', artist: 'Cigarettes before lunch', premium: true, released: true)
