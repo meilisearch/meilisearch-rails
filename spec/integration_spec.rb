@@ -199,8 +199,9 @@ describe 'Posts' do
 end
 
 describe 'Colors' do
-  before(:all) do
+  before(:each) do
     Color.clear_index!(true)
+    Color.delete_all
   end
 
   it 'is synchronous' do
@@ -217,6 +218,7 @@ describe 'Colors' do
   end
 
   it 'returns facets distribution' do
+    Color.create!(name: 'blue', short_name: 'b', hex: 0xFF0000)
     results = Color.search('', { facets: ['short_name'] })
     expect(results.raw_answer).not_to be_nil
     expect(results.facets_distribution).not_to be_nil
@@ -225,6 +227,7 @@ describe 'Colors' do
   end
 
   it 'is raw searchable' do
+    Color.create!(name: 'blue', short_name: 'b', hex: 0xFF0000)
     results = Color.raw_search('blue')
     expect(results['hits'].size).to eq(1)
     expect(results['estimatedTotalHits']).to eq(1)
@@ -234,9 +237,9 @@ describe 'Colors' do
     Color.without_auto_index do
       Color.create!(name: 'blue', short_name: 'b', hex: 0xFF0000)
     end
-    expect(Color.search('blue').size).to eq(1)
+    expect(Color.search('blue').size).to eq(0)
     Color.reindex!(MeiliSearch::Rails::IndexSettings::DEFAULT_BATCH_SIZE, true)
-    expect(Color.search('blue').size).to eq(2)
+    expect(Color.search('blue').size).to eq(1)
   end
 
   it 'is not searchable with non-searchable fields' do
@@ -267,6 +270,10 @@ describe 'Colors' do
   end
 
   it 'uses the specified scope' do
+    Color.create!(name: 'red', short_name: 'r3', hex: 3)
+    Color.create!(name: 'red', short_name: 'r1', hex: 1)
+    Color.create!(name: 'red', short_name: 'r2', hex: 2)
+    Color.create!(name: 'purple', short_name: 'p')
     Color.clear_index!(true)
     Color.where(name: 'red').reindex!(MeiliSearch::Rails::IndexSettings::DEFAULT_BATCH_SIZE, true)
     expect(Color.search('').size).to eq(3)
@@ -807,6 +814,8 @@ describe 'attributes_to_crop' do
 
     Restaurant.reindex!(MeiliSearch::Rails::IndexSettings::DEFAULT_BATCH_SIZE, true)
   end
+
+  after(:all) { MeiliSearch::Rails.configuration[:per_environment] = true }
 
   it 'includes _formatted object' do
     results = Restaurant.search('')
