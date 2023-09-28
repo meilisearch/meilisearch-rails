@@ -793,8 +793,10 @@ end
 
 describe 'attributes_to_crop' do
   before(:all) do
-    MeiliSearch::Rails.configuration = { meilisearch_url: ENV.fetch('MEILISEARCH_HOST', 'http://127.0.0.1:7700'),
-                                         meilisearch_api_key: ENV.fetch('MEILISEARCH_API_KEY', 'masterKey') }
+    # MeiliSearch::Rails.configuration = { meilisearch_url: ENV.fetch('MEILISEARCH_HOST', 'http://127.0.0.1:7700'),
+    #                                      meilisearch_api_key: ENV.fetch('MEILISEARCH_API_KEY', 'masterKey') }
+    MeiliSearch::Rails.configuration[:per_environment] = false
+
     10.times do
       Restaurant.create(
         name: Faker::Restaurant.name,
@@ -900,6 +902,14 @@ describe 'Misconfigured Block' do
 end
 
 describe 'People' do
+  before(:each) do
+    People.clear_index!(true)
+    People.delete_all
+  end
+
+  before(:all) { MeiliSearch::Rails.configuration[:per_environment] = false }
+  after(:all) { MeiliSearch::Rails.configuration[:per_environment] = true }
+
   it 'adds custom complex attribute' do
     People.create(first_name: 'Jane', last_name: 'Doe', card_number: 75_801_887)
     result = People.raw_search('Jane')
@@ -907,15 +917,19 @@ describe 'People' do
   end
 
   it 'has as uid the custom name specified' do
+    People.create(first_name: 'Jane', last_name: 'Doe', card_number: 75_801_887)
     expect(People.index.uid).to eq(safe_index_uid('MyCustomPeople'))
   end
 
   it 'has the chosen field as custom primary key' do
+    People.create(first_name: 'Jane', last_name: 'Doe', card_number: 75_801_887)
     index = MeiliSearch::Rails.client.fetch_index(safe_index_uid('MyCustomPeople'))
     expect(index.primary_key).to eq('card_number')
   end
 
   it 'does not call the API if there has been no attribute change' do
+    People.create(first_name: 'Jane', last_name: 'Doe', card_number: 75_801_887)
+
     person = People.search('Jane').first
 
     expect do
@@ -941,6 +955,7 @@ describe 'People' do
   end
 
   it 'clears index manually' do
+    People.create(first_name: 'Jane', last_name: 'Doe', card_number: 75_801_887)
     results = People.raw_search('')
     expect(results['hits'].size).not_to eq(0)
     People.clear_index!(true)
