@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 describe 'SequelBook' do
-  before(:all) do
+  before(:each) do
     SequelBook.clear_index!(true)
   end
 
@@ -442,19 +442,30 @@ describe 'An imaginary store' do
     end
 
     it 'deletes the associated record' do
-      @iphone.destroy
-      results = Product.search('iphone')
+      ipad = Product.create!(name: 'ipad', href: 'apple', tags: ['awesome', 'great battery'],
+                             description: 'Big screen')
+
+      ipad.index!(true)
+      results = Product.search('ipad')
+      expect(results.size).to eq(1)
+
+      ipad.destroy
+      results = Product.search('ipad')
       expect(results.size).to eq(0)
     end
 
-    it 'does not throw an exception if a search result isn\'t found locally' do
-      Product.without_auto_index { @palmpre.destroy }
-      expect { Product.search('pal').to_json }.not_to raise_error
-    end
+    context 'when a document cannot be found in ActiveRecord' do
+      it 'does not throw an exception' do
+        Product.index.add_documents!(@palmpre.attributes.merge(id: -1))
+        expect { Product.search('pal').to_json }.not_to raise_error
+        Product.index.delete_document!(-1)
+      end
 
-    it 'returns the other results if those are still available locally' do
-      Product.without_auto_index { @palmpre.destroy }
-      expect(JSON.parse(Product.search('pal').to_json).size).to eq(1)
+      it 'returns the other results if those are still available locally' do
+        Product.index.add_documents!(@palmpre.attributes.merge(id: -1))
+        expect(JSON.parse(Product.search('pal').to_json).size).to eq(2)
+        Product.index.delete_document!(-1)
+      end
     end
 
     it 'does not duplicate an already indexed record' do
