@@ -1102,28 +1102,25 @@ context "when have a internal class defined in the app's scope" do
   end
 end
 
-context 'when MeiliSearch calls are deactivated' do
+context 'when MeiliSearch calls are deactivated', focus: true do
   it 'is active by default' do
     expect(MeiliSearch::Rails).to be_active
   end
 
   describe '#deactivate!' do
     context 'without block' do
-      it 'deactivates the requests and keep the state' do
-        MeiliSearch::Rails.deactivate!
+      before(:each) { MeiliSearch::Rails.deactivate! }
+      after(:each) { MeiliSearch::Rails.activate! }
 
+      it 'deactivates the requests and keep the state' do
         expect(MeiliSearch::Rails).not_to be_active
       end
 
       it 'responds with a black hole' do
-        MeiliSearch::Rails.deactivate!
-
         expect(MeiliSearch::Rails.client.foo.bar.now.nil.item.issue).to be_nil
       end
 
       it 'deactivates requests' do
-        MeiliSearch::Rails.deactivate!
-
         expect do
           Task.create(title: 'my task #1')
           Task.search('task')
