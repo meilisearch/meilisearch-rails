@@ -686,8 +686,7 @@ end
 describe 'Kaminari' do
   before(:all) do
     require 'kaminari'
-    MeiliSearch::Rails.configuration = { meilisearch_url: ENV.fetch('MEILISEARCH_HOST', 'http://127.0.0.1:7700'),
-                                         meilisearch_api_key: ENV.fetch('MEILISEARCH_API_KEY', 'masterKey'), pagination_backend: :kaminari }
+    MeiliSearch::Rails.configuration[:pagination_backend] = :kaminari
     Restaurant.clear_index!(true)
 
     10.times do
@@ -700,6 +699,8 @@ describe 'Kaminari' do
 
     Restaurant.reindex!(MeiliSearch::Rails::IndexSettings::DEFAULT_BATCH_SIZE, true)
   end
+
+  after(:all) { MeiliSearch::Rails.configuration[:pagination_backend] = nil }
 
   it 'paginates' do
     hits = Restaurant.search ''
@@ -745,16 +746,15 @@ end
 describe 'Will_paginate' do
   before(:all) do
     require 'will_paginate'
-    MeiliSearch::Rails.configuration = {
-      meilisearch_url: ENV.fetch('MEILISEARCH_HOST', 'http://127.0.0.1:7700'),
-      meilisearch_api_key: ENV.fetch('MEILISEARCH_API_KEY', 'masterKey'), pagination_backend: :will_paginate
-    }
+    MeiliSearch::Rails.configuration[:pagination_backend] = :will_paginate
     Movie.clear_index!(true)
 
     10.times { Movie.create(title: Faker::Movie.title) }
 
     Movie.reindex!(MeiliSearch::Rails::IndexSettings::DEFAULT_BATCH_SIZE, true)
   end
+
+  after(:all) { MeiliSearch::Rails.configuration[:pagination_backend] = nil }
 
   it 'paginates' do
     hits = Movie.search '', hits_per_page: 2
@@ -789,13 +789,8 @@ describe 'Will_paginate' do
 end
 
 describe 'with pagination by pagy' do
-  before(:all) do
-    MeiliSearch::Rails.configuration = {
-      meilisearch_url: ENV.fetch('MEILISEARCH_HOST', 'http://127.0.0.1:7700'),
-      meilisearch_api_key: ENV.fetch('MEILISEARCH_API_KEY', 'masterKey'),
-      pagination_backend: :pagy
-    }
-  end
+  before(:all) { MeiliSearch::Rails.configuration[:pagination_backend] = :pagy }
+  after(:all) { MeiliSearch::Rails.configuration[:pagination_backend] = nil }
 
   it 'has meaningful error when pagy is set as the pagination_backend' do
     logger = double
@@ -811,8 +806,6 @@ end
 
 describe 'attributes_to_crop' do
   before(:all) do
-    # MeiliSearch::Rails.configuration = { meilisearch_url: ENV.fetch('MEILISEARCH_HOST', 'http://127.0.0.1:7700'),
-    #                                      meilisearch_api_key: ENV.fetch('MEILISEARCH_API_KEY', 'masterKey') }
     MeiliSearch::Rails.configuration[:per_environment] = false
 
     10.times do
@@ -1102,7 +1095,7 @@ context "when have a internal class defined in the app's scope" do
   end
 end
 
-context 'when MeiliSearch calls are deactivated', focus: true do
+context 'when MeiliSearch calls are deactivated' do
   it 'is active by default' do
     expect(MeiliSearch::Rails).to be_active
   end
