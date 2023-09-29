@@ -803,15 +803,17 @@ module MeiliSearch
       def meilisearch_settings_changed?(prev, current)
         return true if prev.nil?
 
-        current.each do |k, v|
-          prev_v = prev[k.to_s]
-          if v.is_a?(Array) && prev_v.is_a?(Array)
-            # compare array of strings, avoiding symbols VS strings comparison
-            return true if v.map(&:to_s) != prev_v.map(&:to_s)
-          elsif prev_v != v
-            return true
-          end
+        prev.transform_keys! { |key| key.underscore.to_sym }
+
+        current.each do |key, current_value|
+          prev_value = prev[key.to_sym]
+
+          current_value.map!(&:to_s).sort! if current_value.is_a?(Array)
+          prev_value.map!(&:to_s).sort! if prev_value.is_a?(Array)
+
+          return true if current_value != prev_value
         end
+
         false
       end
 
