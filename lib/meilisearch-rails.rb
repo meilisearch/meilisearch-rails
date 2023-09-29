@@ -747,7 +747,7 @@ module MeiliSearch
 
         @ms_indexes[MeiliSearch::Rails.active?][settings] = SafeIndex.new(ms_index_uid(options), meilisearch_options[:raise_on_failure], meilisearch_options)
 
-        current_settings = @ms_indexes[MeiliSearch::Rails.active?][settings].settings(getVersion: 1) rescue nil # if the index doesn't exist
+        current_settings = @ms_indexes[MeiliSearch::Rails.active?][settings]&.settings
 
         index_settings ||= settings.to_settings
         index_settings = options[:primary_settings].to_settings.merge(index_settings) if options[:inherit]
