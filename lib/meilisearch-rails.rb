@@ -867,8 +867,10 @@ module MeiliSearch
       end
 
       def warn_searchable_missing_attributes
-        if (searchables = meilisearch_settings.get_setting(:searchable_attributes)) &&
-          (attrs = meilisearch_settings.get_setting(:attributes)&.keys)
+        searchables = meilisearch_settings.get_setting(:searchable_attributes)
+        attrs = meilisearch_settings.get_setting(:attributes)&.keys
+
+        if searchables.present? && attrs.present?
           (searchables.map(&:to_s) - attrs.map(&:to_s)).each do |missing_searchable|
             MeiliSearch::Rails.logger.warn(
               "[meilisearch-rails] #{name}##{missing_searchable} declared in searchable_attributes but not in attributes. Please add it to attributes if it should be searchable."
