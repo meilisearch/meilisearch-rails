@@ -1036,19 +1036,19 @@ context 'when a searchable attribute is not an attribute' do
   let(:other_people_class) do
     Class.new(People) do
       def self.name
-        "People"
+        'People'
       end
     end
   end
 
-  let(:logger) { double(warn: nil) }
+  let(:logger) { instance_double('Logger', warn: nil) }
 
   before do
     allow(MeiliSearch::Rails).to receive(:logger).and_return(logger)
 
     other_people_class.meilisearch index_uid: safe_index_uid('Others'), primary_key: :card_number do
-        attribute :first_name
-        searchable_attributes [:first_name, :last_name]
+      attribute :first_name
+      searchable_attributes %i[first_name last_name]
     end
   end
 

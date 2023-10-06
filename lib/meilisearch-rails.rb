@@ -449,7 +449,6 @@ module MeiliSearch
           end
         end
 
-
         warn_searchable_missing_attributes
       end
 
