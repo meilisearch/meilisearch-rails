@@ -1033,7 +1033,13 @@ describe 'Raise on failure' do
 end
 
 context 'when a searchable attribute is not an attribute' do
-  let(:other_people_class) { Class.new(People) { def self.name = "People" } }
+  let(:other_people_class) do
+    Class.new(People) do
+      def self.name
+        "People"
+      end
+    end
+  end
 
   let(:logger) { double(warn: nil) }
 
