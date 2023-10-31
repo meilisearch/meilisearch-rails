@@ -335,7 +335,7 @@ Check [`ddnexus/pagy`](https://ddnexus.github.io/pagy/extras/meilisearch) for mo
 
 #### Deactivate Meilisearch in certain moments
 
-By default HTTP connections to the Meilisearch URL is always active, but sometimes you want to disable the HTTP requests in a particular moment or environment.<br>
+By default, HTTP connections to the Meilisearch URL are always active, but sometimes you want to disable the HTTP requests in a particular moment or environment.<br>
 you have multiple ways to achieve this.
 
 By adding `active: false` in the configuration initializer:
