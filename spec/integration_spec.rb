@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 describe 'SequelBook' do
-  before(:each) do
+  before do
     SequelBook.clear_index!(true)
   end
 
@@ -199,7 +199,7 @@ describe 'Posts' do
 end
 
 describe 'Colors' do
-  before(:each) do
+  before do
     Color.clear_index!(true)
     Color.delete_all
   end
@@ -525,7 +525,7 @@ describe 'MongoDocument' do
 end
 
 describe 'Book' do
-  before(:each) do
+  before do
     Book.clear_index!(true)
     Book.index(safe_index_uid('BookAuthor')).delete_all_documents
     Book.index(safe_index_uid('Book')).delete_all_documents
@@ -789,14 +789,18 @@ describe 'Will_paginate' do
 end
 
 describe 'with pagination by pagy' do
-  before(:all) { MeiliSearch::Rails.configuration[:pagination_backend] = :pagy }
-  after(:all) { MeiliSearch::Rails.configuration[:pagination_backend] = nil }
+  before(:all) do
+    MeiliSearch::Rails.configuration[:pagination_backend] = :pagy
+    MeiliSearch::Rails.configuration[:per_environment] = false
+  end
 
-  before(:all) { MeiliSearch::Rails.configuration[:per_environment] = false }
-  after(:all) { MeiliSearch::Rails.configuration[:per_environment] = true }
+  after(:all) do
+    MeiliSearch::Rails.configuration[:pagination_backend] = nil
+    MeiliSearch::Rails.configuration[:per_environment] = true
+  end
 
   it 'has meaningful error when pagy is set as the pagination_backend' do
-    Movie.create(title: "Harry Potter").index!(true)
+    Movie.create(title: 'Harry Potter').index!(true)
 
     logger = double
     allow(logger).to receive(:warning)
@@ -920,12 +924,13 @@ describe 'Misconfigured Block' do
 end
 
 describe 'People' do
-  before(:each) do
+  before do
     People.clear_index!(true)
     People.delete_all
   end
 
   before(:all) { MeiliSearch::Rails.configuration[:per_environment] = false }
+
   after(:all) { MeiliSearch::Rails.configuration[:per_environment] = true }
 
   it 'adds custom complex attribute' do
@@ -1006,6 +1011,7 @@ end
 
 describe 'Songs' do
   before(:all) { MeiliSearch::Rails.configuration[:per_environment] = false }
+
   after(:all) { MeiliSearch::Rails.configuration[:per_environment] = true }
 
   it 'targets multiple indices' do
@@ -1110,8 +1116,9 @@ context 'when MeiliSearch calls are deactivated' do
 
   describe '#deactivate!' do
     context 'without block' do
-      before(:each) { MeiliSearch::Rails.deactivate! }
-      after(:each) { MeiliSearch::Rails.activate! }
+      before { MeiliSearch::Rails.deactivate! }
+
+      after { MeiliSearch::Rails.activate! }
 
       it 'deactivates the requests and keep the state' do
         expect(MeiliSearch::Rails).not_to be_active
