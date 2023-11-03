@@ -782,7 +782,7 @@ describe 'with pagination by pagy' do
   it 'has meaningful error when pagy is set as the pagination_backend' do
     logger = double
     allow(logger).to receive(:warning)
-    allow(::Rails).to receive(:logger).and_return(logger)
+    allow(MeiliSearch::Rails).to receive(:logger).and_return(logger)
 
     Movie.search('')
 
@@ -1029,6 +1029,31 @@ describe 'Raise on failure' do
         Vegetable.ms_reindex!
       end.not_to raise_error
     end
+  end
+end
+
+context 'when a searchable attribute is not an attribute' do
+  let(:other_people_class) do
+    Class.new(People) do
+      def self.name
+        'People'
+      end
+    end
+  end
+
+  let(:logger) { instance_double('Logger', warn: nil) }
+
+  before do
+    allow(MeiliSearch::Rails).to receive(:logger).and_return(logger)
+
+    other_people_class.meilisearch index_uid: safe_index_uid('Others'), primary_key: :card_number do
+      attribute :first_name
+      searchable_attributes %i[first_name last_name]
+    end
+  end
+
+  it 'warns the user' do
+    expect(logger).to have_received(:warn).with(/meilisearch-rails.+last_name/)
   end
 end
 

@@ -39,6 +39,10 @@ module MeiliSearch
           include InstanceMethods
         end
       end
+
+      def logger
+        @logger ||= (::Rails.logger || Logger.new($stdout))
+      end
     end
 
     class IndexSettings
@@ -304,7 +308,7 @@ module MeiliSearch
         raise e if raise_on_failure
 
         # log the error
-        (::Rails.logger || Logger.new($stdout)).info("[meilisearch-rails] #{e.message}")
+        MeiliSearch::Rails.logger.info("[meilisearch-rails] #{e.message}")
         # return something
         case method.to_s
         when 'search'
@@ -444,6 +448,8 @@ module MeiliSearch
             after_destroy { |searchable| searchable.ms_enqueue_remove_from_index!(ms_synchronous?) }
           end
         end
+
+        warn_searchable_missing_attributes
       end
 
       def ms_without_auto_index(&block)
@@ -857,6 +863,19 @@ module MeiliSearch
 
         # We don't know if the attribute has changed, so conservatively assume it has
         true
+      end
+
+      def warn_searchable_missing_attributes
+        searchables = meilisearch_settings.get_setting(:searchable_attributes)
+        attrs = meilisearch_settings.get_setting(:attributes)&.keys
+
+        if searchables.present? && attrs.present?
+          (searchables.map(&:to_s) - attrs.map(&:to_s)).each do |missing_searchable|
+            MeiliSearch::Rails.logger.warn(
+              "[meilisearch-rails] #{name}##{missing_searchable} declared in searchable_attributes but not in attributes. Please add it to attributes if it should be searchable."
+            )
+          end
+        end
       end
     end
 
