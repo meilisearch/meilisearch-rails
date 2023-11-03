@@ -374,7 +374,7 @@ class Post < ActiveRecord::Base
 
   include MeiliSearch::Rails
 
-  meilisearch synchronous: true do
+  meilisearch index_uid: safe_index_uid('Post'), synchronous: true do
     attribute :comments do
       comments.map(&:body)
     end
