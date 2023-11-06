@@ -260,7 +260,7 @@ module MeiliSearch
         @raise_on_failure = raise_on_failure.nil? || raise_on_failure
 
         SafeIndex.log_or_throw(nil, @raise_on_failure) do
-          client.create_index(index_uid, { primary_key: primary_key })
+          client.create_index!(index_uid, { primary_key: primary_key })
         end
 
         @index = client.index(index_uid)
@@ -735,33 +735,38 @@ module MeiliSearch
 
       protected
 
-      def ms_ensure_init(options = nil, settings = nil, index_settings = nil)
+      def ms_ensure_init(options = meilisearch_options, settings = meilisearch_settings, user_configuration = settings.to_settings)
         raise ArgumentError, 'No `meilisearch` block found in your model.' if meilisearch_settings.nil?
 
         @ms_indexes ||= { true => {}, false => {} }
 
-        options ||= meilisearch_options
-        settings ||= meilisearch_settings
+        @ms_indexes[MeiliSearch::Rails.active?][settings] ||= SafeIndex.new(ms_index_uid(options), meilisearch_options[:raise_on_failure], meilisearch_options)
 
-        return @ms_indexes[MeiliSearch::Rails.active?][settings] if @ms_indexes[MeiliSearch::Rails.active?][settings]
-
-        @ms_indexes[MeiliSearch::Rails.active?][settings] = SafeIndex.new(ms_index_uid(options), meilisearch_options[:raise_on_failure], meilisearch_options)
-
-        current_settings = @ms_indexes[MeiliSearch::Rails.active?][settings]&.settings
-
-        index_settings ||= settings.to_settings
-        index_settings = options[:primary_settings].to_settings.merge(index_settings) if options[:inherit]
-
-        options[:check_settings] = true if options[:check_settings].nil?
-
-        if !ms_indexing_disabled?(options) && options[:check_settings] && meilisearch_settings_changed?(current_settings, index_settings)
-          @ms_indexes[MeiliSearch::Rails.active?][settings].update_settings(index_settings)
-        end
+        update_settings_if_changed(@ms_indexes[MeiliSearch::Rails.active?][settings], options, user_configuration)
 
         @ms_indexes[MeiliSearch::Rails.active?][settings]
       end
 
       private
+
+      def update_settings_if_changed(index, options, user_configuration)
+        server_state = index.settings
+        user_configuration = options[:primary_settings].to_settings.merge(user_configuration) if options[:inherit]
+
+        config = user_configuration.except(:attributes_to_highlight, :attributes_to_crop, :crop_length)
+
+        if !skip_checking_settings?(options) && meilisearch_settings_changed?(server_state, config)
+          index.update_settings(user_configuration)
+        end
+      end
+
+      def skip_checking_settings?(options)
+        ms_indexing_disabled?(options) || ms_checking_disabled?(options)
+      end
+
+      def ms_checking_disabled?(options)
+        options[:check_settings] == false
+      end
 
       def ms_configurations
         raise ArgumentError, 'No `meilisearch` block found in your model.' if meilisearch_settings.nil?
@@ -800,21 +805,22 @@ module MeiliSearch
         options[:primary_key] || MeiliSearch::Rails::IndexSettings::DEFAULT_PRIMARY_KEY
       end
 
-      def meilisearch_settings_changed?(prev, current)
-        return true if prev.nil?
+      def meilisearch_settings_changed?(server_state, user_configuration)
+        return true if server_state.nil?
 
-        prev.transform_keys! { |key| key.underscore.to_sym }
+        user_configuration.transform_keys! { |key| key.to_s.camelize(:lower) }
 
-        current.each do |key, current_value|
-          prev_value = prev[key.to_sym]
+        user_configuration.any? do |key, user|
+          server = server_state[key]
 
-          current_value.map!(&:to_s).sort! if current_value.is_a?(Array)
-          prev_value.map!(&:to_s).sort! if prev_value.is_a?(Array)
-
-          return true if current_value != prev_value
+          if user.is_a?(Hash) && server.is_a?(Hash)
+            meilisearch_settings_changed?(server, user)
+          elsif user.is_a?(Array) && server.is_a?(Array)
+            user.map(&:to_s) != server.map(&:to_s)
+          else
+            user.to_s != server.to_s
+          end
         end
-
-        false
       end
 
       def ms_conditional_index?(options = nil)
