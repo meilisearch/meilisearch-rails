@@ -5,7 +5,7 @@ describe MeiliSearch::Rails::IndexSettings do
     let(:record) { Color.create name: 'dark-blue', short_name: 'blue' }
 
     context 'without changing settings' do
-      fit 'does not call update settings' do
+      it 'does not call update settings' do
         allow(Color.index).to receive(:update_settings).and_call_original
 
         record.ms_index!
@@ -15,7 +15,7 @@ describe MeiliSearch::Rails::IndexSettings do
     end
 
     context 'when settings have been changed' do
-      fit 'makes a request to update settings' do
+      it 'makes a request to update settings' do
         idx = Color.index
         task = idx.update_settings(
           filterable_attributes: ['none']
