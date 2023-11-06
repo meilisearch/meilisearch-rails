@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 describe 'SequelBook' do
-  before(:all) do
+  before do
     SequelBook.clear_index!(true)
   end
 
@@ -199,8 +199,9 @@ describe 'Posts' do
 end
 
 describe 'Colors' do
-  before(:all) do
+  before do
     Color.clear_index!(true)
+    Color.delete_all
   end
 
   it 'is synchronous' do
@@ -217,6 +218,7 @@ describe 'Colors' do
   end
 
   it 'returns facets distribution' do
+    Color.create!(name: 'blue', short_name: 'b', hex: 0xFF0000)
     results = Color.search('', { facets: ['short_name'] })
     expect(results.raw_answer).not_to be_nil
     expect(results.facets_distribution).not_to be_nil
@@ -225,6 +227,7 @@ describe 'Colors' do
   end
 
   it 'is raw searchable' do
+    Color.create!(name: 'blue', short_name: 'b', hex: 0xFF0000)
     results = Color.raw_search('blue')
     expect(results['hits'].size).to eq(1)
     expect(results['estimatedTotalHits']).to eq(1)
@@ -234,9 +237,9 @@ describe 'Colors' do
     Color.without_auto_index do
       Color.create!(name: 'blue', short_name: 'b', hex: 0xFF0000)
     end
-    expect(Color.search('blue').size).to eq(1)
+    expect(Color.search('blue').size).to eq(0)
     Color.reindex!(MeiliSearch::Rails::IndexSettings::DEFAULT_BATCH_SIZE, true)
-    expect(Color.search('blue').size).to eq(2)
+    expect(Color.search('blue').size).to eq(1)
   end
 
   it 'is not searchable with non-searchable fields' do
@@ -267,6 +270,10 @@ describe 'Colors' do
   end
 
   it 'uses the specified scope' do
+    Color.create!(name: 'red', short_name: 'r3', hex: 3)
+    Color.create!(name: 'red', short_name: 'r1', hex: 1)
+    Color.create!(name: 'red', short_name: 'r2', hex: 2)
+    Color.create!(name: 'purple', short_name: 'p')
     Color.clear_index!(true)
     Color.where(name: 'red').reindex!(MeiliSearch::Rails::IndexSettings::DEFAULT_BATCH_SIZE, true)
     expect(Color.search('').size).to eq(3)
@@ -435,19 +442,30 @@ describe 'An imaginary store' do
     end
 
     it 'deletes the associated record' do
-      @iphone.destroy
-      results = Product.search('iphone')
+      ipad = Product.create!(name: 'ipad', href: 'apple', tags: ['awesome', 'great battery'],
+                             description: 'Big screen')
+
+      ipad.index!(true)
+      results = Product.search('ipad')
+      expect(results.size).to eq(1)
+
+      ipad.destroy
+      results = Product.search('ipad')
       expect(results.size).to eq(0)
     end
 
-    it 'does not throw an exception if a search result isn\'t found locally' do
-      Product.without_auto_index { @palmpre.destroy }
-      expect { Product.search('pal').to_json }.not_to raise_error
-    end
+    context 'when a document cannot be found in ActiveRecord' do
+      it 'does not throw an exception' do
+        Product.index.add_documents!(@palmpre.attributes.merge(id: -1))
+        expect { Product.search('pal').to_json }.not_to raise_error
+        Product.index.delete_document!(-1)
+      end
 
-    it 'returns the other results if those are still available locally' do
-      Product.without_auto_index { @palmpre.destroy }
-      expect(JSON.parse(Product.search('pal').to_json).size).to eq(1)
+      it 'returns the other results if those are still available locally' do
+        Product.index.add_documents!(@palmpre.attributes.merge(id: -1))
+        expect(JSON.parse(Product.search('pal').to_json).size).to eq(2)
+        Product.index.delete_document!(-1)
+      end
     end
 
     it 'does not duplicate an already indexed record' do
@@ -507,7 +525,7 @@ describe 'MongoDocument' do
 end
 
 describe 'Book' do
-  before(:all) do
+  before do
     Book.clear_index!(true)
     Book.index(safe_index_uid('BookAuthor')).delete_all_documents
     Book.index(safe_index_uid('Book')).delete_all_documents
@@ -668,8 +686,7 @@ end
 describe 'Kaminari' do
   before(:all) do
     require 'kaminari'
-    MeiliSearch::Rails.configuration = { meilisearch_url: ENV.fetch('MEILISEARCH_HOST', 'http://127.0.0.1:7700'),
-                                         meilisearch_api_key: ENV.fetch('MEILISEARCH_API_KEY', 'masterKey'), pagination_backend: :kaminari }
+    MeiliSearch::Rails.configuration[:pagination_backend] = :kaminari
     Restaurant.clear_index!(true)
 
     10.times do
@@ -682,6 +699,8 @@ describe 'Kaminari' do
 
     Restaurant.reindex!(MeiliSearch::Rails::IndexSettings::DEFAULT_BATCH_SIZE, true)
   end
+
+  after(:all) { MeiliSearch::Rails.configuration[:pagination_backend] = nil }
 
   it 'paginates' do
     hits = Restaurant.search ''
@@ -727,16 +746,15 @@ end
 describe 'Will_paginate' do
   before(:all) do
     require 'will_paginate'
-    MeiliSearch::Rails.configuration = {
-      meilisearch_url: ENV.fetch('MEILISEARCH_HOST', 'http://127.0.0.1:7700'),
-      meilisearch_api_key: ENV.fetch('MEILISEARCH_API_KEY', 'masterKey'), pagination_backend: :will_paginate
-    }
+    MeiliSearch::Rails.configuration[:pagination_backend] = :will_paginate
     Movie.clear_index!(true)
 
     10.times { Movie.create(title: Faker::Movie.title) }
 
     Movie.reindex!(MeiliSearch::Rails::IndexSettings::DEFAULT_BATCH_SIZE, true)
   end
+
+  after(:all) { MeiliSearch::Rails.configuration[:pagination_backend] = nil }
 
   it 'paginates' do
     hits = Movie.search '', hits_per_page: 2
@@ -772,14 +790,18 @@ end
 
 describe 'with pagination by pagy' do
   before(:all) do
-    MeiliSearch::Rails.configuration = {
-      meilisearch_url: ENV.fetch('MEILISEARCH_HOST', 'http://127.0.0.1:7700'),
-      meilisearch_api_key: ENV.fetch('MEILISEARCH_API_KEY', 'masterKey'),
-      pagination_backend: :pagy
-    }
+    MeiliSearch::Rails.configuration[:pagination_backend] = :pagy
+    MeiliSearch::Rails.configuration[:per_environment] = false
+  end
+
+  after(:all) do
+    MeiliSearch::Rails.configuration[:pagination_backend] = nil
+    MeiliSearch::Rails.configuration[:per_environment] = true
   end
 
   it 'has meaningful error when pagy is set as the pagination_backend' do
+    Movie.create(title: 'Harry Potter').index!(true)
+
     logger = double
     allow(logger).to receive(:warning)
     allow(MeiliSearch::Rails).to receive(:logger).and_return(logger)
@@ -793,8 +815,8 @@ end
 
 describe 'attributes_to_crop' do
   before(:all) do
-    MeiliSearch::Rails.configuration = { meilisearch_url: ENV.fetch('MEILISEARCH_HOST', 'http://127.0.0.1:7700'),
-                                         meilisearch_api_key: ENV.fetch('MEILISEARCH_API_KEY', 'masterKey') }
+    MeiliSearch::Rails.configuration[:per_environment] = false
+
     10.times do
       Restaurant.create(
         name: Faker::Restaurant.name,
@@ -805,6 +827,8 @@ describe 'attributes_to_crop' do
 
     Restaurant.reindex!(MeiliSearch::Rails::IndexSettings::DEFAULT_BATCH_SIZE, true)
   end
+
+  after(:all) { MeiliSearch::Rails.configuration[:per_environment] = true }
 
   it 'includes _formatted object' do
     results = Restaurant.search('')
@@ -844,8 +868,8 @@ unless OLD_RAILS
   describe 'EnqueuedDocument' do
     it 'enqueues a job' do
       expect do
-        EnqueuedDocument.create! name: 'test'
-      end.to raise_error('enqueued 1')
+        EnqueuedDocument.create! name: 'hellraiser'
+      end.to raise_error('enqueued hellraiser')
     end
 
     it 'does not enqueue a job inside no index block' do
@@ -900,6 +924,15 @@ describe 'Misconfigured Block' do
 end
 
 describe 'People' do
+  before do
+    People.clear_index!(true)
+    People.delete_all
+  end
+
+  before(:all) { MeiliSearch::Rails.configuration[:per_environment] = false }
+
+  after(:all) { MeiliSearch::Rails.configuration[:per_environment] = true }
+
   it 'adds custom complex attribute' do
     People.create(first_name: 'Jane', last_name: 'Doe', card_number: 75_801_887)
     result = People.raw_search('Jane')
@@ -907,15 +940,19 @@ describe 'People' do
   end
 
   it 'has as uid the custom name specified' do
+    People.create(first_name: 'Jane', last_name: 'Doe', card_number: 75_801_887)
     expect(People.index.uid).to eq(safe_index_uid('MyCustomPeople'))
   end
 
   it 'has the chosen field as custom primary key' do
+    People.create(first_name: 'Jane', last_name: 'Doe', card_number: 75_801_887)
     index = MeiliSearch::Rails.client.fetch_index(safe_index_uid('MyCustomPeople'))
     expect(index.primary_key).to eq('card_number')
   end
 
   it 'does not call the API if there has been no attribute change' do
+    People.create(first_name: 'Jane', last_name: 'Doe', card_number: 75_801_887)
+
     person = People.search('Jane').first
 
     expect do
@@ -941,6 +978,7 @@ describe 'People' do
   end
 
   it 'clears index manually' do
+    People.create(first_name: 'Jane', last_name: 'Doe', card_number: 75_801_887)
     results = People.raw_search('')
     expect(results['hits'].size).not_to eq(0)
     People.clear_index!(true)
@@ -972,6 +1010,10 @@ describe 'Animals' do
 end
 
 describe 'Songs' do
+  before(:all) { MeiliSearch::Rails.configuration[:per_environment] = false }
+
+  after(:all) { MeiliSearch::Rails.configuration[:per_environment] = true }
+
   it 'targets multiple indices' do
     Song.create!(name: 'Coconut nut', artist: 'Smokey Mountain', premium: false, released: true) # Only song supposed to be added to Songs index
     Song.create!(name: 'Smoking hot', artist: 'Cigarettes before lunch', premium: true, released: true)
@@ -1074,21 +1116,19 @@ context 'when MeiliSearch calls are deactivated' do
 
   describe '#deactivate!' do
     context 'without block' do
-      it 'deactivates the requests and keep the state' do
-        MeiliSearch::Rails.deactivate!
+      before { MeiliSearch::Rails.deactivate! }
 
+      after { MeiliSearch::Rails.activate! }
+
+      it 'deactivates the requests and keep the state' do
         expect(MeiliSearch::Rails).not_to be_active
       end
 
       it 'responds with a black hole' do
-        MeiliSearch::Rails.deactivate!
-
         expect(MeiliSearch::Rails.client.foo.bar.now.nil.item.issue).to be_nil
       end
 
       it 'deactivates requests' do
-        MeiliSearch::Rails.deactivate!
-
         expect do
           Task.create(title: 'my task #1')
           Task.search('task')
