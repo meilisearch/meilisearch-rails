@@ -52,7 +52,7 @@ RSpec.describe 'MeiliSearch::Rails::MSCleanUpJob' do
 
       record.delete # does not run callbacks, unlike #destroy
 
-      job.perform_later(record.ms_entries(true))
+      job.perform_later(record_entries)
       expect { perform_enqueued_jobs }.not_to raise_error
 
       expect(Restaurant.index.search("Pollos")['hits']).to be_empty
