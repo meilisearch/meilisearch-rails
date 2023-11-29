@@ -688,12 +688,12 @@ describe 'Movie' do
     Movie.clear_index!(true)
   end
 
-  it 'returns task hash on #ms_index!' do
+  it 'returns array of single task hash on #ms_index!' do
     movie = Movie.create(title: 'Harry Potter')
 
     task = movie.ms_index!
 
-    expect(task).to have_key("taskUid")
+    expect(task).to contain_exactly(a_hash_including('taskUid'))
   end
 
   it 'does not return any record with typo' do
@@ -902,10 +902,10 @@ unless OLD_RAILS
   end
 
   describe 'DisabledEnqueuedDocument' do
-    it 'returns nil #ms_index!' do
+    it '#ms_index! returns an empty array' do
       doc = DisabledEnqueuedDocument.create! name: 'test'
 
-      expect(doc.ms_index!).to be_nil
+      expect(doc.ms_index!).to be_empty
     end
 
     it 'does not try to enqueue a job' do
@@ -917,7 +917,6 @@ unless OLD_RAILS
 
   describe 'ConditionallyEnqueuedDocument' do
     before { allow(MeiliSearch::Rails::MSJob).to receive(:perform_later).and_return(nil) }
-
 
     it 'does not try to enqueue an index job when :if option resolves to false' do
       doc = ConditionallyEnqueuedDocument.create! name: 'test', is_public: false

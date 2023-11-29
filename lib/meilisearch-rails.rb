@@ -526,7 +526,8 @@ module MeiliSearch
       def ms_index!(document, synchronous = false)
         return if ms_without_auto_index_scope
 
-        tasks = ms_configurations.map do |options, settings|
+        # MS tasks to be returned
+        ms_configurations.map do |options, settings|
           next if ms_indexing_disabled?(options)
 
           primary_key = ms_primary_key_of(document, options)
@@ -550,13 +551,7 @@ module MeiliSearch
               index.delete_document(primary_key)
             end
           end
-        end
-
-        if tasks.count <= 1
-          tasks.first
-        else
-          tasks
-        end
+        end.compact
       end
 
       def ms_remove_from_index!(document, synchronous = false)
