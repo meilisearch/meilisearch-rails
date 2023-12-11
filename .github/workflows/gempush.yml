@@ -13,9 +13,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Set up Ruby 2.7
-        uses: ruby/setup-ruby
+        uses: ruby/setup-ruby@v1
         with:
-          ruby-version: 2.7.x
+          ruby-version: '2.7'
       - name: Check release validity
         run: sh .github/scripts/check-release.sh
       - name: Publish to RubyGems
