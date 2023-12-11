@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Set up Ruby 2.7
-        uses: ruby/setup-ruby@main
+        uses: ruby/setup-ruby
         with:
           ruby-version: 2.7.x
       - name: Check release validity
