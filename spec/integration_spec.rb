@@ -803,12 +803,13 @@ describe 'with pagination by pagy' do
     Movie.create(title: 'Harry Potter').index!(true)
 
     logger = double
-    allow(logger).to receive(:warning)
+
+    allow(logger).to receive(:warn)
     allow(MeiliSearch::Rails).to receive(:logger).and_return(logger)
 
     Movie.search('')
 
-    expect(logger).to have_received(:warning)
+    expect(logger).to have_received(:warn)
       .with('[meilisearch-rails] Remove `pagination_backend: :pagy` from your initializer, `pagy` it is not required for `pagy`')
   end
 end
