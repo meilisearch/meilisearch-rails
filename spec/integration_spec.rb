@@ -58,10 +58,10 @@ describe 'Settings change detection' do
 
   it 'does not detect settings changes' do
     expect(Color.send(:meilisearch_settings_changed?, {}, {})).to be(false)
-    expect(Color.send(:meilisearch_settings_changed?, { 'searchable_attributes' => ['name'] },
+    expect(Color.send(:meilisearch_settings_changed?, { 'searchableAttributes' => ['name'] },
                       { searchable_attributes: ['name'] })).to be(false)
     expect(Color.send(:meilisearch_settings_changed?,
-                      { 'searchable_attributes' => ['name'], 'ranking_rules' => ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness', 'hex:asc'] },
+                      { 'searchableAttributes' => ['name'], 'rankingRules' => ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness', 'hex:asc'] },
                       { 'ranking_rules' => ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness', 'hex:asc'] })).to be(false)
   end
 end
@@ -1079,7 +1079,7 @@ describe 'Raise on failure' do
 
     it 'does not raise error timeouts on reindex' do
       allow(index_instance).to receive(:add_documents).and_raise(MeiliSearch::TimeoutError)
-      allow(slow_client).to receive(:create_index).and_return(index_instance)
+      allow(slow_client).to receive(:create_index!).and_return(index_instance)
 
       allow(MeiliSearch::Rails).to receive(:client).and_return(slow_client)
 
@@ -1089,7 +1089,7 @@ describe 'Raise on failure' do
     end
 
     it 'does not raise error timeouts on data addition' do
-      allow(slow_client).to receive(:create_index).and_raise(MeiliSearch::TimeoutError)
+      allow(slow_client).to receive(:create_index!).and_raise(MeiliSearch::TimeoutError)
       allow(index_instance).to receive(:add_documents).and_return(nil)
 
       allow(MeiliSearch::Rails).to receive(:client).and_return(slow_client)
