@@ -3,9 +3,21 @@ require 'spec_helper'
 RSpec.describe 'MeiliSearch::Rails::MSCleanUpJob' do
   include ActiveJob::TestHelper
 
-  subject(:job) { MeiliSearch::Rails::MSCleanUpJob }
+  def clean_up_indexes
+    indexes.each(&:delete_all_documents)
+  end
 
-  subject(:record) do
+  def create_indexed_record
+    record
+
+    indexes.each do |index|
+      index.wait_for_task(index.tasks['results'].last['uid'])
+    end
+  end
+
+  subject(:clean_up) { MeiliSearch::Rails::MSCleanUpJob }
+
+  let(:record) do
     Book.create name: "Moby Dick", author: "Herman Mellville",
                 premium: false, released: true
   end
@@ -21,16 +33,11 @@ RSpec.describe 'MeiliSearch::Rails::MSCleanUpJob' do
   end
 
   it 'removes record from all indexes' do
-    indexes.each(&:delete_all_documents)
+    clean_up_indexes
 
-    record
+    create_indexed_record
 
-    indexes.each do |index|
-      index.wait_for_task(index.tasks['results'].first['uid'])
-      expect(index.search('*')['hits']).to be_one
-    end
-
-    job.perform_now(record_entries)
+    clean_up.perform_now(record_entries)
 
     indexes.each do |index|
       expect(index.search('*')['hits']).to be_empty
@@ -45,17 +52,21 @@ RSpec.describe 'MeiliSearch::Rails::MSCleanUpJob' do
         description: "Mexican chicken restaurant in Albuquerque, New Mexico.")
     end
 
+    let(:indexes) { [Restaurant.index] }
+
     it 'successfully deletes its document in the index' do
-      record
-      Restaurant.index.wait_for_task(Restaurant.index.tasks['results'].first['uid'])
-      expect(Restaurant.index.search("Pollos")['hits']).to be_one
+      clean_up_indexes
+
+      create_indexed_record
 
       record.delete # does not run callbacks, unlike #destroy
 
-      job.perform_later(record_entries)
+      clean_up.perform_later(record_entries)
       expect { perform_enqueued_jobs }.not_to raise_error
 
-      expect(Restaurant.index.search("Pollos")['hits']).to be_empty
+      indexes.each do |index|
+        expect(index.search('*')['hits']).to be_empty
+      end
     end
   end
 end
