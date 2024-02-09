@@ -16,9 +16,7 @@ module MeiliSearch
         raw_results = client.multi_search(search_parameters)['results']
 
         searches.zip(raw_results).flat_map do |(index_target, search_options), result|
-          if search_options[:class_name]
-            index_target = search_options[:class_name].constantize
-          end
+          index_target = search_options[:class_name].constantize if search_options[:class_name]
 
           case index_target
           when String, Symbol
@@ -61,10 +59,8 @@ module MeiliSearch
 
           result['hits'].filter_map do |hit|
             record = results_by_id[hit[ms_pk.to_s].to_s]
-            if record
-              record.formatted = hit['_formatted']
-              record
-            end
+            record&.formatted = hit['_formatted']
+            record
           end
         end
       end
