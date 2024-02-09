@@ -1,6 +1,16 @@
 require 'spec_helper'
 
 describe 'multi-search' do
+  def reset_indexes
+    [Book, Color, Product].each do |klass|
+      klass.delete_all
+      klass.index.delete_all_documents
+    end
+  end
+
+  before(:all) { reset_indexes }
+  after { reset_indexes }
+
   let!(:palmpre) { Product.create!(name: 'palmpre', href: 'ebay', tags: ['discontinued', 'worst phone ever']) }
   let!(:palm_pixi_plus) { Product.create!(name: 'palm pixi plus', href: 'ebay', tags: ['terrible']) }
   let!(:lg_vortex) { Product.create!(name: 'lg vortex', href: 'ebay', tags: ['decent']) }
@@ -13,13 +23,6 @@ describe 'multi-search' do
   let!(:blue) { Color.create!(name: 'blue', short_name: 'blu', hex: 0x0000FF) }
   let!(:black) { Color.create!(name: 'black', short_name: 'bla', hex: 0x000000) }
   let!(:green) { Color.create!(name: 'green', short_name: 'gre', hex: 0x00FF00) }
-
-  after do
-    [Book, Color, Product].each do |klass|
-      klass.delete_all
-      klass.index.delete_all_documents
-    end
-  end
 
   context 'with class keys' do
     it 'returns ORM records' do
