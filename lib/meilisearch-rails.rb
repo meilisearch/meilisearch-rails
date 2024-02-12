@@ -283,6 +283,15 @@ module MeiliSearch
         end
       end
 
+      # Maually define facet_search due to complications with **opts in ruby 2.*
+      def facet_search(*args, **opts)
+        SafeIndex.log_or_throw(:facet_search, @raise_on_failure) do
+          return MeiliSearch::Rails.black_hole unless MeiliSearch::Rails.active?
+
+          @index.facet_search(*args, **opts)
+        end
+      end
+
       # special handling of wait_for_task to handle null task_id
       def wait_for_task(task_uid)
         return if task_uid.nil? && !@raise_on_failure # ok

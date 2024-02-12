@@ -414,7 +414,7 @@ class Book < ActiveRecord::Base
   meilisearch synchronous: true, index_uid: safe_index_uid('SecuredBook'), sanitize: true do
     searchable_attributes [:name]
     typo_tolerance min_word_size_for_typos: { one_typo: 5, twoTypos: 8 }
-    filterable_attributes [:genre]
+    filterable_attributes %i[genre author]
     faceting max_values_per_facet: 3
 
     add_index safe_index_uid('BookAuthor') do
