@@ -48,6 +48,14 @@ module MeiliSearch
           true
         end
 
+        def is_mongo_model?(model_class)
+          defined?(::Mongoid::Document) && model_class.include?(::Mongoid::Document)
+        end
+
+        def is_sequel_model?(model_class)
+          defined?(::Sequel::Model) && model_class < Sequel::Model
+        end
+
         private
 
         def constraint_passes?(record, constraint)
