@@ -165,7 +165,9 @@ class Camera < Product
 end
 
 class Restaurant < ActiveRecord::Base
+  include GlobalID::Identification
   include MeiliSearch::Rails
+
   meilisearch index_uid: safe_index_uid('Restaurant') do
     attributes_to_crop [:description]
     crop_length 10

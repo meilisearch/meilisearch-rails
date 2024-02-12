@@ -249,6 +249,7 @@ module MeiliSearch
       # lazy load the ActiveJob class to ensure the
       # queue is initialized before using it
       autoload :MSJob, 'meilisearch/rails/ms_job'
+      autoload :MSCleanUpJob, 'meilisearch/rails/ms_clean_up_job'
     end
 
     # this class wraps an MeiliSearch::Index document ensuring all raised exceptions
@@ -382,7 +383,11 @@ module MeiliSearch
 
           proc = if options[:enqueue] == true
                    proc do |record, remove|
-                     MSJob.perform_later(record, remove ? 'ms_remove_from_index!' : 'ms_index!')
+                     if remove
+                       MSCleanUpJob.perform_later(record.ms_entries)
+                     else
+                       MSJob.perform_later(record, 'ms_index!')
+                     end
                    end
                  elsif options[:enqueue].respond_to?(:call)
                    options[:enqueue]
@@ -454,7 +459,7 @@ module MeiliSearch
               end
             end
           elsif respond_to?(:after_destroy)
-            after_destroy { |searchable| searchable.ms_enqueue_remove_from_index!(ms_synchronous?) }
+            after_destroy_commit { |searchable| searchable.ms_enqueue_remove_from_index!(ms_synchronous?) }
           end
         end
 
@@ -561,6 +566,19 @@ module MeiliSearch
             end
           end
         end.compact
+      end
+
+      def ms_entries_for(document:, synchronous:)
+        primary_key = ms_primary_key_of(document)
+        raise ArgumentError, 'Cannot index a record without a primary key' if primary_key.blank?
+
+        ms_configurations.filter_map do |options, settings|
+          {
+            synchronous: synchronous || options[:synchronous],
+            index_uid: options[:index_uid],
+            primary_key: primary_key
+          }.with_indifferent_access unless ms_indexing_disabled?(options)
+        end
       end
 
       def ms_remove_from_index!(document, synchronous = false)
@@ -938,6 +956,10 @@ module MeiliSearch
 
       def ms_synchronous?
         @ms_synchronous
+      end
+
+      def ms_entries(synchronous = false)
+        self.class.ms_entries_for(document: self, synchronous: synchronous || ms_synchronous?)
       end
 
       private

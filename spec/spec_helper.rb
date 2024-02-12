@@ -31,6 +31,11 @@ require 'sequel'
 require 'active_model_serializers'
 require 'byebug'
 
+# Required for running background jobs on demand (deterministically)
+ActiveJob::Base.queue_adapter = :test
+# Required for serializing objects in similar to production environments
+GlobalID.app = 'meilisearch-test'
+
 OLD_RAILS = Gem.loaded_specs['rails'].version < Gem::Version.new('4.0')
 NEW_RAILS = Gem.loaded_specs['rails'].version >= Gem::Version.new('6.0')
 
