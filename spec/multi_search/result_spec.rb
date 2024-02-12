@@ -1,28 +1,25 @@
 require 'spec_helper'
 
-describe MeiliSearch::Rails::MultiSearchResult do
-  it 'is enumerable' do
-    expect(described_class).to include(Enumerable)
-  end
-
+describe MeiliSearch::Rails::MultiSearchResult do # rubocop:todo RSpec/FilePath
   let(:raw_results) do
     [
       { 'indexUid' => 'books_index',
         'hits' => [{ 'name' => 'Steve Jobs', 'id' => '3', 'author' => 'Walter Isaacson', 'premium' => nil, 'released' => nil, 'genre' => nil }],
-        'query' => 'Steve', 'processingTimeMs' => 0, 'limit' => 20, 'offset' => 0, 'estimatedTotalHits' => 1
-      },
+        'query' => 'Steve', 'processingTimeMs' => 0, 'limit' => 20, 'offset' => 0, 'estimatedTotalHits' => 1 },
       { 'indexUid' => 'products_index',
         'hits' => [{ 'id' => '4', 'href' => 'ebay', 'name' => 'palm pixi plus' }],
-        'query' => 'palm', 'processingTimeMs' => 0, 'limit' => 1, 'offset' => 0, 'estimatedTotalHits' => 2
-      },
+        'query' => 'palm', 'processingTimeMs' => 0, 'limit' => 1, 'offset' => 0, 'estimatedTotalHits' => 2 },
       { 'indexUid' => 'color_index',
         'hits' => [
           { 'name' => 'black', 'id' => '5', 'short_name' => 'bla', 'hex' => 0 },
           { 'name' => 'blue', 'id' => '4', 'short_name' => 'blu', 'hex' => 255 }
         ],
-        'query' => 'bl', 'processingTimeMs' => 0, 'limit' => 20, 'offset' => 0, 'estimatedTotalHits' => 2
-      }
+        'query' => 'bl', 'processingTimeMs' => 0, 'limit' => 20, 'offset' => 0, 'estimatedTotalHits' => 2 }
     ]
+  end
+
+  it 'is enumerable' do
+    expect(described_class).to include(Enumerable)
   end
 
   context 'with index name keys' do
@@ -48,13 +45,16 @@ describe MeiliSearch::Rails::MultiSearchResult do
     it 'enumerates through the hits of each result with #each_result' do
       expect(result.each_result).to be_an(Enumerator)
       expect(result.each_result).to contain_exactly(
-          [ 'books_index', contain_exactly(
-            a_hash_including('author' => 'Walter Isaacson', 'name' => 'Steve Jobs')) ],
-          [ 'products_index', contain_exactly(
-            a_hash_including('name' => 'palm pixi plus')) ],
-          [ 'color_index', contain_exactly(
-            a_hash_including('name' => 'blue', 'short_name' => 'blu'),
-            a_hash_including('name' => 'black', 'short_name' => 'bla')) ]
+        ['books_index', contain_exactly(
+          a_hash_including('author' => 'Walter Isaacson', 'name' => 'Steve Jobs')
+        )],
+        ['products_index', contain_exactly(
+          a_hash_including('name' => 'palm pixi plus')
+        )],
+        ['color_index', contain_exactly(
+          a_hash_including('name' => 'blue', 'short_name' => 'blu'),
+          a_hash_including('name' => 'black', 'short_name' => 'bla')
+        )]
       )
     end
 
@@ -69,7 +69,7 @@ describe MeiliSearch::Rails::MultiSearchResult do
       end
 
       it 'aliases as #to_ary' do
-        expect(subject.method(:to_ary).original_name).to eq :to_a
+        expect(result.method(:to_ary).original_name).to eq :to_a
       end
     end
 

@@ -23,12 +23,12 @@ module MeiliSearch
 
       include Enumerable
 
-      def each_hit
+      def each_hit(&block)
         @results.each do |_index_target, results|
-          results.each { |res| yield res }
+          results.each(&block)
         end
       end
-      alias_method :each, :each_hit
+      alias each each_hit
 
       def each_result
         @results.each
@@ -37,20 +37,18 @@ module MeiliSearch
       def to_a
         @results.values.flatten(1)
       end
-      alias_method :to_ary, :to_a
+      alias to_ary to_a
 
       def to_h
         @results
       end
-      alias_method :to_hash, :to_h
+      alias to_hash to_h
 
       private
 
       def load_results(klass, result)
         pk_method = klass.ms_primary_key_method
-        pk_method = pk_method.in if Utilities.is_mongo_model?(klass)
-
-        ms_pk = klass.meilisearch_options[:primary_key] || IndexSettings::DEFAULT_PRIMARY_KEY
+        pk_method = pk_method.in if Utilities.mongo_model?(klass)
 
         condition_key = pk_is_virtual?(klass, pk_method) ? klass.primary_key : pk_method
 
@@ -78,8 +76,8 @@ module MeiliSearch
 
       def pk_is_virtual?(model_class, pk_method)
         model_class.columns
-          .map(&(Utilities.is_sequel_model?(model_class) ? :to_s : :name))
-          .exclude?(pk_method.to_s)
+                   .map(&(Utilities.sequel_model?(model_class) ? :to_s : :name))
+                   .exclude?(pk_method.to_s)
       end
     end
   end
