@@ -1,4 +1,4 @@
-name-template: 'v$RESOLVED_VERSION 🛤'
+name-template: 'v$RESOLVED_VERSION 🚂'
 tag-template: 'v$RESOLVED_VERSION'
 exclude-labels:
   - 'skip-changelog'
@@ -32,4 +32,6 @@ replacers:
   - search: '/(?:and )?@bors(?:\[bot\])?,?/g'
     replace: ''
   - search: '/(?:and )?@meili-bot,?/g'
+    replace: ''
+  - search: '/(?:and )?@meili-bors[bot],?/g'
     replace: ''
