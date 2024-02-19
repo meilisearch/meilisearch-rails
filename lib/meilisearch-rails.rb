@@ -261,7 +261,7 @@ module MeiliSearch
         @raise_on_failure = raise_on_failure.nil? || raise_on_failure
 
         SafeIndex.log_or_throw(nil, @raise_on_failure) do
-          client.create_index!(index_uid, { primary_key: primary_key })
+          client.create_index(index_uid, { primary_key: primary_key })
         end
 
         @index = client.index(index_uid)
@@ -306,7 +306,7 @@ module MeiliSearch
         SafeIndex.log_or_throw(:settings, @raise_on_failure) do
           @index.settings(*args)
         rescue ::MeiliSearch::ApiError => e
-          return {} if e.code == 404 # not fatal
+          return {} if e.code == 'index_not_found' # not fatal
 
           raise e
         end
@@ -843,7 +843,7 @@ module MeiliSearch
           if user.is_a?(Hash) && server.is_a?(Hash)
             meilisearch_settings_changed?(server, user)
           elsif user.is_a?(Array) && server.is_a?(Array)
-            user.map(&:to_s) != server.map(&:to_s)
+            user.map(&:to_s).sort! != server.map(&:to_s).sort!
           else
             user.to_s != server.to_s
           end

@@ -1136,11 +1136,13 @@ describe 'Raise on failure' do
     let(:index_instance) { instance_double(MeiliSearch::Index, settings: nil, update_settings: nil) }
     let(:slow_client) { instance_double(MeiliSearch::Client, index: index_instance) }
 
+    before do
+      allow(slow_client).to receive(:create_index)
+      allow(MeiliSearch::Rails).to receive(:client).and_return(slow_client)
+    end
+
     it 'does not raise error timeouts on reindex' do
       allow(index_instance).to receive(:add_documents).and_raise(MeiliSearch::TimeoutError)
-      allow(slow_client).to receive(:create_index!).and_return(index_instance)
-
-      allow(MeiliSearch::Rails).to receive(:client).and_return(slow_client)
 
       expect do
         Vegetable.create(name: 'potato')
@@ -1148,10 +1150,7 @@ describe 'Raise on failure' do
     end
 
     it 'does not raise error timeouts on data addition' do
-      allow(slow_client).to receive(:create_index!).and_raise(MeiliSearch::TimeoutError)
       allow(index_instance).to receive(:add_documents).and_return(nil)
-
-      allow(MeiliSearch::Rails).to receive(:client).and_return(slow_client)
 
       expect do
         Vegetable.ms_reindex!
