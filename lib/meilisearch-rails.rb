@@ -843,7 +843,7 @@ module MeiliSearch
           if user.is_a?(Hash) && server.is_a?(Hash)
             meilisearch_settings_changed?(server, user)
           elsif user.is_a?(Array) && server.is_a?(Array)
-            user.map(&:to_s) != server.map(&:to_s)
+            user.map(&:to_s).sort! != server.map(&:to_s).sort!
           else
             user.to_s != server.to_s
           end
