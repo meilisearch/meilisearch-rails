@@ -2,20 +2,22 @@ require 'spec_helper'
 
 describe MeiliSearch::Rails::MultiSearchResult do # rubocop:todo RSpec/FilePath
   let(:raw_results) do
-    [
-      { 'indexUid' => 'books_index',
-        'hits' => [{ 'name' => 'Steve Jobs', 'id' => '3', 'author' => 'Walter Isaacson', 'premium' => nil, 'released' => nil, 'genre' => nil }],
-        'query' => 'Steve', 'processingTimeMs' => 0, 'limit' => 20, 'offset' => 0, 'estimatedTotalHits' => 1 },
-      { 'indexUid' => 'products_index',
-        'hits' => [{ 'id' => '4', 'href' => 'ebay', 'name' => 'palm pixi plus' }],
-        'query' => 'palm', 'processingTimeMs' => 0, 'limit' => 1, 'offset' => 0, 'estimatedTotalHits' => 2 },
-      { 'indexUid' => 'color_index',
-        'hits' => [
-          { 'name' => 'black', 'id' => '5', 'short_name' => 'bla', 'hex' => 0 },
-          { 'name' => 'blue', 'id' => '4', 'short_name' => 'blu', 'hex' => 255 }
-        ],
-        'query' => 'bl', 'processingTimeMs' => 0, 'limit' => 20, 'offset' => 0, 'estimatedTotalHits' => 2 }
-    ]
+    {
+      'results' => [
+        { 'indexUid' => 'books_index',
+          'hits' => [{ 'name' => 'Steve Jobs', 'id' => '3', 'author' => 'Walter Isaacson', 'premium' => nil, 'released' => nil, 'genre' => nil }],
+          'query' => 'Steve', 'processingTimeMs' => 0, 'limit' => 20, 'offset' => 0, 'estimatedTotalHits' => 1 },
+        { 'indexUid' => 'products_index',
+          'hits' => [{ 'id' => '4', 'href' => 'ebay', 'name' => 'palm pixi plus' }],
+          'query' => 'palm', 'processingTimeMs' => 0, 'limit' => 1, 'offset' => 0, 'estimatedTotalHits' => 2 },
+        { 'indexUid' => 'color_index',
+          'hits' => [
+            { 'name' => 'black', 'id' => '5', 'short_name' => 'bla', 'hex' => 0 },
+            { 'name' => 'blue', 'id' => '4', 'short_name' => 'blu', 'hex' => 255 }
+          ],
+          'query' => 'bl', 'processingTimeMs' => 0, 'limit' => 20, 'offset' => 0, 'estimatedTotalHits' => 2 }
+      ]
+    }
   end
 
   it 'is enumerable' do

@@ -4,13 +4,11 @@ describe 'multi-search' do # rubocop:todo RSpec/DescribeClass
   def reset_indexes
     [Book, Color, Product].each do |klass|
       klass.delete_all
-      klass.index.delete_all_documents
+      klass.clear_index!
     end
   end
 
-  before(:all) { reset_indexes } # rubocop:todo RSpec/BeforeAfterAll
-
-  after { reset_indexes }
+  before { reset_indexes }
 
   let!(:palm_pixi_plus) { Product.create!(name: 'palm pixi plus', href: 'ebay', tags: ['terrible']) }
   let!(:steve_jobs) { Book.create! name: 'Steve Jobs', author: 'Walter Isaacson' }
@@ -94,6 +92,25 @@ describe 'multi-search' do # rubocop:todo RSpec/DescribeClass
         a_hash_including('name' => 'blue', 'short_name' => 'blu'),
         a_hash_including('name' => 'black', 'short_name' => 'bla')
       )
+    end
+  end
+
+  context 'with pagination' do
+    it 'it properly paginates each search' do
+      MeiliSearch::Rails.configuration[:pagination_backend] = :kaminari
+
+      results = MeiliSearch::Rails.multi_search(
+        Book => { q: 'Steve' },
+        Product => { q: 'palm', page: 1, hits_per_page: 1 },
+        Color.index.uid => { q: 'bl', page: 1, 'hitsPerPage' => '1' }
+      )
+
+      expect(results).to contain_exactly(
+        steve_jobs, palm_pixi_plus,
+        a_hash_including('name' => 'black', 'short_name' => 'bla')
+      )
+
+      MeiliSearch::Rails.configuration[:pagination_backend] = nil
     end
   end
 end

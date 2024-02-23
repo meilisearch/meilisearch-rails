@@ -7,7 +7,7 @@ module MeiliSearch
         @results = {}
         @metadata = {}
 
-        searches.zip(raw_results).each do |(index_target, search_options), result|
+        searches.zip(raw_results['results']).each do |(index_target, search_options), result|
           index_target = search_options[:class_name].constantize if search_options[:class_name]
 
           @results[index_target] = case index_target
