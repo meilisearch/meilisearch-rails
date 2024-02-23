@@ -12,7 +12,6 @@ module MeiliSearch
         MultiSearchResult.new(searches, client.multi_search(search_parameters))
       end
 
-
       private
 
       def normalize(options, index_target)

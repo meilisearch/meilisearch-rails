@@ -4,25 +4,30 @@ describe 'multi-search' do # rubocop:todo RSpec/DescribeClass
   def reset_indexes
     [Book, Color, Product].each do |klass|
       klass.delete_all
-      klass.clear_index!
+      klass.clear_index!(true)
     end
   end
 
-  before { reset_indexes }
-
-  let!(:palm_pixi_plus) { Product.create!(name: 'palm pixi plus', href: 'ebay', tags: ['terrible']) }
-  let!(:steve_jobs) { Book.create! name: 'Steve Jobs', author: 'Walter Isaacson' }
-  let!(:blue) { Color.create!(name: 'blue', short_name: 'blu', hex: 0x0000FF) }
-  let!(:black) { Color.create!(name: 'black', short_name: 'bla', hex: 0x000000) }
-
   before do
+    reset_indexes
+
+    Product.create! name: 'palm pixi plus', href: 'ebay', tags: ['terrible']
     Product.create! name: 'lg vortex', href: 'ebay', tags: ['decent']
     Product.create! name: 'palmpre', href: 'ebay', tags: ['discontinued', 'worst phone ever']
     Product.reindex!
 
+    Color.create! name: 'blue', short_name: 'blu', hex: 0x0000FF
+    Color.create! name: 'black', short_name: 'bla', hex: 0x000000
     Color.create! name: 'green', short_name: 'gre', hex: 0x00FF00
+
+    Book.create! name: 'Steve Jobs', author: 'Walter Isaacson'
     Book.create! name: 'Moby Dick', author: 'Herman Melville'
   end
+
+  let!(:palm_pixi_plus) { Product.find_by name: 'palm pixi plus' }
+  let!(:steve_jobs) { Book.find_by name: 'Steve Jobs' }
+  let!(:blue) { Color.find_by name: 'blue' }
+  let!(:black) { Color.find_by name: 'black' }
 
   context 'with class keys' do
     it 'returns ORM records' do
@@ -96,7 +101,7 @@ describe 'multi-search' do # rubocop:todo RSpec/DescribeClass
   end
 
   context 'with pagination' do
-    it 'it properly paginates each search' do
+    it 'properly paginates each search' do
       MeiliSearch::Rails.configuration[:pagination_backend] = :kaminari
 
       results = MeiliSearch::Rails.multi_search(
