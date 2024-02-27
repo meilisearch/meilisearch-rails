@@ -3,6 +3,7 @@ require 'meilisearch/rails/null_object'
 require 'meilisearch/rails/version'
 require 'meilisearch/rails/utilities'
 require 'meilisearch/rails/errors'
+require 'meilisearch/rails/multi_search'
 
 if defined? Rails
   begin
@@ -760,6 +761,11 @@ module MeiliSearch
         false
       end
 
+      def ms_primary_key_method(options = nil)
+        options ||= meilisearch_options
+        options[:primary_key] || options[:id] || :id
+      end
+
       protected
 
       def ms_ensure_init(options = meilisearch_options, settings = meilisearch_settings, user_configuration = settings.to_settings)
@@ -812,11 +818,6 @@ module MeiliSearch
           end
         end
         @configurations
-      end
-
-      def ms_primary_key_method(options = nil)
-        options ||= meilisearch_options
-        options[:primary_key] || options[:id] || :id
       end
 
       def ms_primary_key_of(doc, options = nil)
