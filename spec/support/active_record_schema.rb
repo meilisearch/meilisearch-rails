@@ -24,5 +24,5 @@ unless OLD_RAILS || NEW_RAILS
 end
 
 def ar_schema
-  @schema ||= ActiveRecord::Schema.new
+  @ar_schema ||= ActiveRecord::Schema.new
 end

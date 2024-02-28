@@ -12,5 +12,3 @@ class Fruit < ActiveRecord::Base
     attribute :name
   end
 end
-
-

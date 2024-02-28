@@ -31,6 +31,9 @@ Style/FrozenStringLiteralComment:
 RSpec/MultipleExpectations:
   Enabled: false
 
+RSpec/DescribeClass:
+  Enabled: false
+
 Metrics/BlockLength:
   Enabled: true
   Exclude:

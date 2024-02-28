@@ -11,4 +11,3 @@ class Vegetable < ActiveRecord::Base
     attribute :name
   end
 end
-

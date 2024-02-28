@@ -55,4 +55,3 @@ class ConditionallyEnqueuedDocument < ActiveRecord::Base
     is_public
   end
 end
-

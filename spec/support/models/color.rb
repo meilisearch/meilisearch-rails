@@ -35,4 +35,3 @@ class Color < ActiveRecord::Base
     false
   end
 end
-

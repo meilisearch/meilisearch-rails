@@ -38,4 +38,3 @@ class SequelBook < Sequel::Model(sequel_db)
     released && !premium
   end
 end
-

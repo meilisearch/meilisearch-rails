@@ -16,4 +16,3 @@ class Restaurant < ActiveRecord::Base
     pagination max_total_hits: 5
   end
 end
-

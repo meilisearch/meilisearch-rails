@@ -14,8 +14,8 @@ describe 'When sequel record is created' do
   end
 
   it 'does not override after hooks' do
-    expect(SequelBook).to receive(:new).twice.and_call_original
+    allow(SequelBook).to receive(:new).and_call_original
     SequelBook.create name: 'Steve Jobs', author: 'Walter Isaacson', premium: true, released: true
+    expect(SequelBook).to have_received(:new).twice
   end
 end
-

@@ -12,4 +12,3 @@ class Movie < ActiveRecord::Base
     typo_tolerance enabled: false
   end
 end
-

@@ -22,4 +22,3 @@ class People < ActiveRecord::Base
     will_save_change_to_first_name? || will_save_change_to_last_name?
   end
 end
-

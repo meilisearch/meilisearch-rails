@@ -1,6 +1,5 @@
 require 'spec_helper'
 
-
 if defined?(ActiveModel::Serializer)
   describe 'SerializedDocument' do
     before(:all) do

@@ -31,4 +31,3 @@ class Dog < ActiveRecord::Base
     "dog_#{id}"
   end
 end
-

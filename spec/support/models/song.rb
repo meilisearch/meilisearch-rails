@@ -27,4 +27,3 @@ class Song < ActiveRecord::Base
     released && !premium
   end
 end
-

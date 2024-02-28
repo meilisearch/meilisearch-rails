@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe 'multi-search' do # rubocop:todo RSpec/DescribeClass
+describe 'multi-search' do
   def reset_indexes
     [Book, Color, Product].each do |klass|
       klass.delete_all

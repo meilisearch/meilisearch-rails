@@ -79,4 +79,3 @@ class EncodedString < ActiveRecord::Base
     end
   end
 end
-

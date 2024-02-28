@@ -8,4 +8,3 @@ def sequel_db
 end
 
 FileUtils.rm('sequel_data.sqlite3') if File.exist?('sequel_data.sqlite3')
-
