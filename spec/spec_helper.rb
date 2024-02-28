@@ -33,13 +33,13 @@ require 'byebug'
 
 # Required for running background jobs on demand (deterministically)
 ActiveJob::Base.queue_adapter = :test
-# Required for serializing objects in similar to production environments
+# Required for serializing objects similar to production environments
 GlobalID.app = 'meilisearch-test'
 
 OLD_RAILS = Gem.loaded_specs['rails'].version < Gem::Version.new('4.0')
 NEW_RAILS = Gem.loaded_specs['rails'].version >= Gem::Version.new('6.0')
 
-Dir["#{File.dirname(__FILE__)}/support/**/*.rb"].sort.each { |file| require file }
+Dir["#{File.dirname(__FILE__)}/support/*.rb"].sort.each { |file| require file }
 
 RSpec.configure do |c|
   c.mock_with :rspec
