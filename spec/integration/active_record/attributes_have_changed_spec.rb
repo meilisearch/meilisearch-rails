@@ -1,0 +1,50 @@
+require 'support/models/color'
+require 'support/models/book'
+
+describe 'When record attributes have changed' do
+  it 'detects attribute changes' do
+    color = Color.new name: 'dark-blue', short_name: 'blue'
+
+    expect(Color.ms_must_reindex?(color)).to be(true)
+    color.save
+    expect(Color.ms_must_reindex?(color)).to be(false)
+
+    color.hex = 123_456
+    expect(Color.ms_must_reindex?(color)).to be(false)
+
+    color.not_indexed = 'strstr'
+    expect(Color.ms_must_reindex?(color)).to be(false)
+    color.name = 'red'
+    expect(Color.ms_must_reindex?(color)).to be(true)
+    color.delete
+  end
+
+  it 'detects attribute changes even in a transaction' do
+    color = Color.new name: 'dark-blue', short_name: 'blue'
+    color.save
+    expect(color.instance_variable_get('@ms_must_reindex')).to be_nil
+    Color.transaction do
+      color.name = 'red'
+      color.save
+      color.not_indexed = 'strstr'
+      color.save
+      expect(color.instance_variable_get('@ms_must_reindex')).to be(true)
+    end
+    expect(color.instance_variable_get('@ms_must_reindex')).to be_nil
+    color.delete
+  end
+
+  it 'detects change with ms_dirty? method' do
+    book = Book.new name: 'My life', author: 'Myself', premium: false, released: true
+
+    allow(book).to receive(:ms_dirty?).and_return(true)
+    expect(Book.ms_must_reindex?(book)).to be(true)
+
+    allow(book).to receive(:ms_dirty?).and_return(false)
+    expect(Book.ms_must_reindex?(book)).to be(false)
+
+    allow(book).to receive(:ms_dirty?).and_return(true)
+    expect(Book.ms_must_reindex?(book)).to be(true)
+  end
+end
+

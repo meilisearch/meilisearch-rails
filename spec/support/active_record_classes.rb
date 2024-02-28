@@ -9,12 +9,6 @@ ar_schema.instance_exec do
   create_table :mongo_documents do |t|
     t.string :name
   end
-  create_table :ebooks do |t|
-    t.string :name
-    t.string :author
-    t.boolean :premium
-    t.boolean :released
-  end
 end
 
 class UniqUser < ActiveRecord::Base
@@ -52,19 +46,3 @@ class MongoDocument < ActiveRecord::Base
   end
 end
 
-class Ebook < ActiveRecord::Base
-  include MeiliSearch::Rails
-  attr_accessor :current_time, :published_at
-
-  meilisearch synchronous: true, index_uid: safe_index_uid('eBooks') do
-    searchable_attributes [:name]
-  end
-
-  def ms_dirty?
-    return true if published_at.nil? || current_time.nil?
-
-    # Consider dirty if published date is in the past
-    # This doesn't make so much business sense but it's easy to test.
-    published_at < current_time
-  end
-end

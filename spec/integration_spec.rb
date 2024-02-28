@@ -46,50 +46,6 @@ describe 'Settings change detection' do
   end
 end
 
-describe 'Attributes change detection' do
-  it 'detects attribute changes' do
-    color = Color.new name: 'dark-blue', short_name: 'blue'
-
-    expect(Color.ms_must_reindex?(color)).to be(true)
-    color.save
-    expect(Color.ms_must_reindex?(color)).to be(false)
-
-    color.hex = 123_456
-    expect(Color.ms_must_reindex?(color)).to be(false)
-
-    color.not_indexed = 'strstr'
-    expect(Color.ms_must_reindex?(color)).to be(false)
-    color.name = 'red'
-    expect(Color.ms_must_reindex?(color)).to be(true)
-    color.delete
-  end
-
-  it 'detects attribute changes even in a transaction' do
-    color = Color.new name: 'dark-blue', short_name: 'blue'
-    color.save
-    expect(color.instance_variable_get('@ms_must_reindex')).to be_nil
-    Color.transaction do
-      color.name = 'red'
-      color.save
-      color.not_indexed = 'strstr'
-      color.save
-      expect(color.instance_variable_get('@ms_must_reindex')).to be(true)
-    end
-    expect(color.instance_variable_get('@ms_must_reindex')).to be_nil
-    color.delete
-  end
-
-  it 'detects change with ms_dirty? method' do
-    ebook = Ebook.new name: 'My life', author: 'Myself', premium: false, released: true
-    expect(Ebook.ms_must_reindex?(ebook)).to be(true) # Because it's defined in ms_dirty? method
-    ebook.current_time = 10
-    ebook.published_at = 8
-    expect(Ebook.ms_must_reindex?(ebook)).to be(true)
-    ebook.published_at = 12
-    expect(Ebook.ms_must_reindex?(ebook)).to be(false)
-  end
-end
-
 describe 'Namespaced::Model' do
   before(:all) do
     Namespaced::Model.index.delete_all_documents!
