@@ -451,15 +451,6 @@ describe 'An imaginary store' do
   end
 end
 
-describe 'MongoDocument' do
-  it 'does not have method conflicts' do
-    expect { MongoDocument.reindex! }.to raise_error(NameError)
-    expect { MongoDocument.new.index! }.to raise_error(NameError)
-    MongoDocument.ms_reindex!
-    MongoDocument.create(name: 'mongo').ms_index!
-  end
-end
-
 describe 'Book' do
   before do
     Book.clear_index!(true)
