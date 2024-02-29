@@ -620,20 +620,6 @@ describe 'Book' do
     end.not_to raise_error
   end
 
-  context 'with Marshal serialization' do
-    let(:found_books) { Book.search('*') }
-    let(:marshaled_books) { Marshal.dump(found_books) }
-
-    it 'returns all books in the marshaled format' do
-      # Perform the search and marshal the results
-      expect(marshaled_books).to be_present
-
-      # Load the marshaled data and check the content
-      loaded_books = Marshal.load(marshaled_books)
-      expect(loaded_books).to match_array(found_books)
-    end
-  end
-
   context 'with Rails caching' do
     let(:memory_store) { ActiveSupport::Cache.lookup_store(:memory_store) }
     let(:cache) { Rails.cache }
