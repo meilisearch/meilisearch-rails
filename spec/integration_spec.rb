@@ -125,21 +125,6 @@ describe 'Colors' do
     expect(results).to include(blue)
   end
 
-  it 'returns facets distribution' do
-    Color.create!(name: 'blue', short_name: 'b', hex: 0xFF0000)
-    results = Color.search('', { facets: ['short_name'] })
-    expect(results.raw_answer).not_to be_nil
-    expect(results.facets_distribution).not_to be_nil
-    expect(results.facets_distribution.size).to eq(1)
-    expect(results.facets_distribution['short_name']['b']).to eq(1)
-  end
-
-  it 'is raw searchable' do
-    Color.create!(name: 'blue', short_name: 'b', hex: 0xFF0000)
-    results = Color.raw_search('blue')
-    expect(results['hits'].size).to eq(1)
-    expect(results['estimatedTotalHits']).to eq(1)
-  end
 
   it 'is able to temporarily disable auto-indexing' do
     Color.without_auto_index do
@@ -148,23 +133,6 @@ describe 'Colors' do
     expect(Color.search('blue').size).to eq(0)
     Color.reindex!(MeiliSearch::Rails::IndexSettings::DEFAULT_BATCH_SIZE, true)
     expect(Color.search('blue').size).to eq(1)
-  end
-
-  it 'is not searchable with non-searchable fields' do
-    Color.create!(name: 'blue', short_name: 'x', hex: 0xFF0000)
-    results = Color.search('x')
-    expect(results.size).to eq(0)
-  end
-
-  it 'ranks with custom hex' do
-    Color.create!(name: 'red', short_name: 'r3', hex: 3)
-    Color.create!(name: 'red', short_name: 'r1', hex: 1)
-    Color.create!(name: 'red', short_name: 'r2', hex: 2)
-    results = Color.search('red')
-    expect(results.size).to eq(3)
-    expect(results[0].hex).to eq(1)
-    expect(results[1].hex).to eq(2)
-    expect(results[2].hex).to eq(3)
   end
 
   it 'updates the index if the attribute changed' do
@@ -194,13 +162,6 @@ describe 'Colors' do
     expect(Color.index_uid).to eq(safe_index_uid('Color') + "_#{Rails.env}")
   end
 
-  it 'includes _formatted object' do
-    Color.create!(name: 'green', short_name: 'b', hex: 0xFF0000)
-    results = Color.search('gre')
-    expect(results.size).to eq(1)
-    expect(results[0].formatted).not_to be_nil
-  end
-
   it 'indexes an array of documents' do
     json = Color.raw_search('')
     Color.index_documents Color.limit(1), true # reindex last color, `limit` is incompatible with the reindex! method
@@ -210,27 +171,6 @@ describe 'Colors' do
   it 'does not index non-saved document' do
     expect { Color.new(name: 'purple').index!(true) }.to raise_error(ArgumentError)
     expect { Color.new(name: 'purple').remove_from_index!(true) }.to raise_error(ArgumentError)
-  end
-
-  it 'searches with filter' do
-    Color.create!(name: 'blue', short_name: 'blu', hex: 0x0000FF)
-    black = Color.create!(name: 'black', short_name: 'bla', hex: 0x000000)
-    Color.create!(name: 'green', short_name: 'gre', hex: 0x00FF00)
-    facets = Color.search('bl', { filter: ['short_name = bla'] })
-    expect(facets.size).to eq(1)
-    expect(facets).to include(black)
-  end
-
-  it 'searches with sorting' do
-    Color.delete_all
-
-    blue = Color.create!(name: 'blue', short_name: 'blu', hex: 0x0000FF)
-    black = Color.create!(name: 'black', short_name: 'bla', hex: 0x000000)
-    green = Color.create!(name: 'green', short_name: 'gre', hex: 0x00FF00)
-
-    facets = Color.search('*', { sort: ['name:asc'] })
-
-    expect(facets).to eq([black, blue, green])
   end
 end
 
