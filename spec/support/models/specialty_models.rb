@@ -19,6 +19,8 @@ ar_schema.create_table :serialized_documents do |t|
   t.string :skip
 end
 
+ar_schema.create_table :encoded_strings
+
 module Namespaced
   def self.table_name_prefix
     'namespaced_'
@@ -66,5 +68,15 @@ class SerializedDocument < ActiveRecord::Base
 
   meilisearch index_uid: safe_index_uid('SerializedDocument') do
     use_serializer SerializedDocumentSerializer
+  end
+end
+
+class EncodedString < ActiveRecord::Base
+  include MeiliSearch::Rails
+
+  meilisearch synchronous: true, force_utf8_encoding: true, index_uid: safe_index_uid('EncodedString') do
+    attribute :value do
+      "\xC2\xA0\xE2\x80\xA2\xC2\xA0".force_encoding('ascii-8bit')
+    end
   end
 end

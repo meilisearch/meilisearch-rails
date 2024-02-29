@@ -15,7 +15,6 @@ ar_schema.instance_exec do
     t.boolean :premium
     t.boolean :released
   end
-  create_table :encoded_strings
 end
 
 class UniqUser < ActiveRecord::Base
@@ -67,15 +66,5 @@ class Ebook < ActiveRecord::Base
     # Consider dirty if published date is in the past
     # This doesn't make so much business sense but it's easy to test.
     published_at < current_time
-  end
-end
-
-class EncodedString < ActiveRecord::Base
-  include MeiliSearch::Rails
-
-  meilisearch synchronous: true, force_utf8_encoding: true, index_uid: safe_index_uid('EncodedString') do
-    attribute :value do
-      "\xC2\xA0\xE2\x80\xA2\xC2\xA0".force_encoding('ascii-8bit')
-    end
   end
 end
