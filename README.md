@@ -38,6 +38,7 @@
 - [Compatibility](#-compatibility)
 - [⚙️ Settings](#️-settings)
 - [🔍 Custom search](#-custom-search)
+- [🔍🔍 Multi search](#-multi-search)
 - [🪛 Options](#-options)
   - [Meilisearch configuration & environment](#meilisearch-configuration--environment)
   - [Pagination with `kaminari` or `will_paginate`](#backend-pagination-with-kaminari-or-will_paginate-)
@@ -239,6 +240,58 @@ Book.search('*', sort: ['title:asc'])
 ```
 
 👉 Don't forget to set up the `sortable_attributes` option in the `meilisearch` block of your model.
+
+## 🔍🔍 Multi search
+
+Meilisearch supports searching multiple models at the same time (see [🔍 Custom search](#-custom-search) for search options):
+
+```ruby
+multi_search_results = MeiliSearch::Rails.multi_search(
+  Book => { q: 'Harry' },
+  Manga => { q: 'Attack' }
+)
+```
+
+You can iterate through the results with `.each` or `.each_result`:
+
+```erb
+<% multi_search_results.each do |record| %>
+  <p><%= record.title %></p>
+  <p><%= record.author %></p>
+<% end %>
+
+<p>Harry Potter and the Philosopher's Stone</p>
+<p>J. K. Rowling</p>
+<p>Harry Potter and the Chamber of Secrets</p>
+<p>J. K. Rowling</p>
+<p>Attack on Titan</p>
+<p>Iseyama</p>
+```
+
+```erb
+<% multi_search_results.each_result do |klass, results| %>
+  <p><%= klass.name.pluralize %></p>
+
+  <ul>
+    <% results.each do |record| %>
+      <li><%= record.title %></li>
+    <% end %>
+  </ul>
+<% end %>
+
+
+<p>Books</p>
+<ul>
+  <li>Harry Potter and the Philosopher's Stone</li>
+  <li>Harry Potter and the Chamber of Secrets</li>
+</ul>
+<p>Mangas</p>
+<ul>
+  <li>Attack on Titan</li>
+</ul>
+```
+
+See the [official multi search documentation](https://www.meilisearch.com/docs/reference/api/multi_search).
 
 ## 🪛 Options
 
