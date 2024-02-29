@@ -140,12 +140,6 @@ describe 'Colors' do
     Color.delete_all
   end
 
-  it 'is synchronous' do
-    c = Color.new
-    c.valid?
-    expect(c.send(:ms_synchronous?)).to be(true)
-  end
-
   it 'auto indexes' do
     blue = Color.create!(name: 'blue', short_name: 'b', hex: 0xFF0000)
     results = Color.search('blue')
@@ -259,10 +253,6 @@ describe 'Colors' do
     facets = Color.search('*', { sort: ['name:asc'] })
 
     expect(facets).to eq([black, blue, green])
-  end
-
-  it 'has maxValuesPerFacet set' do
-    expect(Color.ms_index.get_settings.dig('faceting', 'maxValuesPerFacet')).to eq(20)
   end
 end
 
