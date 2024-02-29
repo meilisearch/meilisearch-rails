@@ -2,19 +2,10 @@ require 'support/active_record_schema'
 Dir["#{File.dirname(__FILE__)}/models/*.rb"].sort.each { |file| require file }
 
 ar_schema.instance_exec do
-  create_table :uniq_users, id: false do |t|
-    t.string :name
-  end
   create_table :nullable_ids
   create_table :mongo_documents do |t|
     t.string :name
   end
-end
-
-class UniqUser < ActiveRecord::Base
-  include MeiliSearch::Rails
-
-  meilisearch synchronous: true, index_uid: safe_index_uid('UniqUser'), primary_key: :name
 end
 
 class NullableId < ActiveRecord::Base
