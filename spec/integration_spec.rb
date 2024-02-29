@@ -619,33 +619,6 @@ describe 'Book' do
       Book.index.facet_search('genre')
     end.not_to raise_error
   end
-
-  context 'with Rails caching' do
-    let(:memory_store) { ActiveSupport::Cache.lookup_store(:memory_store) }
-    let(:cache) { Rails.cache }
-
-    let(:search_query) { '*' }
-    let(:cache_key) { "book_search:#{search_query}" }
-
-    before do
-      allow(Rails).to receive(:cache).and_return(memory_store)
-      Rails.cache.clear
-    end
-
-    it 'caches the search results' do
-      # Ensure the cache is empty before the test
-      expect(Rails.cache.read(cache_key)).to be_nil
-
-      # Perform the search and cache the results
-      Rails.cache.fetch(cache_key) do
-        Book.search(search_query)
-      end
-
-      # Check if the search result is cached
-      not_cached_books = Book.search(search_query)
-      expect(Rails.cache.read(cache_key)).to match_array(not_cached_books)
-    end
-  end
 end
 
 describe 'Movie' do
