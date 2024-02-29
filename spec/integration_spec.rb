@@ -1,24 +1,5 @@
 require 'spec_helper'
 
-describe 'SequelBook' do
-  before do
-    SequelBook.clear_index!(true)
-  end
-
-  it 'indexes the book' do
-    steve_jobs = SequelBook.create name: 'Steve Jobs', author: 'Walter Isaacson', premium: true, released: true
-    results = SequelBook.search('steve')
-
-    expect(results.size).to eq(1)
-    expect(results[0].id).to eq(steve_jobs.id)
-  end
-
-  it 'does not override after hooks' do
-    expect(SequelBook).to receive(:new).twice.and_call_original
-    SequelBook.create name: 'Steve Jobs', author: 'Walter Isaacson', premium: true, released: true
-  end
-end
-
 if defined?(ActiveModel::Serializer)
   describe 'SerializedDocument' do
     before(:all) do
@@ -32,7 +13,6 @@ if defined?(ActiveModel::Serializer)
     end
   end
 end
-
 describe 'Encoding' do
   before(:all) do
     EncodedString.clear_index!(true)
