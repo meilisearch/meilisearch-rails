@@ -1,7 +1,29 @@
 require 'support/models/color'
 require 'support/models/book'
+require 'support/models/animals'
 
 describe 'meilisearch_options' do
+  describe ':index_uid and :primary_key (shared index)' do
+    it 'index uid is the same' do
+      cat_index = Cat.index_uid
+      dog_index = Dog.index_uid
+
+      expect(cat_index).to eq(dog_index)
+    end
+
+    it 'searching a type only returns its own documents' do
+      TestUtil.reset_animals!
+
+      Dog.create!([{ name: 'Toby the Dog' }, { name: 'Felix the Dog' }])
+      Cat.create!([{ name: 'Toby the Cat' }, { name: 'Felix the Cat' }, { name: 'roar' }])
+
+      expect(Cat.search('felix')).to be_one
+      expect(Cat.search('felix').first.name).to eq('Felix the Cat')
+      expect(Dog.search('toby')).to be_one
+      expect(Dog.search('Toby').first.name).to eq('Toby the Dog')
+    end
+  end
+
   describe ':if' do
     it 'only indexes the record in the valid indexes' do
       TestUtil.reset_books!

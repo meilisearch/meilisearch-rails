@@ -1,4 +1,5 @@
 require 'support/models/book'
+require 'support/models/animals'
 
 describe 'Instance methods' do
   describe '#ms_entries' do
@@ -28,6 +29,21 @@ describe 'Instance methods' do
         # also includes book's id as if it was a public book
         a_hash_including("index_uid" => safe_index_uid('Book')),
       )
+    end
+
+    context 'when models share an index' do
+      it 'does not return instances of other models' do
+        TestUtil.reset_animals!
+
+        toby_dog = Dog.create!(name: 'Toby the Dog')
+        taby_cat = Cat.create!(name: 'Taby the Cat')
+
+        expect(toby_dog.ms_entries).to contain_exactly(
+          a_hash_including('primary_key' => /dog_\d+/))
+
+        expect(taby_cat.ms_entries).to contain_exactly(
+          a_hash_including('primary_key' => /cat_\d+/))
+      end
     end
   end
 

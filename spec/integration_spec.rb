@@ -631,41 +631,6 @@ describe 'People' do
   end
 end
 
-describe 'Animals' do
-  it 'returns only the requested type' do
-    Dog.create!([{ name: 'Toby the Dog' }, { name: 'Felix the Dog' }])
-    Cat.create!([{ name: 'Toby the Cat' }, { name: 'Felix the Cat' }, { name: 'roar' }])
-
-    expect(Dog.count).to eq(2)
-    expect(Cat.count).to eq(3)
-
-    expect(Cat.search('felix').size).to eq(1)
-    expect(Cat.search('felix').first.name).to eq('Felix the Cat')
-    expect(Dog.search('toby').size).to eq(1)
-    expect(Dog.search('Toby').first.name).to eq('Toby the Dog')
-  end
-
-  it 'shares a single index' do
-    cat_index = Cat.index.instance_variable_get('@index').uid
-    dog_index = Dog.index.instance_variable_get('@index').uid
-
-    expect(cat_index).to eq(dog_index)
-  end
-
-  describe '#ms_entries' do
-    it 'returns the correct entry for each animal' do
-      toby_dog = Dog.create!(name: 'Toby the Dog')
-      taby_cat = Cat.create!(name: 'Taby the Cat')
-
-      expect(toby_dog.ms_entries).to contain_exactly(
-        a_hash_including('primary_key' => /dog_\d+/))
-
-      expect(taby_cat.ms_entries).to contain_exactly(
-        a_hash_including('primary_key' => /cat_\d+/))
-    end
-  end
-end
-
 describe 'Songs' do
   before(:all) { MeiliSearch::Rails.configuration[:per_environment] = false }
 
