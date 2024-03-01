@@ -22,9 +22,8 @@ describe 'meilisearch_options' do
   end
 
   describe ':auto_index' do
-    it 'auto indexes by default' do
-      Color.clear_index!(true)
-      Color.delete_all
+    it 'is enabled by default' do
+      TestUtil.reset_colors!
 
       Color.create!(name: 'blue', short_name: 'b', hex: 0xFF0000)
       results = Color.raw_search('blue')

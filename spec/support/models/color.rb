@@ -35,3 +35,10 @@ class Color < ActiveRecord::Base
     false
   end
 end
+
+module TestUtil
+  def self.reset_colors!
+    Color.clear_index!(true)
+    Color.delete_all
+  end
+end

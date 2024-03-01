@@ -1,6 +1,17 @@
 require 'support/models/book'
+require 'support/models/color'
 
 describe 'When record is updated' do
+  it 'updates the changed attributes on the index' do
+    purple = Color.create!(name: 'purple', short_name: 'p')
+    expect(Color.search('purple')).to be_one
+    expect(Color.search('pink')).to be_empty
+
+    purple.update name: 'pink'
+    expect(Color.search('purple')).to be_empty
+    expect(Color.search('pink')).to be_one
+  end
+
   it 'automatically removes document from conditional indexes' do
     TestUtil.reset_books!
 

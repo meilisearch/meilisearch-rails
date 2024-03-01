@@ -45,5 +45,15 @@ describe 'Instance methods' do
         a_hash_including('taskUid')
       )
     end
+
+    it 'throws error on non-persisted instances' do
+      expect { Color.new(name: 'purple').index!(true) }.to raise_error(ArgumentError)
+    end
+  end
+
+  describe '#ms_remove_from_index!' do
+    it 'throws error on non-persisted instances' do
+      expect { Color.new(name: 'purple').remove_from_index!(true) }.to raise_error(ArgumentError)
+    end
   end
 end

@@ -112,64 +112,6 @@ describe 'NestedItem' do
   end
 end
 
-describe 'Colors' do
-  before do
-    Color.clear_index!(true)
-    Color.delete_all
-  end
-
-  it 'auto indexes' do
-    blue = Color.create!(name: 'blue', short_name: 'b', hex: 0xFF0000)
-    results = Color.search('blue')
-    expect(results.size).to eq(1)
-    expect(results).to include(blue)
-  end
-
-
-  it 'is able to temporarily disable auto-indexing' do
-    Color.without_auto_index do
-      Color.create!(name: 'blue', short_name: 'b', hex: 0xFF0000)
-    end
-    expect(Color.search('blue').size).to eq(0)
-    Color.reindex!(MeiliSearch::Rails::IndexSettings::DEFAULT_BATCH_SIZE, true)
-    expect(Color.search('blue').size).to eq(1)
-  end
-
-  it 'updates the index if the attribute changed' do
-    purple = Color.create!(name: 'purple', short_name: 'p')
-    expect(Color.search('purple').size).to eq(1)
-    expect(Color.search('pink').size).to eq(0)
-    purple.name = 'pink'
-    purple.save
-    expect(Color.search('purple').size).to eq(0)
-    expect(Color.search('pink').size).to eq(1)
-  end
-
-  it 'uses the specified scope' do
-    Color.create!(name: 'red', short_name: 'r3', hex: 3)
-    Color.create!(name: 'red', short_name: 'r1', hex: 1)
-    Color.create!(name: 'red', short_name: 'r2', hex: 2)
-    Color.create!(name: 'purple', short_name: 'p')
-    Color.clear_index!(true)
-    Color.where(name: 'red').reindex!(MeiliSearch::Rails::IndexSettings::DEFAULT_BATCH_SIZE, true)
-    expect(Color.search('').size).to eq(3)
-    Color.clear_index!(true)
-    Color.where(id: Color.first.id).reindex!(MeiliSearch::Rails::IndexSettings::DEFAULT_BATCH_SIZE, true)
-    expect(Color.search('').size).to eq(1)
-  end
-
-  it 'indexes an array of documents' do
-    json = Color.raw_search('')
-    Color.index_documents Color.limit(1), true # reindex last color, `limit` is incompatible with the reindex! method
-    expect(json['hits'].count).to eq(Color.raw_search('')['hits'].count)
-  end
-
-  it 'does not index non-saved document' do
-    expect { Color.new(name: 'purple').index!(true) }.to raise_error(ArgumentError)
-    expect { Color.new(name: 'purple').remove_from_index!(true) }.to raise_error(ArgumentError)
-  end
-end
-
 describe 'An imaginary store' do
   before(:all) do
     Product.clear_index!(true)

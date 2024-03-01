@@ -56,8 +56,8 @@ end
 
 describe '#raw_search' do
   it 'allows for access to meilisearch-ruby search' do
-    Color.clear_index!(true)
-    Color.delete_all
+    TestUtil.reset_colors!
+
     Color.create!(name: 'blue', short_name: 'b', hex: 0xFF0000)
 
     raw_results = Color.raw_search('blue')
