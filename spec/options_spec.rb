@@ -2,6 +2,7 @@ require 'support/models/color'
 require 'support/models/book'
 require 'support/models/animals'
 require 'support/models/people'
+require 'support/models/disabled_models'
 
 describe 'meilisearch_options' do
   describe ':index_uid' do
@@ -86,6 +87,32 @@ describe 'meilisearch_options' do
         result = People.raw_search('Joanna')
         expect(result['hits']).to be_one
       end
+    end
+  end
+
+  describe ':disable_indexing' do
+    it 'prevents indexing when disabled with a boolean' do
+      # manually trigger index creation since indexing is disabled
+      DisabledBoolean.index
+
+      DisabledBoolean.create name: 'foo'
+      expect(DisabledBoolean.search('')).to be_empty
+    end
+
+    it 'prevents indexing when disabled with a proc' do
+      # manually trigger index creation since indexing is disabled
+      DisabledProc.index
+
+      DisabledProc.create name: 'foo'
+      expect(DisabledProc.search('')).to be_empty
+    end
+
+    it 'prevents indexing when disabled with a symbol (method)' do
+      # manually trigger index creation since indexing is disabled
+      DisabledSymbol.index
+
+      DisabledSymbol.create name: 'foo'
+      expect(DisabledSymbol.search('')).to be_empty
     end
   end
 

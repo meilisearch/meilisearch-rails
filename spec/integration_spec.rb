@@ -476,29 +476,6 @@ describe 'attributes_to_crop' do
   end
 end
 
-describe 'Disabled' do
-  before(:all) do
-    DisabledBoolean.index.delete_all_documents!
-    DisabledProc.index.delete_all_documents!
-    DisabledSymbol.index.delete_all_documents!
-  end
-
-  it 'disables the indexing using a boolean' do
-    DisabledBoolean.create name: 'foo'
-    expect(DisabledBoolean.search('').size).to eq(0)
-  end
-
-  it 'disables the indexing using a proc' do
-    DisabledProc.create name: 'foo'
-    expect(DisabledProc.search('').size).to eq(0)
-  end
-
-  it 'disables the indexing using a symbol' do
-    DisabledSymbol.create name: 'foo'
-    expect(DisabledSymbol.search('').size).to eq(0)
-  end
-end
-
 unless OLD_RAILS
   describe 'EnqueuedDocument' do
     it 'enqueues a job' do
