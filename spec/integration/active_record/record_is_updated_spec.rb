@@ -30,4 +30,16 @@ describe 'When record is updated' do
     results = index.search('Public book')
     expect(results['hits']).to be_empty
   end
+
+  context 'when attributes have not changed' do
+    it 'does not call the API' do
+      TestUtil.reset_people!
+
+      jane = People.create(first_name: 'Jane', last_name: 'Doe', card_number: 75_801_887)
+
+      expect do
+        jane.update(first_name: 'Jane')
+      end.not_to change(People.index.tasks['results'], :count)
+    end
+  end
 end

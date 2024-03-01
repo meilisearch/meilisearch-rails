@@ -1,5 +1,6 @@
 require 'support/models/color'
 require 'support/models/book'
+require 'support/models/people'
 
 describe 'Model methods' do
   describe '.reindex!' do
@@ -18,6 +19,24 @@ describe 'Model methods' do
       Color.clear_index!(true)
       Color.where(id: Color.first.id).reindex!(3, true)
       expect(Color.search('').size).to eq(1)
+    end
+  end
+
+  describe '.clear_index!' do
+    context 'when :auto_remove is disabled' do
+      it 'clears index manually' do
+        TestUtil.reset_people!
+
+        People.create(first_name: 'Jane', last_name: 'Doe', card_number: 75_801_887)
+
+        results = People.raw_search('')
+        expect(results['hits']).not_to be_empty
+
+        People.clear_index!(true)
+
+        results = People.raw_search('')
+        expect(results['hits']).to be_empty
+      end
     end
   end
 

@@ -1,7 +1,21 @@
 require 'spec_helper'
 require 'support/models/book'
+require 'support/models/people'
 
 describe MeiliSearch::Rails::IndexSettings do
+  describe 'add_attribute' do
+    context 'with a symbol' do
+      it 'calls method for new attribute' do
+        TestUtil.reset_people!
+
+        People.create(first_name: 'Jane', last_name: 'Doe', card_number: 75_801_887)
+
+        result = People.raw_search('Jane')
+        expect(result['hits'][0]['full_name']).to eq('Jane Doe')
+      end
+    end
+  end
+
   describe 'faceting' do
     it 'respects max values per facet' do
       TestUtil.reset_books!

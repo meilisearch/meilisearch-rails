@@ -1,8 +1,25 @@
 require 'support/models/color'
 require 'support/models/book'
 require 'support/models/animals'
+require 'support/models/people'
 
 describe 'meilisearch_options' do
+  describe ':index_uid' do
+    it 'sets the index uid specified' do
+      TestUtil.reset_people!
+      People.create(first_name: 'Jane', last_name: 'Doe', card_number: 75_801_887)
+      expect(People.index.uid).to eq("#{safe_index_uid('MyCustomPeople')}_test")
+    end
+  end
+
+  describe ':primary_key' do
+    it 'sets the primary key specified' do
+      TestUtil.reset_people!
+      People.create(first_name: 'Jane', last_name: 'Doe', card_number: 75_801_887)
+      expect(People.index.fetch_info.primary_key).to eq('card_number')
+    end
+  end
+
   describe ':index_uid and :primary_key (shared index)' do
     it 'index uid is the same' do
       cat_index = Cat.index_uid
@@ -51,6 +68,24 @@ describe 'meilisearch_options' do
       results = Color.raw_search('blue')
       expect(results['hits'].size).to eq(1)
       expect(results['estimatedTotalHits']).to eq(1)
+    end
+  end
+
+  describe ':auto_remove' do
+    context 'when false' do
+      it 'does not remove document on destroy' do
+        TestUtil.reset_people!
+
+        joanna = People.create(first_name: 'Joanna', last_name: 'Banana', card_number: 75_801_888)
+
+        result = People.raw_search('Joanna')
+        expect(result['hits']).to be_one
+
+        joanna.destroy
+
+        result = People.raw_search('Joanna')
+        expect(result['hits']).to be_one
+      end
     end
   end
 

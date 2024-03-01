@@ -1,5 +1,6 @@
 require 'support/models/book'
 require 'support/models/animals'
+require 'support/models/people'
 
 describe 'Instance methods' do
   describe '#ms_entries' do
@@ -70,6 +71,22 @@ describe 'Instance methods' do
   describe '#ms_remove_from_index!' do
     it 'throws error on non-persisted instances' do
       expect { Color.new(name: 'purple').remove_from_index!(true) }.to raise_error(ArgumentError)
+    end
+
+    context 'when :auto_remove is disabled' do
+      it 'is able to remove manually' do
+        TestUtil.reset_people!
+
+        bob = People.create(first_name: 'Bob', last_name: 'Sponge', card_number: 75_801_889)
+
+        result = People.raw_search('Bob')
+        expect(result['hits']).to be_one
+
+        bob.remove_from_index!
+
+        result = People.raw_search('Bob')
+        expect(result['hits']).to be_empty
+      end
     end
   end
 end
