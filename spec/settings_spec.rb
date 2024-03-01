@@ -1,6 +1,50 @@
 require 'spec_helper'
+require 'support/models/book'
 
 describe MeiliSearch::Rails::IndexSettings do
+  describe 'faceting' do
+    it 'respects max values per facet' do
+      TestUtil.reset_books!
+
+      4.times do
+        Book.create! name: Faker::Book.title, author: Faker::Book.author,
+                     genre: Faker::Book.unique.genre
+      end
+
+      genres = Book.distinct.pluck(:genre)
+
+      results = Book.search('', { facets: ['genre'] })
+
+      expect(genres.size).to be > 3
+      expect(results.facets_distribution['genre'].size).to eq(3)
+    end
+  end
+
+  describe 'typo_tolerance' do
+    it 'searches with one typo min size' do
+      TestUtil.reset_books!
+
+      Book.create! name: 'The Lord of the Rings', author: 'me', premium: false, released: true
+      results = Book.search('Lrod')
+      expect(results).to be_empty
+
+      results = Book.search('Rnigs')
+      expect(results).to be_one
+    end
+
+    it 'searches with two typo min size' do
+      TestUtil.reset_books!
+
+      Book.create! name: 'Dracula', author: 'me', premium: false, released: true
+      results = Book.search('Darclua')
+      expect(results).to be_empty
+
+      Book.create! name: 'Frankenstein', author: 'me', premium: false, released: true
+      results = Book.search('Farnkenstien')
+      expect(results).to be_one
+    end
+  end
+
   describe 'settings change detection' do
     let(:record) { Color.create name: 'dark-blue', short_name: 'blue' }
 

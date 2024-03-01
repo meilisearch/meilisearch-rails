@@ -32,3 +32,11 @@ class Book < ActiveRecord::Base
     released && !premium
   end
 end
+
+module TestUtil
+  def self.reset_books!
+    Book.clear_index!(true)
+    Book.index(safe_index_uid('BookAuthor')).delete_all_documents
+    Book.index(safe_index_uid('Book')).delete_all_documents
+  end
+end

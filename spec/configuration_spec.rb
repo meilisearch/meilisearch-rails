@@ -1,4 +1,6 @@
 require 'spec_helper'
+require 'support/models/book'
+require 'support/models/color'
 
 describe MeiliSearch::Rails::Configuration do
   before { stub_const('MeiliSearch::Rails::VERSION', '0.0.1') }
@@ -60,6 +62,20 @@ describe MeiliSearch::Rails::Configuration do
           .to have_received(:new)
           .with('http://localhost:7700', 's3cr3tap1k3y', client_agents: 'Meilisearch Rails (v0.0.1)', timeout: 2, max_retries: 1)
       end
+    end
+  end
+
+  context 'with per_environment' do
+    # per_environment is already enabled in testing
+    # no setup is required
+
+    it 'adds a Rails env-based index suffix' do
+      expect(Color.index_uid).to eq(safe_index_uid('Color') + "_#{Rails.env}")
+    end
+
+    it 'uses suffix in the additional index as well' do
+      index = Book.index(safe_index_uid('Book'))
+      expect(index.uid).to eq("#{safe_index_uid('Book')}_#{Rails.env}")
     end
   end
 

@@ -47,7 +47,6 @@ describe 'Search' do
     )
   end
 
-
   it 'results include #formatted object' do
     Color.create!(name: 'green', short_name: 'b', hex: 0xFF0000)
     results = Color.search('gre')
