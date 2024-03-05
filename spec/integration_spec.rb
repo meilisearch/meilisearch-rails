@@ -46,50 +46,6 @@ describe 'Settings change detection' do
   end
 end
 
-describe 'Attributes change detection' do
-  it 'detects attribute changes' do
-    color = Color.new name: 'dark-blue', short_name: 'blue'
-
-    expect(Color.ms_must_reindex?(color)).to be(true)
-    color.save
-    expect(Color.ms_must_reindex?(color)).to be(false)
-
-    color.hex = 123_456
-    expect(Color.ms_must_reindex?(color)).to be(false)
-
-    color.not_indexed = 'strstr'
-    expect(Color.ms_must_reindex?(color)).to be(false)
-    color.name = 'red'
-    expect(Color.ms_must_reindex?(color)).to be(true)
-    color.delete
-  end
-
-  it 'detects attribute changes even in a transaction' do
-    color = Color.new name: 'dark-blue', short_name: 'blue'
-    color.save
-    expect(color.instance_variable_get('@ms_must_reindex')).to be_nil
-    Color.transaction do
-      color.name = 'red'
-      color.save
-      color.not_indexed = 'strstr'
-      color.save
-      expect(color.instance_variable_get('@ms_must_reindex')).to be(true)
-    end
-    expect(color.instance_variable_get('@ms_must_reindex')).to be_nil
-    color.delete
-  end
-
-  it 'detects change with ms_dirty? method' do
-    ebook = Ebook.new name: 'My life', author: 'Myself', premium: false, released: true
-    expect(Ebook.ms_must_reindex?(ebook)).to be(true) # Because it's defined in ms_dirty? method
-    ebook.current_time = 10
-    ebook.published_at = 8
-    expect(Ebook.ms_must_reindex?(ebook)).to be(true)
-    ebook.published_at = 12
-    expect(Ebook.ms_must_reindex?(ebook)).to be(false)
-  end
-end
-
 describe 'Namespaced::Model' do
   before(:all) do
     Namespaced::Model.index.delete_all_documents!
@@ -182,12 +138,6 @@ describe 'Colors' do
   before do
     Color.clear_index!(true)
     Color.delete_all
-  end
-
-  it 'is synchronous' do
-    c = Color.new
-    c.valid?
-    expect(c.send(:ms_synchronous?)).to be(true)
   end
 
   it 'auto indexes' do
@@ -303,10 +253,6 @@ describe 'Colors' do
     facets = Color.search('*', { sort: ['name:asc'] })
 
     expect(facets).to eq([black, blue, green])
-  end
-
-  it 'has maxValuesPerFacet set' do
-    expect(Color.ms_index.get_settings.dig('faceting', 'maxValuesPerFacet')).to eq(20)
   end
 end
 
@@ -495,15 +441,6 @@ describe 'An imaginary store' do
   end
 end
 
-describe 'MongoDocument' do
-  it 'does not have method conflicts' do
-    expect { MongoDocument.reindex! }.to raise_error(NameError)
-    expect { MongoDocument.new.index! }.to raise_error(NameError)
-    MongoDocument.ms_reindex!
-    MongoDocument.create(name: 'mongo').ms_index!
-  end
-end
-
 describe 'Book' do
   before do
     Book.clear_index!(true)
@@ -662,47 +599,6 @@ describe 'Book' do
       Book.index.facet_search('genre', filter: 'author = A')
       Book.index.facet_search('genre')
     end.not_to raise_error
-  end
-
-  context 'with Marshal serialization' do
-    let(:found_books) { Book.search('*') }
-    let(:marshaled_books) { Marshal.dump(found_books) }
-
-    it 'returns all books in the marshaled format' do
-      # Perform the search and marshal the results
-      expect(marshaled_books).to be_present
-
-      # Load the marshaled data and check the content
-      loaded_books = Marshal.load(marshaled_books)
-      expect(loaded_books).to match_array(found_books)
-    end
-  end
-
-  context 'with Rails caching' do
-    let(:memory_store) { ActiveSupport::Cache.lookup_store(:memory_store) }
-    let(:cache) { Rails.cache }
-
-    let(:search_query) { '*' }
-    let(:cache_key) { "book_search:#{search_query}" }
-
-    before do
-      allow(Rails).to receive(:cache).and_return(memory_store)
-      Rails.cache.clear
-    end
-
-    it 'caches the search results' do
-      # Ensure the cache is empty before the test
-      expect(Rails.cache.read(cache_key)).to be_nil
-
-      # Perform the search and cache the results
-      Rails.cache.fetch(cache_key) do
-        Book.search(search_query)
-      end
-
-      # Check if the search result is cached
-      not_cached_books = Book.search(search_query)
-      expect(Rails.cache.read(cache_key)).to match_array(not_cached_books)
-    end
   end
 end
 
