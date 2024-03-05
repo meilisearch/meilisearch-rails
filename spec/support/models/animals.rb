@@ -31,3 +31,12 @@ class Dog < ActiveRecord::Base
     "dog_#{id}"
   end
 end
+
+module TestUtil
+  def self.reset_animals!
+    Cat.clear_index!(true)
+    Cat.delete_all
+    Dog.clear_index!(true)
+    Dog.delete_all
+  end
+end
