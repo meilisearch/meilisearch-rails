@@ -1235,3 +1235,39 @@ context 'when MeiliSearch calls are deactivated' do
     end
   end
 end
+
+describe 'proximity_precision' do
+  before do
+    stub_const(
+      'OtherColor',
+      Class.new do
+        include ActiveModel::Model
+        include MeiliSearch::Rails
+      end
+    )
+  end
+
+  context 'when the value is byWord' do
+    before do
+      OtherColor.meilisearch synchronize: true, index_uid: safe_index_uid('OtherColors') do
+        proximity_precision 'byWord'
+      end
+    end
+
+    it 'sets the value byWord to proximity precision' do
+      expect(OtherColor.index.get_settings['proximityPrecision']).to eq('byWord')
+    end
+  end
+
+  context 'when the value is byAttribute' do
+    before do
+      OtherColor.meilisearch synchronize: true, index_uid: safe_index_uid('OtherColors') do
+        proximity_precision 'byAttribute'
+      end
+    end
+
+    it 'sets the value byAttribute to proximity precision' do
+      expect(OtherColor.index.get_settings['proximityPrecision']).to eq('byAttribute')
+    end
+  end
+end
