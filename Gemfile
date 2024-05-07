@@ -31,7 +31,7 @@ group :test do
   gem 'jdbc-sqlite3', platform: :jruby
   gem 'rspec', '~> 3.0'
   gem 'simplecov', require: 'false'
-  gem 'codecov', require: 'false'
+  gem 'simplecov-cobertura', require: 'false'
   gem 'threads'
 
   gem 'byebug'
