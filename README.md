@@ -207,6 +207,7 @@ class Book < ApplicationRecord
     crop_length 10
     faceting max_values_per_facet: 2000
     pagination max_total_hits: 1000
+    proximity_precision 'byWord'
   end
 end
 ```
