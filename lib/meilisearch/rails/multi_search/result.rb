@@ -30,8 +30,8 @@ module MeiliSearch
       end
       alias each each_hit
 
-      def each_result
-        @results.each
+      def each_result(&block)
+        @results.each(&block)
       end
 
       def to_a
