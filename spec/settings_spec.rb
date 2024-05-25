@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'support/async_helper'
 require 'support/models/book'
 require 'support/models/people'
 require 'support/models/restaurant'
@@ -10,6 +10,7 @@ describe MeiliSearch::Rails::IndexSettings do
         TestUtil.reset_people!
 
         People.create(first_name: 'Jane', last_name: 'Doe', card_number: 75_801_887)
+        AsyncHelper.await_last_task
 
         result = People.raw_search('Jane')
         expect(result['hits'][0]['full_name']).to eq('Jane Doe')

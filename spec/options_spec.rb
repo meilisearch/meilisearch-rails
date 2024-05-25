@@ -1,3 +1,4 @@
+require 'support/async_helper'
 require 'support/models/color'
 require 'support/models/book'
 require 'support/models/animals'
@@ -77,12 +78,14 @@ describe 'meilisearch_options' do
       it 'does not remove document on destroy' do
         TestUtil.reset_people!
 
-        joanna = People.create(first_name: 'Joanna', last_name: 'Banana', card_number: 75_801_888)
+        joanna = People.create(first_name: 'Joanna', last_name: 'Mason', card_number: 75_801_888)
+        AsyncHelper.await_last_task
 
         result = People.raw_search('Joanna')
         expect(result['hits']).to be_one
 
         joanna.destroy
+        AsyncHelper.await_last_task
 
         result = People.raw_search('Joanna')
         expect(result['hits']).to be_one

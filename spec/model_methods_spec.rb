@@ -1,3 +1,4 @@
+require 'support/async_helper'
 require 'support/models/color'
 require 'support/models/book'
 require 'support/models/people'
@@ -28,6 +29,7 @@ describe 'Model methods' do
         TestUtil.reset_people!
 
         People.create(first_name: 'Jane', last_name: 'Doe', card_number: 75_801_887)
+        AsyncHelper.await_last_task
 
         results = People.raw_search('')
         expect(results['hits']).not_to be_empty
