@@ -1,6 +1,7 @@
 require 'support/models/book'
 require 'support/models/animals'
 require 'support/models/people'
+require 'support/models/movie'
 
 describe 'Instance methods' do
   describe '#ms_entries' do
@@ -49,7 +50,15 @@ describe 'Instance methods' do
   end
 
   describe '#ms_index!' do
-    it 'returns array of tasks' do
+    it 'returns array with single task with single index' do
+      TestUtil.reset_movies!
+
+      task = Movie.create(title: 'Harry Potter').ms_index!
+
+      expect(task).to contain_exactly(a_hash_including('taskUid'))
+    end
+
+    it 'returns array of tasks with multiple indexes' do
       TestUtil.reset_books!
 
       moby_dick = Book.create! name: 'Moby Dick', author: 'Herman Melville', premium: false, released: true

@@ -1,6 +1,7 @@
 require 'spec_helper'
 require 'support/models/book'
 require 'support/models/people'
+require 'support/models/restaurant'
 
 describe MeiliSearch::Rails::IndexSettings do
   describe 'add_attribute' do
@@ -35,6 +36,14 @@ describe MeiliSearch::Rails::IndexSettings do
   end
 
   describe 'typo_tolerance' do
+    it 'does not return any record with type when disabled' do
+      TestUtil.reset_movies!
+
+      Movie.create(title: 'Harry Potter')
+
+      expect(Movie.search('harry pottr', matching_strategy: 'all')).to be_empty
+    end
+
     it 'searches with one typo min size' do
       TestUtil.reset_books!
 
@@ -56,6 +65,30 @@ describe MeiliSearch::Rails::IndexSettings do
       Book.create! name: 'Frankenstein', author: 'me', premium: false, released: true
       results = Book.search('Farnkenstien')
       expect(results).to be_one
+    end
+  end
+
+  describe 'attributes_to_crop' do
+    before(:all) do
+      10.times do
+        Restaurant.create(
+          name: Faker::Restaurant.name,
+          kind: Faker::Restaurant.type,
+          description: Faker::Restaurant.description
+        )
+      end
+
+      Restaurant.reindex!(MeiliSearch::Rails::IndexSettings::DEFAULT_BATCH_SIZE, true)
+    end
+
+    it 'includes _formatted object' do
+      results = Restaurant.search('')
+      raw_search_results = Restaurant.raw_search('')
+      expect(results[0].formatted).not_to be_nil
+      expect(results[0].formatted).to eq(raw_search_results['hits'].first['_formatted'])
+      expect(results.first.formatted['description'].length).to be < results.first['description'].length
+      expect(results.first.formatted['description']).to eq(raw_search_results['hits'].first['_formatted']['description'])
+      expect(results.first.formatted['description']).not_to eq(results.first['description'])
     end
   end
 
