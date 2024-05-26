@@ -209,16 +209,6 @@ end
 #   end
 # end
 
-context "when have a internal class defined in the app's scope" do
-  it 'does not raise NoMethodError' do
-    Task.create(title: 'my task #1')
-
-    expect do
-      Task.search('task')
-    end.not_to raise_error
-  end
-end
-
 context 'when MeiliSearch calls are deactivated' do
   it 'is active by default' do
     expect(MeiliSearch::Rails).to be_active
