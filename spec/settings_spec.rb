@@ -5,6 +5,16 @@ require 'support/models/restaurant'
 require 'support/models/specialty_models'
 
 describe MeiliSearch::Rails::IndexSettings do
+  describe 'attribute' do
+    context 'when passed a block' do
+      it 'uses the block to determine attribute\'s value' do
+        m = Namespaced::Model.new(another_private_value: 2)
+        attributes = Namespaced::Model.meilisearch_settings.get_attributes(m)
+        expect(attributes).to include('customAttr' => 42, 'myid' => m.id)
+      end
+    end
+  end
+
   describe 'add_attribute' do
     context 'with a symbol' do
       it 'calls method for new attribute' do

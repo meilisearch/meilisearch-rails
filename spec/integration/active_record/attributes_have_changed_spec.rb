@@ -46,5 +46,23 @@ describe 'When record attributes have changed' do
     allow(book).to receive(:ms_dirty?).and_return(true)
     expect(Book.ms_must_reindex?(book)).to be(true)
   end
+
+  it 'always updates when there is no custom _changed? function' do
+    m = Namespaced::Model.new(another_private_value: 2)
+    m.save
+    results = Namespaced::Model.search('42')
+    expect(results.size).to eq(1)
+    expect(results[0].id).to eq(m.id)
+
+    m.another_private_value = 5
+    m.save
+
+    results = Namespaced::Model.search('42')
+    expect(results.size).to eq(0)
+
+    results = Namespaced::Model.search('45')
+    expect(results.size).to eq(1)
+    expect(results[0].id).to eq(m.id)
+  end
 end
 

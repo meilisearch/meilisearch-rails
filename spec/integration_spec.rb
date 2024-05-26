@@ -20,41 +20,6 @@ describe 'Settings change detection' do
   end
 end
 
-describe 'Namespaced::Model' do
-  before(:all) do
-    Namespaced::Model.index.delete_all_documents!
-  end
-
-  it 'has an index name without :: hierarchy' do
-    expect(Namespaced::Model.index_uid.include?('Namespaced_Model')).to be(true)
-  end
-
-  it 'uses the block to determine attribute\'s value' do
-    m = Namespaced::Model.new(another_private_value: 2)
-    attributes = Namespaced::Model.meilisearch_settings.get_attributes(m)
-    expect(attributes['customAttr']).to eq(42)
-    expect(attributes['myid']).to eq(m.id)
-  end
-
-  it 'always updates when there is no custom _changed? function' do
-    m = Namespaced::Model.new(another_private_value: 2)
-    m.save
-    results = Namespaced::Model.search('42')
-    expect(results.size).to eq(1)
-    expect(results[0].id).to eq(m.id)
-
-    m.another_private_value = 5
-    m.save
-
-    results = Namespaced::Model.search('42')
-    expect(results.size).to eq(0)
-
-    results = Namespaced::Model.search('45')
-    expect(results.size).to eq(1)
-    expect(results[0].id).to eq(m.id)
-  end
-end
-
 describe 'NestedItem' do
   before(:all) do
     NestedItem.clear_index!(true)
