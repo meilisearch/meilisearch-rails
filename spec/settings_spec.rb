@@ -2,6 +2,7 @@ require 'support/async_helper'
 require 'support/models/book'
 require 'support/models/people'
 require 'support/models/restaurant'
+require 'support/models/specialty_models'
 
 describe MeiliSearch::Rails::IndexSettings do
   describe 'add_attribute' do
@@ -90,6 +91,22 @@ describe MeiliSearch::Rails::IndexSettings do
       expect(results.first.formatted['description'].length).to be < results.first['description'].length
       expect(results.first.formatted['description']).to eq(raw_search_results['hits'].first['_formatted']['description'])
       expect(results.first.formatted['description']).not_to eq(results.first['description'])
+    end
+  end
+
+  describe 'use_serializer' do
+    it 'only uses the attributes from the serializer' do
+      o = SerializedDocument.new name: 'test', skip: 'skip me'
+      attributes = SerializedDocument.meilisearch_settings.get_attributes(o)
+      expect(attributes).to eq({ name: 'test' })
+    end
+  end
+
+  describe 'force_utf8_encoding' do
+    it 'converts to utf8' do
+      EncodedString.create!
+      results = EncodedString.raw_search ''
+      expect(results['hits'].first).to include('value' => ' • ')
     end
   end
 

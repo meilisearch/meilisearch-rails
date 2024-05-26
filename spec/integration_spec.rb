@@ -1,31 +1,5 @@
 require 'spec_helper'
 
-if defined?(ActiveModel::Serializer)
-  describe 'SerializedDocument' do
-    before(:all) do
-      SerializedDocument.clear_index!(true)
-    end
-
-    it 'pushes the name but not the other attribute' do
-      o = SerializedDocument.new name: 'test', skip: 'skip me'
-      attributes = SerializedDocument.meilisearch_settings.get_attributes(o)
-      expect(attributes).to eq({ name: 'test' })
-    end
-  end
-end
-describe 'Encoding' do
-  before(:all) do
-    EncodedString.clear_index!(true)
-  end
-
-  it 'converts to utf-8' do
-    EncodedString.create!
-    results = EncodedString.raw_search ''
-    expect(results['hits'].size).to eq(1)
-    expect(results['hits'].first['value']).to eq("\xC2\xA0\xE2\x80\xA2\xC2\xA0".force_encoding('utf-8'))
-  end
-end
-
 describe 'Settings change detection' do
   it 'detects settings changes' do
     expect(Color.send(:meilisearch_settings_changed?, nil, {})).to be(true)
