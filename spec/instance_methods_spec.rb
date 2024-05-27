@@ -2,6 +2,7 @@ require 'support/models/book'
 require 'support/models/animals'
 require 'support/models/people'
 require 'support/models/movie'
+require 'support/models/queued_models'
 
 describe 'Instance methods' do
   describe '#ms_entries' do
@@ -74,6 +75,12 @@ describe 'Instance methods' do
 
     it 'throws error on non-persisted instances' do
       expect { Color.new(name: 'purple').index!(true) }.to raise_error(ArgumentError)
+    end
+
+    it 'returns empty array when indexing is disabled' do
+      doc = DisabledEnqueuedDocument.create! name: 'test'
+
+      expect(doc.ms_index!).to be_empty
     end
   end
 

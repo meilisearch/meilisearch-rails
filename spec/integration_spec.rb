@@ -51,66 +51,6 @@ describe 'NestedItem' do
   end
 end
 
-unless OLD_RAILS
-  describe 'EnqueuedDocument' do
-    it 'enqueues a job' do
-      expect do
-        EnqueuedDocument.create! name: 'hellraiser'
-      end.to raise_error('enqueued hellraiser')
-    end
-
-    it 'does not enqueue a job inside no index block' do
-      expect do
-        EnqueuedDocument.without_auto_index do
-          EnqueuedDocument.create! name: 'test'
-        end
-      end.not_to raise_error
-    end
-  end
-
-  describe 'DisabledEnqueuedDocument' do
-    it '#ms_index! returns an empty array' do
-      doc = DisabledEnqueuedDocument.create! name: 'test'
-
-      expect(doc.ms_index!).to be_empty
-    end
-
-    it 'does not try to enqueue a job' do
-      expect do
-        DisabledEnqueuedDocument.create! name: 'test'
-      end.not_to raise_error
-    end
-  end
-
-  describe 'ConditionallyEnqueuedDocument' do
-    before do
-      allow(MeiliSearch::Rails::MSJob).to receive(:perform_later).and_return(nil)
-      allow(MeiliSearch::Rails::MSCleanUpJob).to receive(:perform_later).and_return(nil)
-    end
-
-    it 'does not try to enqueue an index job when :if option resolves to false' do
-      doc = ConditionallyEnqueuedDocument.create! name: 'test', is_public: false
-
-      expect(MeiliSearch::Rails::MSJob).not_to have_received(:perform_later).with(doc, 'ms_index!')
-    end
-
-    it 'enqueues an index job when :if option resolves to true' do
-      doc = ConditionallyEnqueuedDocument.create! name: 'test', is_public: true
-
-      expect(MeiliSearch::Rails::MSJob).to have_received(:perform_later).with(doc, 'ms_index!')
-    end
-
-    it 'does enqueue a remove_from_index despite :if option' do
-      doc = ConditionallyEnqueuedDocument.create!(name: 'test', is_public: true)
-      expect(MeiliSearch::Rails::MSJob).to have_received(:perform_later).with(doc, 'ms_index!')
-
-      doc.destroy!
-
-      expect(MeiliSearch::Rails::MSCleanUpJob).to have_received(:perform_later).with(doc.ms_entries)
-    end
-  end
-end
-
 describe 'Misconfigured Block' do
   it 'forces the meilisearch block' do
     expect do

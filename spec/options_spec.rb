@@ -4,6 +4,7 @@ require 'support/models/book'
 require 'support/models/animals'
 require 'support/models/people'
 require 'support/models/disabled_models'
+require 'support/models/queued_models'
 
 describe 'meilisearch_options' do
   describe ':index_uid' do
@@ -119,6 +120,58 @@ describe 'meilisearch_options' do
 
       DisabledSymbol.create name: 'foo'
       expect(DisabledSymbol.search('')).to be_empty
+    end
+  end
+
+  describe ':enqueue' do
+    context 'when configured with a proc' do
+      it 'runs proc when created' do
+        expect do
+          EnqueuedDocument.create! name: 'hellraiser'
+        end.to raise_error('enqueued hellraiser')
+      end
+
+      it 'does not run proc in without_auto_index block' do
+        expect do
+          EnqueuedDocument.without_auto_index do
+            EnqueuedDocument.create! name: 'test'
+          end
+        end.not_to raise_error
+      end
+
+      it 'does not run proc when auto_index is disabled' do
+        expect do
+          DisabledEnqueuedDocument.create! name: 'test'
+        end.not_to raise_error
+      end
+
+      context 'when :if is configured' do
+        before do
+          allow(MeiliSearch::Rails::MSJob).to receive(:perform_later).and_return(nil)
+          allow(MeiliSearch::Rails::MSCleanUpJob).to receive(:perform_later).and_return(nil)
+        end
+
+        it 'does not try to enqueue an index job when :if option resolves to false' do
+          doc = ConditionallyEnqueuedDocument.create! name: 'test', is_public: false
+
+          expect(MeiliSearch::Rails::MSJob).not_to have_received(:perform_later).with(doc, 'ms_index!')
+        end
+
+        it 'enqueues an index job when :if option resolves to true' do
+          doc = ConditionallyEnqueuedDocument.create! name: 'test', is_public: true
+
+          expect(MeiliSearch::Rails::MSJob).to have_received(:perform_later).with(doc, 'ms_index!')
+        end
+
+        it 'does enqueue a remove_from_index despite :if option' do
+          doc = ConditionallyEnqueuedDocument.create!(name: 'test', is_public: true)
+          expect(MeiliSearch::Rails::MSJob).to have_received(:perform_later).with(doc, 'ms_index!')
+
+          doc.destroy!
+
+          expect(MeiliSearch::Rails::MSCleanUpJob).to have_received(:perform_later).with(doc.ms_entries)
+        end
+      end
     end
   end
 
