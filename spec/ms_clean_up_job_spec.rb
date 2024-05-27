@@ -23,7 +23,7 @@ RSpec.describe 'MeiliSearch::Rails::MSCleanUpJob' do
   end
 
   let(:record_entries) do
-    record.ms_entries(true).each { |h| h[:index_uid] += '_test' }
+    record.ms_entries(true)
   end
 
   let(:indexes) do

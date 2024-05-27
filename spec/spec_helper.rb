@@ -4,13 +4,16 @@ require 'bundler/setup'
 
 unless ENV.fetch('DISABLE_COVERAGE', false)
   require 'simplecov'
-  require 'codecov'
 
   SimpleCov.start do
     add_filter %r{^/spec/}
     minimum_coverage 86.70
 
-    formatter SimpleCov::Formatter::Codecov if ENV['CI']
+    if ENV['CI']
+      require 'simplecov-cobertura'
+
+      formatter SimpleCov::Formatter::CoberturaFormatter
+    end
   end
 end
 

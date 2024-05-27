@@ -207,6 +207,7 @@ class Book < ApplicationRecord
     crop_length 10
     faceting max_values_per_facet: 2000
     pagination max_total_hits: 1000
+    proximity_precision 'byWord'
   end
 end
 ```
@@ -230,7 +231,7 @@ harry_book.formatted # => {"id"=>"1", "name"=>"<em>Harry</em> Potter", "descript
 👉 Don't forget that `attributes_to_highlight`, `attributes_to_crop`, and
 `crop_length` can be set up in the `meilisearch` block of your model.
 
-## 🔍 Sorted search
+### 🔍 Sorted search
 
 As an example of how to use the sort option, here is how you could achieve
 returning all books sorted by title in ascending order:

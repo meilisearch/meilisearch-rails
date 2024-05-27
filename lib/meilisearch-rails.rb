@@ -67,6 +67,7 @@ module MeiliSearch
         pagination
         faceting
         typo_tolerance
+        proximity_precision
       ].freeze
 
       CAMELIZE_OPTIONS = %i[pagination faceting typo_tolerance].freeze
@@ -588,7 +589,7 @@ module MeiliSearch
         ms_configurations.filter_map do |options, settings|
           {
             synchronous: synchronous || options[:synchronous],
-            index_uid: options[:index_uid],
+            index_uid: ms_index_uid(options),
             primary_key: primary_key
           }.with_indifferent_access unless ms_indexing_disabled?(options)
         end

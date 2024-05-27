@@ -1,5 +1,3 @@
-version: "3.7"
-
 volumes:
   bundle:
   play_bundle:
