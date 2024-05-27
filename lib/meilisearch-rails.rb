@@ -83,6 +83,20 @@ module MeiliSearch
       def initialize(options, &block)
         @options = options
         instance_exec(&block) if block_given?
+        warn_searchable_missing_attributes
+      end
+
+      def warn_searchable_missing_attributes
+        searchables = get_setting(:searchable_attributes)
+        attrs = get_setting(:attributes)&.keys
+
+        if searchables.present? && attrs.present?
+          (searchables.map(&:to_s) - attrs.map(&:to_s)).each do |missing_searchable|
+            MeiliSearch::Rails.logger.warn(
+              "[meilisearch-rails] #{missing_searchable} declared in searchable_attributes but not in attributes. Please add it to attributes if it should be searchable."
+            )
+          end
+        end
       end
 
       def use_serializer(serializer)
@@ -463,8 +477,6 @@ module MeiliSearch
             after_destroy_commit { |searchable| searchable.ms_enqueue_remove_from_index!(ms_synchronous?) }
           end
         end
-
-        warn_searchable_missing_attributes
       end
 
       def ms_without_auto_index(&block)
@@ -899,19 +911,6 @@ module MeiliSearch
 
         # We don't know if the attribute has changed, so conservatively assume it has
         true
-      end
-
-      def warn_searchable_missing_attributes
-        searchables = meilisearch_settings.get_setting(:searchable_attributes)
-        attrs = meilisearch_settings.get_setting(:attributes)&.keys
-
-        if searchables.present? && attrs.present?
-          (searchables.map(&:to_s) - attrs.map(&:to_s)).each do |missing_searchable|
-            MeiliSearch::Rails.logger.warn(
-              "[meilisearch-rails] #{name}##{missing_searchable} declared in searchable_attributes but not in attributes. Please add it to attributes if it should be searchable."
-            )
-          end
-        end
       end
     end
 

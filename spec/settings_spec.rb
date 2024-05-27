@@ -121,6 +121,26 @@ describe MeiliSearch::Rails::IndexSettings do
     end
   end
 
+  describe 'searchable_attributes' do
+    # TODO: Add more searchable_attributes tests
+    context 'when a searchable attribute is not an attribute' do
+      let(:logger) { instance_double('Logger', warn: nil) }
+
+      before do
+        allow(MeiliSearch::Rails).to receive(:logger).and_return(logger)
+      end
+
+      it 'warns the user' do
+        People.meilisearch_settings.add_index(safe_index_uid('searchable_attr_spec')) do
+          attribute :first_name
+          searchable_attributes %i[first_name last_name]
+        end
+
+        expect(logger).to have_received(:warn).with(/meilisearch-rails.+last_name/)
+      end
+    end
+  end
+
   describe 'add_index' do
     let(:private_songs_index) { safe_index_uid('PrivateSongs') }
     let(:public_songs_index) { safe_index_uid('Songs') }
