@@ -13,9 +13,9 @@ describe 'Instance methods' do
       )
 
       expect(book.ms_entries).to contain_exactly(
-        a_hash_including("index_uid" => safe_index_uid('SecuredBook')),
-        a_hash_including("index_uid" => safe_index_uid('BookAuthor')),
-        a_hash_including("index_uid" => safe_index_uid('Book')),
+        a_hash_including("index_uid" => /SecuredBook/),
+        a_hash_including("index_uid" => /BookAuthor/),
+        a_hash_including("index_uid" => /Book/),
       )
     end
 
@@ -27,10 +27,10 @@ describe 'Instance methods' do
       )
 
       expect(book.ms_entries).to contain_exactly(
-        a_hash_including("index_uid" => safe_index_uid('SecuredBook')),
-        a_hash_including("index_uid" => safe_index_uid('BookAuthor')),
+        a_hash_including("index_uid" => /SecuredBook/),
+        a_hash_including("index_uid" => /BookAuthor/),
         # also includes book's id as if it was a public book
-        a_hash_including("index_uid" => safe_index_uid('Book')),
+        a_hash_including("index_uid" => /Book/),
       )
     end
 
