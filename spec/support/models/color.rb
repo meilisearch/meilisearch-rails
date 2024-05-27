@@ -25,6 +25,7 @@ class Color < ActiveRecord::Base
     ]
     attributes_to_highlight [:name]
     faceting max_values_per_facet: 20
+    proximity_precision 'byWord'
   end
 
   def will_save_change_to_hex?

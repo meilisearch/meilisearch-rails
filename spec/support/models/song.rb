@@ -19,6 +19,8 @@ class Song < ActiveRecord::Base
     add_index PUBLIC_INDEX_UID, if: :public? do
       searchable_attributes %i[name artist]
     end
+
+    proximity_precision 'byAttribute'
   end
 
   private

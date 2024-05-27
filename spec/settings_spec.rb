@@ -4,6 +4,7 @@ require 'support/models/people'
 require 'support/models/restaurant'
 require 'support/models/specialty_models'
 require 'support/models/song'
+require 'support/models/color'
 
 describe MeiliSearch::Rails::IndexSettings do
   describe 'attribute' do
@@ -110,6 +111,18 @@ describe MeiliSearch::Rails::IndexSettings do
       o = SerializedDocument.new name: 'test', skip: 'skip me'
       attributes = SerializedDocument.meilisearch_settings.get_attributes(o)
       expect(attributes).to eq({ name: 'test' })
+    end
+  end
+
+  describe 'proximity_precision' do
+    it 'can be set to byWord' do
+      expect(Color.index.get_settings['proximityPrecision']).to eq('byWord')
+    end
+
+    it 'can be set to byAttribute' do
+      Song.create!(name: 'Coconut nut', artist: 'Smokey Mountain', premium: false, released: true)
+      AsyncHelper.await_last_task
+      expect(Song.index.get_settings['proximityPrecision']).to eq('byAttribute')
     end
   end
 
