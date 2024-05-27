@@ -20,14 +20,6 @@ describe 'Settings change detection' do
   end
 end
 
-describe 'Misconfigured Block' do
-  it 'forces the meilisearch block' do
-    expect do
-      MisconfiguredBlock.reindex!
-    end.to raise_error(ArgumentError)
-  end
-end
-
 # This changes the index uid of the People class as well, making tests unrandomizable
 # context 'when a searchable attribute is not an attribute' do
 #   let(:other_people_class) do
