@@ -26,3 +26,5 @@ end
 def ar_schema
   @ar_schema ||= ActiveRecord::Schema.new
 end
+
+ar_schema.verbose = false
