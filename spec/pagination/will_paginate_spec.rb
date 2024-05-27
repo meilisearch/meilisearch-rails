@@ -1,4 +1,5 @@
 require 'will_paginate'
+require 'support/async_helper'
 require 'support/models/movie'
 
 describe 'Pagination with will_paginate' do
@@ -7,6 +8,8 @@ describe 'Pagination with will_paginate' do
     Movie.clear_index!
 
     6.times { Movie.create(title: Faker::Movie.title) }
+
+    AsyncHelper.await_last_task
   end
 
   it 'paginates with sort' do
