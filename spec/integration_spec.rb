@@ -59,28 +59,6 @@ describe 'Misconfigured Block' do
   end
 end
 
-describe 'Songs' do
-  before(:all) { MeiliSearch::Rails.configuration[:per_environment] = false }
-
-  after(:all) { MeiliSearch::Rails.configuration[:per_environment] = true }
-
-  it 'targets multiple indices' do
-    Song.create!(name: 'Coconut nut', artist: 'Smokey Mountain', premium: false, released: true) # Only song supposed to be added to Songs index
-    Song.create!(name: 'Smoking hot', artist: 'Cigarettes before lunch', premium: true, released: true)
-    Song.create!(name: 'Floor is lava', artist: 'Volcano', premium: true, released: false)
-    Song.index.wait_for_task(Song.index.tasks['results'].first['uid'])
-    MeiliSearch::Rails.client.index(safe_index_uid('PrivateSongs')).wait_for_task(MeiliSearch::Rails.client.index(safe_index_uid('PrivateSongs')).tasks['results'].first['uid'])
-    results = Song.search('', index: safe_index_uid('Songs'))
-    expect(results.size).to eq(1)
-    raw_results = Song.raw_search('', index: safe_index_uid('Songs'))
-    expect(raw_results['hits'].size).to eq(1)
-    results = Song.search('', index: safe_index_uid('PrivateSongs'))
-    expect(results.size).to eq(3)
-    raw_results = Song.raw_search('', index: safe_index_uid('PrivateSongs'))
-    expect(raw_results['hits'].size).to eq(3)
-  end
-end
-
 # This changes the index uid of the People class as well, making tests unrandomizable
 # context 'when a searchable attribute is not an attribute' do
 #   let(:other_people_class) do

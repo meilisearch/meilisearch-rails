@@ -3,6 +3,7 @@ require 'support/models/book'
 require 'support/models/people'
 require 'support/models/restaurant'
 require 'support/models/specialty_models'
+require 'support/models/song'
 
 describe MeiliSearch::Rails::IndexSettings do
   describe 'attribute' do
@@ -117,6 +118,30 @@ describe MeiliSearch::Rails::IndexSettings do
       EncodedString.create!
       results = EncodedString.raw_search ''
       expect(results['hits'].first).to include('value' => ' • ')
+    end
+  end
+
+  describe 'add_index' do
+    let(:private_songs_index) { safe_index_uid('PrivateSongs') }
+    let(:public_songs_index) { safe_index_uid('Songs') }
+
+    it 'targets multiple indexes' do
+      songs =
+        [
+          Song.create!(name: 'Coconut nut', artist: 'Smokey Mountain', premium: false, released: true),
+          Song.create!(name: 'Smoking hot', artist: 'Cigarettes before lunch', premium: true, released: true),
+          Song.create!(name: 'Floor is lava', artist: 'Volcano', premium: true, released: false)
+        ]
+
+      public_song = songs.first
+
+      AsyncHelper.await_last_task
+
+      public_search = Song.search('', index: public_songs_index)
+      expect(public_search).to contain_exactly(public_song)
+
+      results = Song.search('', index: private_songs_index)
+      expect(results).to match(songs)
     end
   end
 
