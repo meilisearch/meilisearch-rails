@@ -3,6 +3,8 @@ require 'support/models/color'
 require 'support/models/book'
 require 'support/models/animals'
 require 'support/models/people'
+require 'support/models/vegetable'
+require 'support/models/fruit'
 require 'support/models/disabled_models'
 require 'support/models/queued_models'
 

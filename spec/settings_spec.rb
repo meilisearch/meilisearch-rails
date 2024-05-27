@@ -159,6 +159,7 @@ describe MeiliSearch::Rails::IndexSettings do
     let(:public_songs_index) { safe_index_uid('Songs') }
 
     it 'targets multiple indexes' do
+      Song.clear_index!(true)
       songs =
         [
           Song.create!(name: 'Coconut nut', artist: 'Smokey Mountain', premium: false, released: true),
