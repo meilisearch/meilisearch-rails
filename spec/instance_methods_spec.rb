@@ -13,9 +13,9 @@ describe 'Instance methods' do
       )
 
       expect(book.ms_entries).to contain_exactly(
-        a_hash_including("index_uid" => /SecuredBook/),
-        a_hash_including("index_uid" => /BookAuthor/),
-        a_hash_including("index_uid" => /Book/),
+        a_hash_including('index_uid' => /SecuredBook/),
+        a_hash_including('index_uid' => /BookAuthor/),
+        a_hash_including('index_uid' => /Book/)
       )
     end
 
@@ -27,10 +27,10 @@ describe 'Instance methods' do
       )
 
       expect(book.ms_entries).to contain_exactly(
-        a_hash_including("index_uid" => /SecuredBook/),
-        a_hash_including("index_uid" => /BookAuthor/),
+        a_hash_including('index_uid' => /SecuredBook/),
+        a_hash_including('index_uid' => /BookAuthor/),
         # also includes book's id as if it was a public book
-        a_hash_including("index_uid" => /Book/),
+        a_hash_including('index_uid' => /Book/)
       )
     end
 
@@ -42,10 +42,12 @@ describe 'Instance methods' do
         taby_cat = Cat.create!(name: 'Taby the Cat')
 
         expect(toby_dog.ms_entries).to contain_exactly(
-          a_hash_including('primary_key' => /dog_\d+/))
+          a_hash_including('primary_key' => /dog_\d+/)
+        )
 
         expect(taby_cat.ms_entries).to contain_exactly(
-          a_hash_including('primary_key' => /cat_\d+/))
+          a_hash_including('primary_key' => /cat_\d+/)
+        )
       end
     end
   end

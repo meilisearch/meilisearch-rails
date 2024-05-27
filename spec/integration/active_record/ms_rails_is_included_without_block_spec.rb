@@ -7,4 +7,3 @@ describe 'When MeiliSearch::Rails is included but not called' do
     end.to raise_error(ArgumentError)
   end
 end
-

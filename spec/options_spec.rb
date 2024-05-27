@@ -216,7 +216,7 @@ describe 'meilisearch_options' do
 
         expect(b['hits'][0]).to include(
           'name' => '"&gt; hack0r',
-          'author' => '',
+          'author' => ''
         )
       end
 
@@ -229,7 +229,7 @@ describe 'meilisearch_options' do
         b = Book.raw_search('hack', { attributes_to_highlight: ['*'] })
 
         expect(b['hits'][0]['_formatted']).to include(
-          'name' => '"&gt; <em>hack</em>0r',
+          'name' => '"&gt; <em>hack</em>0r'
         )
       end
     end

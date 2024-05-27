@@ -21,4 +21,3 @@ describe 'When a record has associations' do
     end
   end
 end
-

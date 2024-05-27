@@ -65,4 +65,3 @@ describe 'When record attributes have changed' do
     expect(results[0].id).to eq(m.id)
   end
 end
-
