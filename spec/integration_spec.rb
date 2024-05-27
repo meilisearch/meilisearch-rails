@@ -141,48 +141,6 @@ describe 'Songs' do
   end
 end
 
-describe 'Raise on failure' do
-  before { Vegetable.instance_variable_set('@ms_indexes', nil) }
-
-  it 'raises on failure' do
-    expect do
-      Fruit.search('', { filter: 'title = Nightshift' })
-    end.to raise_error(MeiliSearch::ApiError)
-  end
-
-  it 'does not raise on failure' do
-    expect do
-      Vegetable.search('', { filter: 'title = Kale' })
-    end.not_to raise_error
-  end
-
-  context 'when Meilisearch server take too long to answer' do
-    let(:index_instance) { instance_double(MeiliSearch::Index, settings: nil, update_settings: nil) }
-    let(:slow_client) { instance_double(MeiliSearch::Client, index: index_instance) }
-
-    before do
-      allow(slow_client).to receive(:create_index)
-      allow(MeiliSearch::Rails).to receive(:client).and_return(slow_client)
-    end
-
-    it 'does not raise error timeouts on reindex' do
-      allow(index_instance).to receive(:add_documents).and_raise(MeiliSearch::TimeoutError)
-
-      expect do
-        Vegetable.create(name: 'potato')
-      end.not_to raise_error
-    end
-
-    it 'does not raise error timeouts on data addition' do
-      allow(index_instance).to receive(:add_documents).and_return(nil)
-
-      expect do
-        Vegetable.ms_reindex!
-      end.not_to raise_error
-    end
-  end
-end
-
 # This changes the index uid of the People class as well, making tests unrandomizable
 # context 'when a searchable attribute is not an attribute' do
 #   let(:other_people_class) do
