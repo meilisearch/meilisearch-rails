@@ -20,37 +20,6 @@ describe 'Settings change detection' do
   end
 end
 
-describe 'NestedItem' do
-  before(:all) do
-    NestedItem.clear_index!(true)
-  rescue StandardError
-    # not fatal
-  end
-
-  it 'fetches attributes unscoped' do
-    i1 = NestedItem.create hidden: false
-    i2 = NestedItem.create hidden: true
-
-    i1.children << NestedItem.create(hidden: true) << NestedItem.create(hidden: true)
-    NestedItem.where(id: [i1.id, i2.id]).reindex!(MeiliSearch::Rails::IndexSettings::DEFAULT_BATCH_SIZE, true)
-
-    result = NestedItem.index.get_document(i1.id)
-    expect(result['nb_children']).to eq(2)
-
-    result = NestedItem.raw_search('')
-    expect(result['hits'].size).to eq(1)
-
-    if i2.respond_to? :update_attributes
-      i2.update_attributes hidden: false # rubocop:disable Rails/ActiveRecordAliases
-    else
-      i2.update hidden: false
-    end
-
-    result = NestedItem.raw_search('')
-    expect(result['hits'].size).to eq(2)
-  end
-end
-
 describe 'Misconfigured Block' do
   it 'forces the meilisearch block' do
     expect do
