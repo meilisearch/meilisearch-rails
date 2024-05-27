@@ -97,6 +97,7 @@ describe 'meilisearch_options' do
     it 'prevents indexing when disabled with a boolean' do
       # manually trigger index creation since indexing is disabled
       DisabledBoolean.index
+      AsyncHelper.await_last_task
 
       DisabledBoolean.create name: 'foo'
       expect(DisabledBoolean.search('')).to be_empty
@@ -105,6 +106,7 @@ describe 'meilisearch_options' do
     it 'prevents indexing when disabled with a proc' do
       # manually trigger index creation since indexing is disabled
       DisabledProc.index
+      AsyncHelper.await_last_task
 
       DisabledProc.create name: 'foo'
       expect(DisabledProc.search('')).to be_empty
@@ -113,6 +115,7 @@ describe 'meilisearch_options' do
     it 'prevents indexing when disabled with a symbol (method)' do
       # manually trigger index creation since indexing is disabled
       DisabledSymbol.index
+      AsyncHelper.await_last_task
 
       DisabledSymbol.create name: 'foo'
       expect(DisabledSymbol.search('')).to be_empty

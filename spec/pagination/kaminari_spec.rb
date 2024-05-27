@@ -1,4 +1,5 @@
 require 'kaminari'
+require 'support/async_helper'
 require 'support/models/restaurant'
 
 describe 'Pagination with kaminari' do
@@ -13,6 +14,8 @@ describe 'Pagination with kaminari' do
         description: Faker::Restaurant.description
       )
     end
+
+    AsyncHelper.await_last_task
   end
 
   it 'paginates' do
