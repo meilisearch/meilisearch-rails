@@ -22,3 +22,10 @@ class People < ActiveRecord::Base
     will_save_change_to_first_name? || will_save_change_to_last_name?
   end
 end
+
+module TestUtil
+  def self.reset_people!
+    People.clear_index!(true)
+    People.delete_all
+  end
+end
