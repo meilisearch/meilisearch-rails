@@ -32,7 +32,7 @@ Gem::Specification.new do |s|
     'Rakefile'
   ]
 
-  s.required_ruby_version = '>= 2.6.0'
+  s.required_ruby_version = '>= 3.0.0'
 
   s.add_dependency 'meilisearch', '~> 0.28'
 end
