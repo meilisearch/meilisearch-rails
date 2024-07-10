@@ -8,14 +8,14 @@ on:
 jobs:
   build:
     name: Build + Publish
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Ruby 2.7
+      - name: Set up Ruby 3.2
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '2.7'
+          ruby-version: '3.2'
       - name: Check release validity
         run: sh .github/scripts/check-release.sh
       - name: Publish to RubyGems
