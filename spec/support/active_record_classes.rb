@@ -1,5 +1,5 @@
 require 'support/active_record_schema'
-Dir["#{File.dirname(__FILE__)}/models/*.rb"].sort.each { |file| require file }
+Dir["#{File.dirname(__FILE__)}/models/*.rb"].each { |file| require file }
 
 ar_schema.instance_exec do
   create_table :uniq_users, id: false do |t|
