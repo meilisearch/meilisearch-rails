@@ -1164,6 +1164,26 @@ context 'when a searchable attribute is not an attribute' do
   end
 end
 
+context 'when a searchable attribute is nested' do
+  let(:logger) { instance_double('Logger', warn: nil) }
+
+  before do
+    allow(MeiliSearch::Rails).to receive(:logger).and_return(logger)
+  end
+
+  it 'does not warn the user' do
+    Comment.meilisearch_settings.add_index(safe_index_uid('nested_searchable_attr_spec')) do
+      attribute :post do
+        { title: post&.title }
+      end
+
+      searchable_attributes ['post.title']
+    end
+
+    expect(logger).not_to have_received(:warn)
+  end
+end
+
 context "when have a internal class defined in the app's scope" do
   it 'does not raise NoMethodError' do
     Task.create(title: 'my task #1')
