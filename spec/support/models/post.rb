@@ -24,4 +24,9 @@ class Post < ActiveRecord::Base
 end
 
 class Comment < ActiveRecord::Base
+  belongs_to :post
+
+  include MeiliSearch::Rails
+
+  meilisearch
 end
