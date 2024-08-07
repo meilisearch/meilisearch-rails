@@ -25,6 +25,7 @@ class Color < ActiveRecord::Base
     ]
     attributes_to_highlight [:name]
     faceting max_values_per_facet: 20
+    proximity_precision 'byWord'
   end
 
   def will_save_change_to_hex?
@@ -33,5 +34,12 @@ class Color < ActiveRecord::Base
 
   def will_save_change_to_short_name?
     false
+  end
+end
+
+module TestUtil
+  def self.reset_colors!
+    Color.clear_index!(true)
+    Color.delete_all
   end
 end

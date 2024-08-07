@@ -12,3 +12,10 @@ class Movie < ActiveRecord::Base
     typo_tolerance enabled: false
   end
 end
+
+module TestUtil
+  def self.reset_movies!
+    Movie.clear_index!(true)
+    Movie.delete_all
+  end
+end
