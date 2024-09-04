@@ -567,14 +567,14 @@ module MeiliSearch
             doc = doc.merge ms_pk(options) => primary_key
 
             if synchronous || options[:synchronous]
-              index.add_documents!(doc)
+              index.add_documents(doc).await
             else
               index.add_documents(doc)
             end
           elsif ms_conditional_index?(options) && primary_key.present?
             # remove non-indexable documents
             if synchronous || options[:synchronous]
-              index.delete_document!(primary_key)
+              index.delete_document(primary_key).await
             else
               index.delete_document(primary_key)
             end
@@ -606,7 +606,7 @@ module MeiliSearch
 
           index = ms_ensure_init(options, settings)
           if synchronous || options[:synchronous]
-            index.delete_document!(primary_key)
+            index.delete_document(primary_key).await
           else
             index.delete_document(primary_key)
           end
@@ -619,7 +619,7 @@ module MeiliSearch
           next if ms_indexing_disabled?(options)
 
           index = ms_ensure_init(options, settings)
-          synchronous || options[:synchronous] ? index.delete_all_documents! : index.delete_all_documents
+          synchronous || options[:synchronous] ? index.delete_all_documents.await : index.delete_all_documents
           @ms_indexes[MeiliSearch::Rails.active?][settings] = nil
         end
         nil
