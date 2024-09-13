@@ -8,7 +8,7 @@ module MeiliSearch
           index = MeiliSearch::Rails.client.index(document[:index_uid])
 
           if document[:synchronous]
-            index.delete_document!(document[:primary_key])
+            index.delete_document(document[:primary_key]).await
           else
             index.delete_document(document[:primary_key])
           end

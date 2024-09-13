@@ -122,15 +122,15 @@ describe 'Tech shop' do
 
     context 'when a document cannot be found in ActiveRecord' do
       it 'does not throw an exception' do
-        Product.index.add_documents!(@palmpre.attributes.merge(id: -1))
+        Product.index.add_documents(@palmpre.attributes.merge(id: -1)).await
         expect { Product.search('pal') }.not_to raise_error
-        Product.index.delete_document!(-1)
+        Product.index.delete_document(-1).await
       end
 
       it 'returns other available results' do
-        Product.index.add_documents!(@palmpre.attributes.merge(id: -1))
+        Product.index.add_documents(@palmpre.attributes.merge(id: -1)).await
         expect(Product.search('pal').size).to eq(2)
-        Product.index.delete_document!(-1)
+        Product.index.delete_document(-1).await
       end
     end
 
