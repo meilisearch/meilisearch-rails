@@ -152,6 +152,26 @@ describe MeiliSearch::Rails::IndexSettings do
         expect(logger).to have_received(:warn).with(/meilisearch-rails.+last_name/)
       end
     end
+
+    context 'when a searchable attribute is nested' do
+      let(:logger) { instance_double('Logger', warn: nil) }
+
+      before do
+        allow(MeiliSearch::Rails).to receive(:logger).and_return(logger)
+      end
+
+      it 'we cannot be certain that it is not defined and don\'t warn the user' do
+        Comment.meilisearch_settings.add_index(safe_index_uid('nested_searchable_attr_spec')) do
+          attribute :post do
+            { title: post&.title }
+          end
+
+          searchable_attributes ['post.title']
+        end
+
+        expect(logger).not_to have_received(:warn)
+      end
+    end
   end
 
   describe 'add_index' do
