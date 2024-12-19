@@ -19,13 +19,16 @@ module MeiliSearch
 
         def self.create(results, total_hits, options = {})
           offset = ((options[:page] - 1) * options[:per_page])
-          array = new results, limit: options[:per_page], offset: offset, total_count: total_hits
+          total_hits = 0 if total_hits.nil?
+          offset = 0 if offset.nil?
+          limit = 0 if options[:per_page].nil?
+          array = new results, limit: limit, offset: offset, total_count: total_hits
 
           if array.empty? && !results.empty?
             # since Kaminari 0.16.0, you need to pad the results with nil values so it matches the offset param
             # otherwise you'll get an empty array: https://github.com/amatsuda/kaminari/commit/29fdcfa8865f2021f710adaedb41b7a7b081e34d
             results = Array.new(offset) + results
-            array = new results, offset: offset, limit: options[:per_page], total_count: total_hits
+            array = new results, offset: offset, limit: limit, total_count: total_hits
           end
 
           array
