@@ -1,10 +1,10 @@
 status = [
   'integration-tests (Rails 6.1 with Ruby 3.2)',
-  'integration-tests (Rails 6.1 with Ruby 3.1)',
-  'integration-tests (Rails 6.1 with Ruby 3.0)',
-  'integration-tests (Rails 7 with Ruby 3.0)',
-  'integration-tests (Rails 7 with Ruby 3.1)',
+  'integration-tests (Rails 6.1 with Ruby 3.3)',
+  'integration-tests (Rails 6.1 with Ruby 3.4)',
   'integration-tests (Rails 7 with Ruby 3.2)',
+  'integration-tests (Rails 7 with Ruby 3.3)',
+  'integration-tests (Rails 7 with Ruby 3.4)',
   'linter-check',
   'smoke-test',
 ]
