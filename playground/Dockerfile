@@ -1,4 +1,4 @@
-FROM ruby:3.1.2-slim
+FROM ruby:3.4-slim
 ENV LANG C.UTF-8
 
 RUN apt-get update -qq && apt-get install -yq --no-install-recommends \
@@ -9,7 +9,8 @@ RUN apt-get update -qq && apt-get install -yq --no-install-recommends \
     telnet \
     nodejs \
     npm \
-    python \
+    python3 \
+    libsqlite3-dev \
   && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 RUN apt-get update -qq && apt-get install -y libpq-dev

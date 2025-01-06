@@ -13,17 +13,18 @@ group :development do
 end
 
 group :test do
-  rails_version = ENV['RAILS_VERSION'] || '6.1'
+  rails_version = ENV['RAILS_VERSION'] || '7.1'
   sequel_version = ENV['SEQUEL_VERSION'] ? "~> #{ENV['SEQUEL_VERSION']}" : '>= 4.0'
 
   gem 'active_model_serializers'
   gem 'rails', "~> #{rails_version}"
   gem 'sequel', sequel_version
 
-  if Gem::Version.new(rails_version) >= Gem::Version.new('6.0')
-    gem 'sqlite3', '~> 1.4.0', platform: %i[rbx ruby]
+  # remove when deprecate rails 6
+  if Gem::Version.new(rails_version) >= Gem::Version.new('7.0')
+    gem 'sqlite3', '~> 2', platform: %i[rbx ruby]
   else
-    gem 'sqlite3', '< 1.4.0', platform: %i[rbx ruby]
+    gem 'sqlite3', '< 2', platform: %i[rbx ruby]
   end
 
   gem 'activerecord-jdbc-adapter', platform: :jruby
@@ -33,6 +34,7 @@ group :test do
   gem 'simplecov', require: 'false'
   gem 'simplecov-cobertura', require: 'false'
   gem 'threads'
+  gem 'logger'
 
   gem 'byebug'
   gem 'dotenv', '~> 2.7', '>= 2.7.6'
