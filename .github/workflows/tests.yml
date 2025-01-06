@@ -25,6 +25,8 @@ jobs:
     name: integration-tests (Rails ${{ matrix.rails-version }} with Ruby ${{ matrix.ruby-version }})
     steps:
       - uses: actions/checkout@v4
+      - name: Install SQLite dependencies
+        run: sudo apt-get update && sudo apt-get install -y libsqlite3-dev
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
@@ -45,6 +47,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Install SQLite dependencies
+        run: sudo apt-get update && sudo apt-get install -y libsqlite3-dev
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         env:
@@ -70,6 +74,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Install SQLite dependencies
+        run: sudo apt-get update && sudo apt-get install -y libsqlite3-dev
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         env:
