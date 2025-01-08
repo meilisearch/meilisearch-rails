@@ -74,13 +74,13 @@ module MeiliSearch
           alias_method :must_reindex?, :ms_must_reindex? unless method_defined? :must_reindex?
         end
 
-        base.cattr_accessor :meilisearch_options, :meilisearch_settings, :ms_config
+        base.cattr_accessor :meilisearch_options, :ms_index_settings, :ms_config
       end
 
       def meilisearch(options = {}, &block)
-        self.meilisearch_settings = IndexSettings.new(options, &block)
+        self.ms_index_settings = IndexSettings.new(options, &block)
         self.meilisearch_options = {
-          per_page: meilisearch_settings.get_setting(:hitsPerPage) || 20, page: 1
+          per_page: ms_index_settings.get_setting(:hitsPerPage) || 20, page: 1
         }.merge(options)
 
         self.ms_config = ModelConfiguration.new(model_name.to_s.constantize, options)
@@ -333,15 +333,15 @@ module MeiliSearch
       def ms_raw_search(q, params = {})
         index_uid = params.delete(:index) || params.delete('index')
 
-        unless meilisearch_settings.get_setting(:attributes_to_highlight).nil?
-          params[:attributes_to_highlight] = meilisearch_settings.get_setting(:attributes_to_highlight)
+        unless ms_index_settings.get_setting(:attributes_to_highlight).nil?
+          params[:attributes_to_highlight] = ms_index_settings.get_setting(:attributes_to_highlight)
         end
 
-        unless meilisearch_settings.get_setting(:attributes_to_crop).nil?
-          params[:attributes_to_crop] = meilisearch_settings.get_setting(:attributes_to_crop)
+        unless ms_index_settings.get_setting(:attributes_to_crop).nil?
+          params[:attributes_to_crop] = ms_index_settings.get_setting(:attributes_to_crop)
 
-          unless meilisearch_settings.get_setting(:crop_length).nil?
-            params[:crop_length] = meilisearch_settings.get_setting(:crop_length)
+          unless ms_index_settings.get_setting(:crop_length).nil?
+            params[:crop_length] = ms_index_settings.get_setting(:crop_length)
           end
         end
 
@@ -486,8 +486,8 @@ module MeiliSearch
 
       protected
 
-      def ms_ensure_init(options = meilisearch_options, settings = meilisearch_settings, user_configuration = settings.to_settings)
-        raise ArgumentError, 'No `meilisearch` block found in your model.' if meilisearch_settings.nil?
+      def ms_ensure_init(options = meilisearch_options, settings = ms_index_settings, user_configuration = settings.to_settings)
+        raise ArgumentError, 'No `meilisearch` block found in your model.' if ms_index_settings.nil?
 
         @ms_indexes ||= { true => {}, false => {} }
 
@@ -506,7 +506,7 @@ module MeiliSearch
 
         config = user_configuration.except(:attributes_to_highlight, :attributes_to_crop, :crop_length)
 
-        if !skip_checking_settings?(options) && meilisearch_settings_changed?(server_state, config)
+        if !skip_checking_settings?(options) && ms_index_settings_changed?(server_state, config)
           index.update_settings(user_configuration)
         end
       end
@@ -520,12 +520,12 @@ module MeiliSearch
       end
 
       def ms_configurations
-        raise ArgumentError, 'No `meilisearch` block found in your model.' if meilisearch_settings.nil?
+        raise ArgumentError, 'No `meilisearch` block found in your model.' if ms_index_settings.nil?
 
         if @configurations.nil?
           @configurations = {}
-          @configurations[meilisearch_options] = meilisearch_settings
-          meilisearch_settings.additional_indexes.each do |k, v|
+          @configurations[meilisearch_options] = ms_index_settings
+          ms_index_settings.additional_indexes.each do |k, v|
             @configurations[k] = v
 
             next unless v.additional_indexes.any?
@@ -551,7 +551,7 @@ module MeiliSearch
         options[:primary_key] || MeiliSearch::Rails::IndexSettings::DEFAULT_PRIMARY_KEY
       end
 
-      def meilisearch_settings_changed?(server_state, user_configuration)
+      def ms_index_settings_changed?(server_state, user_configuration)
         return true if server_state.nil?
 
         user_configuration.transform_keys! { |key| key.to_s.camelize(:lower) }
@@ -560,7 +560,7 @@ module MeiliSearch
           server = server_state[key]
 
           if user.is_a?(Hash) && server.is_a?(Hash)
-            meilisearch_settings_changed?(server, user)
+            ms_index_settings_changed?(server, user)
           elsif user.is_a?(Array) && server.is_a?(Array)
             user.map(&:to_s).sort! != server.map(&:to_s).sort!
           else
