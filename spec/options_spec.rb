@@ -153,6 +153,22 @@ describe 'meilisearch_options' do
   end
 
   describe ':enqueue' do
+    context 'when configured with a symbol' do
+      it 'runs the class method when created' do
+        expect do
+          SymbolEnqueuedDocument.create! name: 'hellraiser'
+        end.to raise_error('enqueued hellraiser')
+      end
+
+      it 'does not run method in without_auto_index block' do
+        expect do
+          SymbolEnqueuedDocument.without_auto_index do
+            SymbolEnqueuedDocument.create! name: 'hellraiser'
+          end
+        end.not_to raise_error
+      end
+    end
+
     context 'when configured with a proc' do
       it 'runs proc when created' do
         expect do

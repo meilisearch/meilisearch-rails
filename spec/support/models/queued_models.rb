@@ -13,6 +13,10 @@ ar_schema.create_table :conditionally_enqueued_documents do |t|
   t.boolean :is_public
 end
 
+ar_schema.create_table :symbol_enqueued_documents do |t|
+  t.string :name
+end
+
 class EnqueuedDocument < ActiveRecord::Base
   include MeiliSearch::Rails
 
@@ -53,5 +57,18 @@ class ConditionallyEnqueuedDocument < ActiveRecord::Base
 
   def should_index?
     is_public
+  end
+end
+
+class SymbolEnqueuedDocument < ActiveRecord::Base
+  include MeiliSearch::Rails
+
+  meilisearch(enqueue: :queue_me,
+              index_uid: safe_index_uid('SymbolEnqueuedDocument')) do
+    attributes %i[name is_public]
+  end
+
+  def self.queue_me(record, remove)
+    raise "enqueued #{record.name}"
   end
 end
