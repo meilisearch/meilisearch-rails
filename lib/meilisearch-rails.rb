@@ -6,6 +6,7 @@ require 'meilisearch/rails/errors'
 require 'meilisearch/rails/multi_search'
 require 'meilisearch/rails/index_settings'
 require 'meilisearch/rails/safe_index'
+require 'meilisearch/rails/model_configuration'
 
 if defined? Rails
   begin
@@ -73,7 +74,7 @@ module MeiliSearch
           alias_method :must_reindex?, :ms_must_reindex? unless method_defined? :must_reindex?
         end
 
-        base.cattr_accessor :meilisearch_options, :meilisearch_settings
+        base.cattr_accessor :meilisearch_options, :meilisearch_settings, :ms_config
       end
 
       def meilisearch(options = {}, &block)
@@ -83,11 +84,9 @@ module MeiliSearch
           per_page: meilisearch_settings.get_setting(:hitsPerPage) || 20, page: 1
         }.merge(options)
 
-        attr_accessor :formatted
+        self.ms_config = ModelConfiguration.new(model_name.to_s.constantize, options)
 
-        if options.key?(:per_environment)
-          raise BadConfiguration, ':per_environment option should be defined globally on MeiliSearch::Rails.configuration block.'
-        end
+        attr_accessor :formatted
 
         if options[:synchronous] == true
           if defined?(::Sequel::Model) && self < Sequel::Model
@@ -104,8 +103,6 @@ module MeiliSearch
           end
         end
         if options[:enqueue]
-          raise ArgumentError, 'Cannot use a enqueue if the `synchronous` option is set' if options[:synchronous]
-
           proc = if options[:enqueue] == true
                    proc do |record, remove|
                      if remove
