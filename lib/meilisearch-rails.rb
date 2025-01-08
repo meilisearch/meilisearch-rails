@@ -80,7 +80,6 @@ module MeiliSearch
       def meilisearch(options = {}, &block)
         self.meilisearch_settings = IndexSettings.new(options, &block)
         self.meilisearch_options = {
-          type: model_name.to_s.constantize,
           per_page: meilisearch_settings.get_setting(:hitsPerPage) || 20, page: 1
         }.merge(options)
 
@@ -393,12 +392,12 @@ module MeiliSearch
         # Since we provide a way to customize the primary_key value, `ms_pk(meilisearch_options)` may not
         # respond with a valid database column. The blocks below prevent that from happening.
         has_virtual_column_as_pk = if defined?(::Sequel::Model) && self < Sequel::Model
-                                     meilisearch_options[:type].columns.map(&:to_s).exclude?(condition_key.to_s)
+                                     columns.map(&:to_s).exclude?(condition_key.to_s)
                                    else
-                                     meilisearch_options[:type].columns.map(&:name).map(&:to_s).exclude?(condition_key.to_s)
+                                     columns.map(&:name).map(&:to_s).exclude?(condition_key.to_s)
                                    end
 
-        condition_key = meilisearch_options[:type].primary_key if has_virtual_column_as_pk
+        condition_key = primary_key if has_virtual_column_as_pk
 
         hit_ids = if has_virtual_column_as_pk
                     json['hits'].map { |hit| hit[condition_key] }
@@ -410,7 +409,7 @@ module MeiliSearch
         # results_by_id creates a hash with the primaryKey of the document (id) as the key and doc itself as the value
         # {"13"=>#<Product id: 13, name: "iphone", href: "apple", tags: nil, type: nil,
         # description: "Puts even more features at your fingertips", release_date: nil>}
-        results_by_id = meilisearch_options[:type].where(condition_key => hit_ids).index_by do |hit|
+        results_by_id = where(condition_key => hit_ids).index_by do |hit|
           ms_primary_key_of(hit)
         end
 
