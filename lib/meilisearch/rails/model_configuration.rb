@@ -8,6 +8,14 @@ module MeiliSearch
         parse_options(options)
       end
 
+      def sequel_model?
+        defined?(::Sequel::Model) && model < Sequel::Model
+      end
+
+      def active_record_model?
+        defined?(::ActiveRecord) && model.ancestors.include?(::ActiveRecord::Base)
+      end
+
       private
 
       def parse_options(options)

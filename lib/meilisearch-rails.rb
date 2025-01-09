@@ -88,7 +88,7 @@ module MeiliSearch
         attr_accessor :formatted
 
         if options[:synchronous] == true
-          if defined?(::Sequel::Model) && self < Sequel::Model
+          if ms_config.sequel_model?
             class_eval do
               copy_after_validation = instance_method(:after_validation)
               define_method(:after_validation) do |*args|
@@ -122,7 +122,7 @@ module MeiliSearch
           end
         end
         unless options[:auto_index] == false
-          if defined?(::Sequel::Model) && self < Sequel::Model
+          if ms_config.sequel_model?
             class_eval do
               copy_after_validation = instance_method(:after_validation)
               copy_before_save = instance_method(:before_save)
@@ -169,7 +169,7 @@ module MeiliSearch
           end
         end
         unless options[:auto_remove] == false
-          if defined?(::Sequel::Model) && self < Sequel::Model
+          if ms_config.sequel_model?
             class_eval do
               copy_after_destroy = instance_method(:after_destroy)
 
@@ -391,7 +391,7 @@ module MeiliSearch
         # The condition_key must be a valid column otherwise, the `.where` below will not work
         # Since we provide a way to customize the primary_key value, `ms_pk(meilisearch_options)` may not
         # respond with a valid database column. The blocks below prevent that from happening.
-        has_virtual_column_as_pk = if defined?(::Sequel::Model) && self < Sequel::Model
+        has_virtual_column_as_pk = if ms_config.sequel_model?
                                      columns.map(&:to_s).exclude?(condition_key.to_s)
                                    else
                                      columns.map(&:name).map(&:to_s).exclude?(condition_key.to_s)
@@ -591,10 +591,10 @@ module MeiliSearch
       end
 
       def ms_find_in_batches(batch_size, &block)
-        if (defined?(::ActiveRecord) && ancestors.include?(::ActiveRecord::Base)) || respond_to?(:find_in_batches)
+        if ms_config.active_record_model? || respond_to?(:find_in_batches)
           scope = respond_to?(:meilisearch_import) ? meilisearch_import : all
           scope.find_in_batches(batch_size: batch_size, &block)
-        elsif defined?(::Sequel::Model) && self < Sequel::Model
+        elsif ms_config.sequel_model?
           dataset.extension(:pagination).each_page(batch_size, &block)
         else
           # don't worry, mongoid has its own underlying cursor/streaming mechanism
@@ -682,7 +682,7 @@ module MeiliSearch
         # ms_must_reindex flag is reset after every commit as part. If we must reindex at any point in
         # a transaction, keep flag set until it is explicitly unset
         @ms_must_reindex ||=
-          if defined?(::Sequel::Model) && is_a?(Sequel::Model)
+          if self.class.ms_config.sequel_model?
             new? || self.class.ms_must_reindex?(self)
           else
             new_record? || self.class.ms_must_reindex?(self)
