@@ -661,7 +661,7 @@ module MeiliSearch
       end
 
       def ms_synchronous?
-        @ms_synchronous
+        !!@ms_synchronous
       end
 
       def ms_entries(synchronous = false)
@@ -691,12 +691,13 @@ module MeiliSearch
       end
 
       def ms_perform_index_tasks
-        return if !@ms_auto_indexing || @ms_must_reindex == false
+        return unless @ms_auto_indexing && @ms_must_reindex
 
         ms_enqueue_index!(ms_synchronous?)
-        remove_instance_variable(:@ms_auto_indexing) if instance_variable_defined?(:@ms_auto_indexing)
-        remove_instance_variable(:@ms_synchronous) if instance_variable_defined?(:@ms_synchronous)
-        remove_instance_variable(:@ms_must_reindex) if instance_variable_defined?(:@ms_must_reindex)
+
+        @ms_must_reindex = nil
+        @ms_auto_indexing = nil
+        @ms_synchronous = nil
       end
     end
   end
