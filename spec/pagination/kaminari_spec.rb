@@ -30,6 +30,17 @@ describe 'Pagination with kaminari' do
     expect(p2).to contain_exactly(second)
   end
 
+  it "doesn't crash when meilisearch is disabled" do
+    MeiliSearch::Rails.configuration[:active] = false
+
+    expect do
+      Restaurant.search ''
+    end.not_to raise_error
+
+  ensure
+    MeiliSearch::Rails.configuration[:active] = true
+  end
+
   it 'returns number of total results' do
     hits = Restaurant.search ''
     expect(hits.total_count).to eq(2)
