@@ -56,6 +56,10 @@ module MeiliSearch
           defined?(::Sequel::Model) && model_class < Sequel::Model
         end
 
+        def null_object?(obj)
+          obj.is_a? NullObject
+        end
+
         private
 
         def constraint_passes?(record, constraint)
