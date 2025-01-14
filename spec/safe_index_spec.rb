@@ -1,6 +1,6 @@
 require 'support/models/book'
 
-describe MeiliSearch::Rails::SafeIndex do
+describe Meilisearch::Rails::SafeIndex do
   describe '#facet_search' do
     it 'accepts all params without error' do
       TestUtil.reset_books!

@@ -1,4 +1,4 @@
-module MeiliSearch
+module Meilisearch
   module Rails
     class MultiSearchResult
       attr_reader :metadata
