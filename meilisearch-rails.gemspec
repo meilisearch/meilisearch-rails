@@ -5,7 +5,7 @@ require 'meilisearch/rails/version'
 
 Gem::Specification.new do |s|
   s.name = 'meilisearch-rails'
-  s.version = MeiliSearch::Rails::VERSION
+  s.version = Meilisearch::Rails::VERSION
 
   s.authors = ['Meili']
   s.email = 'bonjour@meilisearch.com'
@@ -34,6 +34,6 @@ Gem::Specification.new do |s|
 
   s.required_ruby_version = '>= 3.0.0'
 
-  s.add_dependency 'meilisearch', '~> 0.28'
+  s.add_dependency 'meilisearch', '~> 0.30'
   s.add_dependency 'mutex_m', '~> 0.2'
 end

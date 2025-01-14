@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module MeiliSearch
+module Meilisearch
   module Rails
     VERSION = '0.14.1'
 

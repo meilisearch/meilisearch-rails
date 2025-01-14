@@ -1,9 +1,9 @@
 require 'spec_helper'
 
-RSpec.describe 'MeiliSearch::Rails::MSJob' do
+RSpec.describe 'Meilisearch::Rails::MSJob' do
   include ActiveJob::TestHelper
 
-  subject(:job) { MeiliSearch::Rails::MSJob }
+  subject(:job) { Meilisearch::Rails::MSJob }
 
   let(:record) { double }
   let(:method_name) { :index! }

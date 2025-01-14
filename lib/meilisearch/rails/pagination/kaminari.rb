@@ -1,11 +1,11 @@
 unless defined? Kaminari
-  raise(MeiliSearch::BadConfiguration,
+  raise(Meilisearch::BadConfiguration,
         "Meilisearch: Please add 'kaminari' to your Gemfile to use kaminari pagination backend")
 end
 
 require 'kaminari/models/array_extension'
 
-module MeiliSearch
+module Meilisearch
   module Rails
     module Pagination
       class Kaminari < ::Kaminari::PaginatableArray

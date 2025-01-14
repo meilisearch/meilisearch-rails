@@ -5,7 +5,7 @@ ar_schema.create_table :vegetables do |t|
 end
 
 class Vegetable < ActiveRecord::Base
-  include MeiliSearch::Rails
+  include Meilisearch::Rails
 
   meilisearch raise_on_failure: false, index_uid: safe_index_uid('Fruit') do
     attribute :name

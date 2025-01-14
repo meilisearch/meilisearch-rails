@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-RSpec.describe 'MeiliSearch::Rails::MSCleanUpJob' do
+RSpec.describe 'Meilisearch::Rails::MSCleanUpJob' do
   include ActiveJob::TestHelper
 
   def clean_up_indexes
@@ -15,7 +15,7 @@ RSpec.describe 'MeiliSearch::Rails::MSCleanUpJob' do
     end
   end
 
-  subject(:clean_up) { MeiliSearch::Rails::MSCleanUpJob }
+  subject(:clean_up) { Meilisearch::Rails::MSCleanUpJob }
 
   let(:record) do
     Book.create name: "Moby Dick", author: "Herman Mellville",

@@ -4,7 +4,7 @@ require 'support/models/restaurant'
 
 describe 'Pagination with kaminari' do
   before(:all) do
-    MeiliSearch::Rails.configuration[:pagination_backend] = :kaminari
+    Meilisearch::Rails.configuration[:pagination_backend] = :kaminari
     Restaurant.clear_index!
 
     3.times do
