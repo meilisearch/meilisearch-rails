@@ -1,14 +1,14 @@
 require 'spec_helper'
 require 'rake'
 
-describe MeiliSearch::Rails::Utilities do
+describe Meilisearch::Rails::Utilities do
   around do |example|
-    included_in = MeiliSearch::Rails.instance_variable_get :@included_in
-    MeiliSearch::Rails.instance_variable_set :@included_in, []
+    included_in = Meilisearch::Rails.instance_variable_get :@included_in
+    Meilisearch::Rails.instance_variable_set :@included_in, []
 
     example.run
 
-    MeiliSearch::Rails.instance_variable_set :@included_in, included_in
+    Meilisearch::Rails.instance_variable_set :@included_in, included_in
   end
 
   it 'gets the models where Meilisearch module was included' do

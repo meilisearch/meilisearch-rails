@@ -1,5 +1,5 @@
 class Book < ApplicationRecord
-  include MeiliSearch::Rails
+  include Meilisearch::Rails
 
   meilisearch do
     # add_attribute :extra_attr

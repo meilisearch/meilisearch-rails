@@ -1,4 +1,4 @@
-module MeiliSearch
+module Meilisearch
   module Rails
     class MSJob < ::ActiveJob::Base
       queue_as :meilisearch

@@ -5,7 +5,7 @@ ar_schema.create_table :movies do |t|
 end
 
 class Movie < ActiveRecord::Base
-  include MeiliSearch::Rails
+  include Meilisearch::Rails
 
   meilisearch index_uid: safe_index_uid('Movie') do
     pagination max_total_hits: 5

@@ -73,7 +73,7 @@ describe 'meilisearch_options' do
       i2 = NestedItem.create hidden: true
 
       i1.children << NestedItem.create(hidden: true) << NestedItem.create(hidden: true)
-      NestedItem.where(id: [i1.id, i2.id]).reindex!(MeiliSearch::Rails::IndexSettings::DEFAULT_BATCH_SIZE, true)
+      NestedItem.where(id: [i1.id, i2.id]).reindex!(Meilisearch::Rails::IndexSettings::DEFAULT_BATCH_SIZE, true)
 
       result = NestedItem.index.get_document(i1.id)
       expect(result['nb_children']).to eq(2)
@@ -176,29 +176,29 @@ describe 'meilisearch_options' do
 
       context 'when :if is configured' do
         before do
-          allow(MeiliSearch::Rails::MSJob).to receive(:perform_later).and_return(nil)
-          allow(MeiliSearch::Rails::MSCleanUpJob).to receive(:perform_later).and_return(nil)
+          allow(Meilisearch::Rails::MSJob).to receive(:perform_later).and_return(nil)
+          allow(Meilisearch::Rails::MSCleanUpJob).to receive(:perform_later).and_return(nil)
         end
 
         it 'does not try to enqueue an index job when :if option resolves to false' do
           doc = ConditionallyEnqueuedDocument.create! name: 'test', is_public: false
 
-          expect(MeiliSearch::Rails::MSJob).not_to have_received(:perform_later).with(doc, 'ms_index!')
+          expect(Meilisearch::Rails::MSJob).not_to have_received(:perform_later).with(doc, 'ms_index!')
         end
 
         it 'enqueues an index job when :if option resolves to true' do
           doc = ConditionallyEnqueuedDocument.create! name: 'test', is_public: true
 
-          expect(MeiliSearch::Rails::MSJob).to have_received(:perform_later).with(doc, 'ms_index!')
+          expect(Meilisearch::Rails::MSJob).to have_received(:perform_later).with(doc, 'ms_index!')
         end
 
         it 'does enqueue a remove_from_index despite :if option' do
           doc = ConditionallyEnqueuedDocument.create!(name: 'test', is_public: true)
-          expect(MeiliSearch::Rails::MSJob).to have_received(:perform_later).with(doc, 'ms_index!')
+          expect(Meilisearch::Rails::MSJob).to have_received(:perform_later).with(doc, 'ms_index!')
 
           doc.destroy!
 
-          expect(MeiliSearch::Rails::MSCleanUpJob).to have_received(:perform_later).with(doc.ms_entries)
+          expect(Meilisearch::Rails::MSCleanUpJob).to have_received(:perform_later).with(doc.ms_entries)
         end
       end
     end
@@ -240,7 +240,7 @@ describe 'meilisearch_options' do
       it 'raises exception on failure' do
         expect do
           Fruit.search('', { filter: 'title = Nightshift' })
-        end.to raise_error(MeiliSearch::ApiError)
+        end.to raise_error(Meilisearch::ApiError)
       end
     end
 
@@ -252,16 +252,16 @@ describe 'meilisearch_options' do
       end
 
       context 'in case of timeout' do
-        let(:index_instance) { instance_double(MeiliSearch::Index, settings: nil, update_settings: nil) }
-        let(:slow_client) { instance_double(MeiliSearch::Client, index: index_instance) }
+        let(:index_instance) { instance_double(Meilisearch::Index, settings: nil, update_settings: nil) }
+        let(:slow_client) { instance_double(Meilisearch::Client, index: index_instance) }
 
         before do
           allow(slow_client).to receive(:create_index)
-          allow(MeiliSearch::Rails).to receive(:client).and_return(slow_client)
+          allow(Meilisearch::Rails).to receive(:client).and_return(slow_client)
         end
 
         it 'does not raise error timeouts on reindex' do
-          allow(index_instance).to receive(:add_documents).and_raise(MeiliSearch::TimeoutError)
+          allow(index_instance).to receive(:add_documents).and_raise(Meilisearch::TimeoutError)
 
           expect do
             Vegetable.create(name: 'potato')

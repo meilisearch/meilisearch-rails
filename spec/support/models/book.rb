@@ -9,7 +9,7 @@ ar_schema.create_table :books do |t|
 end
 
 class Book < ActiveRecord::Base
-  include MeiliSearch::Rails
+  include Meilisearch::Rails
 
   meilisearch synchronous: true, index_uid: safe_index_uid('SecuredBook'), sanitize: true do
     searchable_attributes [:name]

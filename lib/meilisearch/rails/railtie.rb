@@ -1,6 +1,6 @@
 require 'rails'
 
-module MeiliSearch
+module Meilisearch
   module Rails
     class Railtie < ::Rails::Railtie
       rake_tasks do

@@ -6,7 +6,7 @@ require 'support/models/specialty_models'
 require 'support/models/song'
 require 'support/models/color'
 
-describe MeiliSearch::Rails::IndexSettings do
+describe Meilisearch::Rails::IndexSettings do
   describe 'attribute' do
     context 'when passed a block' do
       it 'uses the block to determine attribute\'s value' do
@@ -92,7 +92,7 @@ describe MeiliSearch::Rails::IndexSettings do
         )
       end
 
-      Restaurant.reindex!(MeiliSearch::Rails::IndexSettings::DEFAULT_BATCH_SIZE, true)
+      Restaurant.reindex!(Meilisearch::Rails::IndexSettings::DEFAULT_BATCH_SIZE, true)
     end
 
     it 'includes _formatted object' do
@@ -140,7 +140,7 @@ describe MeiliSearch::Rails::IndexSettings do
       let(:logger) { instance_double('Logger', warn: nil) }
 
       before do
-        allow(MeiliSearch::Rails).to receive(:logger).and_return(logger)
+        allow(Meilisearch::Rails).to receive(:logger).and_return(logger)
       end
 
       it 'warns the user' do
@@ -157,7 +157,7 @@ describe MeiliSearch::Rails::IndexSettings do
       let(:logger) { instance_double('Logger', warn: nil) }
 
       before do
-        allow(MeiliSearch::Rails).to receive(:logger).and_return(logger)
+        allow(Meilisearch::Rails).to receive(:logger).and_return(logger)
       end
 
       it 'we cannot be certain that it is not defined and don\'t warn the user' do

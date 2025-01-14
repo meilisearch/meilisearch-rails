@@ -39,7 +39,7 @@ describe 'Tech shop' do
     # Subproducts
     @camera = Camera.create!(name: 'canon eos rebel t3', href: 'canon')
 
-    Product.reindex!(MeiliSearch::Rails::IndexSettings::DEFAULT_BATCH_SIZE, true)
+    Product.reindex!(Meilisearch::Rails::IndexSettings::DEFAULT_BATCH_SIZE, true)
   end
 
   context 'product' do
@@ -57,7 +57,7 @@ describe 'Tech shop' do
 
       products_after_clear = Product.raw_search('')['hits']
       expect(products_after_clear).to be_empty
-      Product.reindex!(MeiliSearch::Rails::IndexSettings::DEFAULT_BATCH_SIZE, true)
+      Product.reindex!(Meilisearch::Rails::IndexSettings::DEFAULT_BATCH_SIZE, true)
 
       products_after_reindex = Product.raw_search('')['hits']
       expect(products_after_reindex).not_to be_empty

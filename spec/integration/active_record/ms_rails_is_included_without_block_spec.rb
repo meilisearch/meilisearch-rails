@@ -1,6 +1,6 @@
 require 'support/models/specialty_models'
 
-describe 'When MeiliSearch::Rails is included but not called' do
+describe 'When Meilisearch::Rails is included but not called' do
   it 'raises an error' do
     expect do
       MisconfiguredBlock.reindex!
