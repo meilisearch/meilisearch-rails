@@ -42,4 +42,15 @@ describe 'Pagination with will_paginate' do
   it 'respects max_total_hits' do
     expect(Movie.search('*').count).to eq(5)
   end
+
+  it 'does not crash when meilisearch is disabled' do
+    MeiliSearch::Rails.configuration[:active] = false
+
+    expect do
+      Movie.search ''
+    end.not_to raise_error
+
+  ensure
+    MeiliSearch::Rails.configuration[:active] = true
+  end
 end
