@@ -2,13 +2,17 @@ module MeiliSearch
   module Rails
     module Configuration
       def configuration
-        raise NotConfigured if @_config.blank?
+        raise NotConfigured if @_config.blank? || @_config[:meilisearch_api_key].nil?
 
         @_config
       end
 
       def configuration=(configuration)
         @_config = configuration
+
+        return if !@_config || !@_config[:stringify_primary_keys].nil?
+
+        @_config[:stringify_primary_keys] = true
       end
 
       def deactivate!

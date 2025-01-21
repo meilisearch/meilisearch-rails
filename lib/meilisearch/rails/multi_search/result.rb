@@ -59,15 +59,28 @@ module MeiliSearch
 
         if records.respond_to? :in_order_of
           records.in_order_of(condition_key, hits_by_id.keys).each do |record|
-            record.formatted = hits_by_id[record.send(condition_key).to_s]['_formatted']
+            record_id = if MeiliSearch::Rails.configuration[:stringify_primary_keys]
+                          record.send(condition_key).to_s
+                        else
+                          record.send(condition_key)
+                        end
+            record.formatted = hits_by_id[record_id]['_formatted']
           end
         else
           results_by_id = records.index_by do |hit|
-            hit.send(condition_key).to_s
+            if MeiliSearch::Rails.configuration[:stringify_primary_keys]
+              hit.send(condition_key).to_s
+            else
+              hit.send(condition_key)
+            end
           end
 
           result['hits'].filter_map do |hit|
-            record = results_by_id[hit[condition_key.to_s].to_s]
+            record = if MeiliSearch::Rails.configuration[:stringify_primary_keys]
+                       results_by_id[hit[condition_key.to_s].to_s]
+                     else
+                       results_by_id[hit[condition_key]]
+                     end
             record&.formatted = hit['_formatted']
             record
           end
