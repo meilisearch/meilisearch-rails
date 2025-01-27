@@ -7,17 +7,16 @@ module MeiliSearch
         @results = {}
         @metadata = {}
 
-        searches.zip(raw_results['results']).each do |(index_target, search_options), result|
-          index_target = search_options[:class_name].constantize if search_options[:class_name]
+        searches.zip(raw_results['results']).each do |(target, search_options), result|
+          results_class = if search_options[:class_name]
+                            search_options[:class_name].constantize
+                          elsif target.instance_of?(Class)
+                            target
+                          end
 
-          @results[index_target] = case index_target
-                                   when String, Symbol
-                                     result['hits']
-                                   else
-                                     load_results(index_target, result)
-                                   end
+          @results[target] = results_class ? load_results(results_class, result) : result['hits']
 
-          @metadata[index_target] = result.except('hits')
+          @metadata[target] = result.except('hits')
         end
       end
 
