@@ -23,17 +23,41 @@ module MeiliSearch
       include Enumerable
 
       def each_hit(&block)
-        @results.each do |_index_target, results|
+        MeiliSearch::Rails.logger.warn(
+          <<~DEPRECATION
+            [meilisearch-rails] Flattening multi search results is deprecated.
+            If you do not want the results to be grouped, please use federated search instead.
+          DEPRECATION
+        )
+
+        @results.each_value do |results|
           results.each(&block)
         end
       end
-      alias each each_hit
+
+      def each(&block)
+        MeiliSearch::Rails.logger.info(
+          <<~INFO
+            [meilisearch-rails] #each on a multi search now iterates through grouped results.
+            If you do not want the results to be grouped, please use federated search instead.
+            To quickly go back to the old deprecated behavior, use `#each_hit`.
+          INFO
+        )
+
+        @results.each(&block)
+      end
 
       def each_result(&block)
         @results.each(&block)
       end
 
       def to_a
+        MeiliSearch::Rails.logger.warn(
+          <<~DEPRECATION
+            [meilisearch-rails] Flattening multi search results is deprecated.
+            If you do not want the results to be grouped, please use federated search instead.
+          DEPRECATION
+        )
         @results.values.flatten(1)
       end
       alias to_ary to_a
