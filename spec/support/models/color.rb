@@ -7,7 +7,7 @@ ar_schema.create_table :colors do |t|
 end
 
 class Color < ActiveRecord::Base
-  include MeiliSearch::Rails
+  include Meilisearch::Rails
   attr_accessor :not_indexed
 
   meilisearch synchronous: true, index_uid: safe_index_uid('Color') do

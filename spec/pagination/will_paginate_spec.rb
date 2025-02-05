@@ -4,7 +4,7 @@ require 'support/models/movie'
 
 describe 'Pagination with will_paginate' do
   before(:all) do
-    MeiliSearch::Rails.configuration[:pagination_backend] = :will_paginate
+    Meilisearch::Rails.configuration[:pagination_backend] = :will_paginate
     Movie.clear_index!
 
     6.times { Movie.create(title: Faker::Movie.title) }

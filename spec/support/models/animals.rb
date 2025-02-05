@@ -9,7 +9,7 @@ ar_schema.create_table :dogs do |t|
 end
 
 class Cat < ActiveRecord::Base
-  include MeiliSearch::Rails
+  include Meilisearch::Rails
 
   meilisearch index_uid: safe_index_uid('animals'), synchronous: true, primary_key: :ms_id
 
@@ -21,7 +21,7 @@ class Cat < ActiveRecord::Base
 end
 
 class Dog < ActiveRecord::Base
-  include MeiliSearch::Rails
+  include Meilisearch::Rails
 
   meilisearch index_uid: safe_index_uid('animals'), synchronous: true, primary_key: :ms_id
 

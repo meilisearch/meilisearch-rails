@@ -1,4 +1,4 @@
-describe MeiliSearch::Rails do
+describe Meilisearch::Rails do
   it 'is active by default' do
     expect(described_class).to be_active
   end

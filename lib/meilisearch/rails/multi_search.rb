@@ -1,6 +1,6 @@
 require_relative 'multi_search/result'
 
-module MeiliSearch
+module Meilisearch
   module Rails
     class << self
       def multi_search(searches)
@@ -42,7 +42,7 @@ module MeiliSearch
       end
 
       def pagination_enabled?
-        MeiliSearch::Rails.configuration[:pagination_backend]
+        Meilisearch::Rails.configuration[:pagination_backend]
       end
     end
   end
