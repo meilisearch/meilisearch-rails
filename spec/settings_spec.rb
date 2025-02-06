@@ -11,7 +11,7 @@ describe MeiliSearch::Rails::IndexSettings do
     context 'when passed a block' do
       it 'uses the block to determine attribute\'s value' do
         m = Namespaced::Model.new(another_private_value: 2)
-        attributes = Namespaced::Model.meilisearch_settings.get_attributes(m)
+        attributes = Namespaced::Model.ms_index_settings.get_attributes(m)
         expect(attributes).to include('customAttr' => 42, 'myid' => m.id)
       end
     end
@@ -109,7 +109,7 @@ describe MeiliSearch::Rails::IndexSettings do
   describe 'use_serializer' do
     it 'only uses the attributes from the serializer' do
       o = SerializedDocument.new name: 'test', skip: 'skip me'
-      attributes = SerializedDocument.meilisearch_settings.get_attributes(o)
+      attributes = SerializedDocument.ms_index_settings.get_attributes(o)
       expect(attributes).to eq({ name: 'test' })
     end
   end
@@ -144,7 +144,7 @@ describe MeiliSearch::Rails::IndexSettings do
       end
 
       it 'warns the user' do
-        People.meilisearch_settings.add_index(safe_index_uid('searchable_attr_spec')) do
+        People.ms_index_settings.add_index(safe_index_uid('searchable_attr_spec')) do
           attribute :first_name
           searchable_attributes %i[first_name last_name]
         end
@@ -161,7 +161,7 @@ describe MeiliSearch::Rails::IndexSettings do
       end
 
       it 'we cannot be certain that it is not defined and don\'t warn the user' do
-        Comment.meilisearch_settings.add_index(safe_index_uid('nested_searchable_attr_spec')) do
+        Comment.ms_index_settings.add_index(safe_index_uid('nested_searchable_attr_spec')) do
           attribute :post do
             { title: post&.title }
           end
