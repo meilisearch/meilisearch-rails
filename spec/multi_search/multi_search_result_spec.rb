@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe MeiliSearch::Rails::MultiSearchResult do # rubocop:todo RSpec/FilePath
+describe Meilisearch::Rails::MultiSearchResult do # rubocop:todo RSpec/FilePath
   let(:raw_results) do
     {
       'results' => [

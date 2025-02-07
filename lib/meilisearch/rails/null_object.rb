@@ -1,6 +1,6 @@
 require 'singleton'
 
-module MeiliSearch
+module Meilisearch
   module Rails
     class NullObject
       include Singleton

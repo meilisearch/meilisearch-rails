@@ -31,7 +31,7 @@ describe 'multi-search' do
 
   context 'with class keys' do
     it 'returns ORM records' do
-      results = MeiliSearch::Rails.multi_search(
+      results = Meilisearch::Rails.multi_search(
         Book => { q: 'Steve' },
         Product => { q: 'palm', limit: 1 },
         Color => { q: 'bl' }
@@ -45,7 +45,7 @@ describe 'multi-search' do
 
   context 'with index name keys' do
     it 'returns hashes' do
-      results = MeiliSearch::Rails.multi_search(
+      results = Meilisearch::Rails.multi_search(
         Book.index.uid => { q: 'Steve' },
         Product.index.uid.to_sym => { q: 'palm', limit: 1 },
         Color.index.uid => { q: 'bl' }
@@ -61,7 +61,7 @@ describe 'multi-search' do
 
     context 'when class_name is specified' do
       it 'returns ORM records' do
-        results = MeiliSearch::Rails.multi_search(
+        results = Meilisearch::Rails.multi_search(
           Book.index.uid => { q: 'Steve', class_name: 'Book' },
           Product.index.uid.to_sym => { q: 'palm', limit: 1, class_name: 'Product' },
           Color.index.uid => { q: 'bl', class_name: 'Color' }
@@ -74,7 +74,7 @@ describe 'multi-search' do
 
       it 'throws error if class cannot be found' do
         expect do
-          MeiliSearch::Rails.multi_search(
+          Meilisearch::Rails.multi_search(
             Book.index.uid => { q: 'Steve', class_name: 'Book' },
             Product.index.uid.to_sym => { q: 'palm', limit: 1, class_name: 'ProductOfCapitalism' },
             Color.index.uid => { q: 'bl', class_name: 'Color' }
@@ -86,7 +86,7 @@ describe 'multi-search' do
 
   context 'with a mixture of symbol and class keys' do
     it 'returns a mixture of ORM records and hashes' do
-      results = MeiliSearch::Rails.multi_search(
+      results = Meilisearch::Rails.multi_search(
         Book => { q: 'Steve' },
         Product.index.uid => { q: 'palm', limit: 1, class_name: 'Product' },
         Color.index.uid => { q: 'bl' }
@@ -102,9 +102,9 @@ describe 'multi-search' do
 
   context 'with pagination' do
     it 'properly paginates each search' do
-      MeiliSearch::Rails.configuration[:pagination_backend] = :kaminari
+      Meilisearch::Rails.configuration[:pagination_backend] = :kaminari
 
-      results = MeiliSearch::Rails.multi_search(
+      results = Meilisearch::Rails.multi_search(
         Book => { q: 'Steve' },
         Product => { q: 'palm', page: 1, hits_per_page: 1 },
         Color.index.uid => { q: 'bl', page: 1, 'hitsPerPage' => '1' }
@@ -115,7 +115,7 @@ describe 'multi-search' do
         a_hash_including('name' => 'black', 'short_name' => 'bla')
       )
 
-      MeiliSearch::Rails.configuration[:pagination_backend] = nil
+      Meilisearch::Rails.configuration[:pagination_backend] = nil
     end
   end
 end
