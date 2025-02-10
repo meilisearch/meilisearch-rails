@@ -70,4 +70,10 @@ describe 'Pagination with kaminari' do
   it 'respects max_total_hits' do
     expect(Restaurant.search('*').count).to eq(2)
   end
+
+  it 'correctly forwards parameters' do
+    # Kaminari only makes current_page available if
+    # limit and offset have been passed
+    expect(Restaurant.search('*').current_page).to eq(1)
+  end
 end
