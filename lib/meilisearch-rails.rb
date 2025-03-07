@@ -20,7 +20,13 @@ end
 
 require 'logger'
 
-module MeiliSearch
+# Workaround for the soft deprecation of MeiliSearch
+# The regular `const_get` method does not seem to work
+# too well with autoload and thus does not pull in methods
+# like `client` which are obviously vital.
+MeiliSearch::Rails = Meilisearch::Rails
+
+module Meilisearch
   module Rails
     autoload :Configuration, 'meilisearch/rails/configuration'
     extend Configuration
@@ -97,7 +103,7 @@ module MeiliSearch
               [meilisearch-rails] #{missing_searchable} declared in searchable_attributes but not in attributes. \
               Please add it to attributes if it should be searchable.
             WARNING
-            MeiliSearch::Rails.logger.warn(warning)
+            Meilisearch::Rails.logger.warn(warning)
           end
         end
       end
@@ -270,12 +276,12 @@ module MeiliSearch
       autoload :MSCleanUpJob, 'meilisearch/rails/ms_clean_up_job'
     end
 
-    # this class wraps an MeiliSearch::Index document ensuring all raised exceptions
+    # this class wraps an Meilisearch::Index document ensuring all raised exceptions
     # are correctly logged or thrown depending on the `raise_on_failure` option
     class SafeIndex
       def initialize(index_uid, raise_on_failure, options)
-        client = MeiliSearch::Rails.client
-        primary_key = options[:primary_key] || MeiliSearch::Rails::IndexSettings::DEFAULT_PRIMARY_KEY
+        client = Meilisearch::Rails.client
+        primary_key = options[:primary_key] || Meilisearch::Rails::IndexSettings::DEFAULT_PRIMARY_KEY
         @raise_on_failure = raise_on_failure.nil? || raise_on_failure
 
         SafeIndex.log_or_throw(nil, @raise_on_failure) do
@@ -285,7 +291,7 @@ module MeiliSearch
         @index = client.index(index_uid)
       end
 
-      ::MeiliSearch::Index.instance_methods(false).each do |m|
+      ::Meilisearch::Index.instance_methods(false).each do |m|
         define_method(m) do |*args, &block|
           if m == :update_settings
             args[0].delete(:attributes_to_highlight) if args[0][:attributes_to_highlight]
@@ -294,7 +300,7 @@ module MeiliSearch
           end
 
           SafeIndex.log_or_throw(m, @raise_on_failure) do
-            return MeiliSearch::Rails.black_hole unless MeiliSearch::Rails.active?
+            return Meilisearch::Rails.black_hole unless Meilisearch::Rails.active?
 
             @index.send(m, *args, &block)
           end
@@ -304,7 +310,7 @@ module MeiliSearch
       # Maually define facet_search due to complications with **opts in ruby 2.*
       def facet_search(*args, **opts)
         SafeIndex.log_or_throw(:facet_search, @raise_on_failure) do
-          return MeiliSearch::Rails.black_hole unless MeiliSearch::Rails.active?
+          return Meilisearch::Rails.black_hole unless Meilisearch::Rails.active?
 
           @index.facet_search(*args, **opts)
         end
@@ -323,7 +329,7 @@ module MeiliSearch
       def settings(*args)
         SafeIndex.log_or_throw(:settings, @raise_on_failure) do
           @index.settings(*args)
-        rescue ::MeiliSearch::ApiError => e
+        rescue ::Meilisearch::ApiError => e
           return {} if e.code == 'index_not_found' # not fatal
 
           raise e
@@ -332,11 +338,11 @@ module MeiliSearch
 
       def self.log_or_throw(method, raise_on_failure, &block)
         yield
-      rescue ::MeiliSearch::TimeoutError, ::MeiliSearch::ApiError => e
+      rescue ::Meilisearch::TimeoutError, ::Meilisearch::ApiError => e
         raise e if raise_on_failure
 
         # log the error
-        MeiliSearch::Rails.logger.info("[meilisearch-rails] #{e.message}")
+        Meilisearch::Rails.logger.info("[meilisearch-rails] #{e.message}")
         # return something
         case method.to_s
         when 'search'
@@ -349,7 +355,7 @@ module MeiliSearch
       end
     end
 
-    # these are the class methods added when MeiliSearch is included
+    # these are the class methods added when Meilisearch is included
     module ClassMethods
       def self.extended(base)
         class << base
@@ -379,7 +385,7 @@ module MeiliSearch
         attr_accessor :formatted
 
         if options.key?(:per_environment)
-          raise BadConfiguration, ':per_environment option should be defined globally on MeiliSearch::Rails.configuration block.'
+          raise BadConfiguration, ':per_environment option should be defined globally on Meilisearch::Rails.configuration block.'
         end
 
         if options[:synchronous] == true
@@ -499,7 +505,7 @@ module MeiliSearch
         Thread.current["ms_without_auto_index_scope_for_#{model_name}"]
       end
 
-      def ms_reindex!(batch_size = MeiliSearch::Rails::IndexSettings::DEFAULT_BATCH_SIZE, synchronous = false)
+      def ms_reindex!(batch_size = Meilisearch::Rails::IndexSettings::DEFAULT_BATCH_SIZE, synchronous = false)
         return if ms_without_auto_index_scope
 
         ms_configurations.each do |options, settings|
@@ -622,7 +628,7 @@ module MeiliSearch
 
           index = ms_ensure_init(options, settings)
           synchronous || options[:synchronous] ? index.delete_all_documents.await : index.delete_all_documents
-          @ms_indexes[MeiliSearch::Rails.active?][settings] = nil
+          @ms_indexes[Meilisearch::Rails.active?][settings] = nil
         end
         nil
       end
@@ -666,7 +672,7 @@ module MeiliSearch
       end
 
       def ms_search(query, params = {})
-        if MeiliSearch::Rails.configuration[:pagination_backend]
+        if Meilisearch::Rails.configuration[:pagination_backend]
           %i[page hitsPerPage hits_per_page].each do |key|
             params[key.to_s.underscore.to_sym] = params[key].to_i if params.key?(key)
           end
@@ -736,7 +742,7 @@ module MeiliSearch
 
       def ms_index_uid(options = nil)
         options ||= meilisearch_options
-        global_options ||= MeiliSearch::Rails.configuration
+        global_options ||= Meilisearch::Rails.configuration
 
         name = options[:index_uid] || model_name.to_s.gsub('::', '_')
         name = "#{name}_#{::Rails.env}" if global_options[:per_environment]
@@ -788,11 +794,11 @@ module MeiliSearch
 
         @ms_indexes ||= { true => {}, false => {} }
 
-        @ms_indexes[MeiliSearch::Rails.active?][settings] ||= SafeIndex.new(ms_index_uid(options), meilisearch_options[:raise_on_failure], meilisearch_options)
+        @ms_indexes[Meilisearch::Rails.active?][settings] ||= SafeIndex.new(ms_index_uid(options), meilisearch_options[:raise_on_failure], meilisearch_options)
 
-        update_settings_if_changed(@ms_indexes[MeiliSearch::Rails.active?][settings], options, user_configuration)
+        update_settings_if_changed(@ms_indexes[Meilisearch::Rails.active?][settings], options, user_configuration)
 
-        @ms_indexes[MeiliSearch::Rails.active?][settings]
+        @ms_indexes[Meilisearch::Rails.active?][settings]
       end
 
       private
@@ -845,7 +851,7 @@ module MeiliSearch
       end
 
       def ms_pk(options = nil)
-        options[:primary_key] || MeiliSearch::Rails::IndexSettings::DEFAULT_PRIMARY_KEY
+        options[:primary_key] || Meilisearch::Rails::IndexSettings::DEFAULT_PRIMARY_KEY
       end
 
       def meilisearch_settings_changed?(server_state, user_configuration)
