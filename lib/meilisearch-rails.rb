@@ -415,7 +415,7 @@ module MeiliSearch
                    raise ArgumentError, "Invalid `enqueue` option: #{options[:enqueue]}"
                  end
           meilisearch_options[:enqueue] = proc do |record, remove|
-            proc.call(record, remove) unless ms_without_auto_index_scope
+            proc.call(record, remove) if ::MeiliSearch::Rails.active? && !ms_without_auto_index_scope
           end
         end
         unless options[:auto_index] == false
