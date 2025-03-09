@@ -7,7 +7,7 @@ ar_schema.create_table :people do |t|
 end
 
 class People < ActiveRecord::Base
-  include MeiliSearch::Rails
+  include Meilisearch::Rails
 
   meilisearch synchronous: true, index_uid: safe_index_uid('MyCustomPeople'), primary_key: :card_number,
               auto_remove: false do
