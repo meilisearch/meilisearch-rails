@@ -241,22 +241,7 @@ multi_search_results = MeiliSearch::Rails.multi_search(
 )
 ```
 
-You can iterate through the results with `.each` or `.each_result`:
-
-```erb
-<% multi_search_results.each do |record| %>
-  <p><%= record.title %></p>
-  <p><%= record.author %></p>
-<% end %>
-
-<p>Harry Potter and the Philosopher's Stone</p>
-<p>J. K. Rowling</p>
-<p>Harry Potter and the Chamber of Secrets</p>
-<p>J. K. Rowling</p>
-<p>Attack on Titan</p>
-<p>Iseyama</p>
-```
-
+Use `#each_result` to loop through pairs of your provided keys and the results:
 ```erb
 <% multi_search_results.each_result do |klass, results| %>
   <p><%= klass.name.pluralize %></p>
@@ -279,6 +264,59 @@ You can iterate through the results with `.each` or `.each_result`:
   <li>Attack on Titan</li>
 </ul>
 ```
+
+Records are loaded when the keys are models, or when `:class_name` option is passed:
+
+```ruby
+multi_search_results = MeiliSearch::Rails.multi_search(
+  'books' => { q: 'Harry', class_name: 'Book' },
+  'mangas' => { q: 'Attack', class_name: 'Manga' }
+)
+```
+
+Otherwise, hashes are returned.
+
+The index to search is inferred from the model if the key is a model, if the key is a string the key is assumed to be the index unless the `:index_name` option is passed:
+
+```ruby
+multi_search_results = MeiliSearch::Rails.multi_search(
+  'western' => { q: 'Harry', class_name: 'Book', index_name: 'books_production' },
+  'japanese' => { q: 'Attack', class_name: 'Manga', index_name: 'mangas_production' }
+)
+```
+
+### Multi search the same index <!-- omit in toc -->
+
+You can search the same index multiple times by specifying `:index_name`:
+
+```ruby
+query = 'hero'
+multi_search_results = MeiliSearch::Rails.multi_search(
+  'Isekai Manga' => { q: query, class_name: 'Manga', filters: 'genre:isekai', index_name: 'mangas_production' }
+  'Shounen Manga' => { q: query, class_name: 'Manga', filters: 'genre:shounen', index_name: 'mangas_production' }
+  'Steampunk Manga' => { q: query, class_name: 'Manga', filters: 'genre:steampunk', index_name: 'mangas_production' }
+)
+```
+
+### Deprecated #each <!-- omit in toc -->
+
+**DEPRECATED:** You used to be able to iterate through a flattened collection with `.each`:
+
+```erb
+<% multi_search_results.each do |record| %>
+  <p><%= record.title %></p>
+  <p><%= record.author %></p>
+<% end %>
+
+<p>Harry Potter and the Philosopher's Stone</p>
+<p>J. K. Rowling</p>
+<p>Harry Potter and the Chamber of Secrets</p>
+<p>J. K. Rowling</p>
+<p>Attack on Titan</p>
+<p>Iseyama</p>
+```
+
+But this has been deprecated in favor of **federated search**.
 
 See the [official multi search documentation](https://www.meilisearch.com/docs/reference/api/multi_search).
 

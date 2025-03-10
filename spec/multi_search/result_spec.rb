@@ -60,7 +60,57 @@ describe MeiliSearch::Rails::MultiSearchResult do # rubocop:todo RSpec/FilePath
       )
     end
 
+    describe '#each' do
+      let(:logger) { instance_double('Logger', info: nil) }
+
+      before do
+        allow(MeiliSearch::Rails).to receive(:logger).and_return(logger)
+      end
+
+      it 'has the same behavior as #each_result' do
+        expect(result.each).to be_an(Enumerator)
+        expect(result.each).to contain_exactly(
+          ['books_index', contain_exactly(
+            a_hash_including('author' => 'Walter Isaacson', 'name' => 'Steve Jobs')
+          )],
+          ['products_index', contain_exactly(
+            a_hash_including('name' => 'palm pixi plus')
+          )],
+          ['color_index', contain_exactly(
+            a_hash_including('name' => 'blue', 'short_name' => 'blu'),
+            a_hash_including('name' => 'black', 'short_name' => 'bla')
+          )]
+        )
+      end
+
+      it 'warns about changed behavior' do
+        result.each(&:to_s)
+
+        expect(logger).to have_received(:info).with(a_string_including('#each on a multi search now iterates through grouped results.'))
+      end
+    end
+
+    describe '#each_hit' do
+      let(:logger) { instance_double('Logger', warn: nil) }
+
+      before do
+        allow(MeiliSearch::Rails).to receive(:logger).and_return(logger)
+      end
+
+      it 'warns about deprecation' do
+        result.each_hit(&:to_s)
+
+        expect(logger).to have_received(:warn).with(a_string_including('Flattening multi search'))
+      end
+    end
+
     describe '#to_a' do
+      let(:logger) { instance_double('Logger', warn: nil) }
+
+      before do
+        allow(MeiliSearch::Rails).to receive(:logger).and_return(logger)
+      end
+
       it 'returns the hits' do
         expect(result.to_a).to contain_exactly(
           a_hash_including('author' => 'Walter Isaacson', 'name' => 'Steve Jobs'),
@@ -72,6 +122,12 @@ describe MeiliSearch::Rails::MultiSearchResult do # rubocop:todo RSpec/FilePath
 
       it 'aliases as #to_ary' do
         expect(result.method(:to_ary).original_name).to eq :to_a
+      end
+
+      it 'warns about deprecation' do
+        result.to_a
+
+        expect(logger).to have_received(:warn).with(a_string_including('Flattening multi search'))
       end
     end
 
