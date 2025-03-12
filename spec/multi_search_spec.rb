@@ -180,4 +180,17 @@ describe 'multi-search' do
       Meilisearch::Rails.configuration[:pagination_backend] = nil
     end
   end
+
+  context 'with collections' do
+    it 'fetches items from the given collection' do
+      results = MeiliSearch::Rails.multi_search(
+        Product.index.uid => { q: 'palm', class_name: 'Product', collection: Product.where('tags LIKE "%terrible%"') },
+        Color => { q: 'bl', collection: Color.where(short_name: 'bla') }
+      )
+
+      expect(results).to contain_exactly(
+        black, palm_pixi_plus
+      )
+    end
+  end
 end

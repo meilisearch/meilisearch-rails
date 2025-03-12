@@ -18,7 +18,7 @@ module Meilisearch
 
       def normalize(options, index_target)
         options
-          .except(:class_name)
+          .except(:class_name, :collection)
           .merge!(index_uid: index_uid_from_target(index_target))
       end
 

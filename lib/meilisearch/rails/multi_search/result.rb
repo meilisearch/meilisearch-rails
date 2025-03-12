@@ -14,7 +14,7 @@ module Meilisearch
                             target
                           end
 
-          @results[target] = results_class ? load_results(results_class, result) : result['hits']
+          @results[target] = results_class ? load_results(results_class, result, collection: search_options[:collection]) : result['hits']
 
           @metadata[target] = result.except('hits')
         end
@@ -69,7 +69,7 @@ module Meilisearch
 
       private
 
-      def load_results(klass, result)
+      def load_results(klass, result, collection: klass)
         pk_method = klass.ms_primary_key_method
         pk_method = pk_method.in if Utilities.mongo_model?(klass)
 
@@ -78,7 +78,7 @@ module Meilisearch
         hits_by_id =
           result['hits'].index_by { |hit| hit[condition_key.to_s] }
 
-        records = klass.where(condition_key => hits_by_id.keys)
+        records = collection.where(condition_key => hits_by_id.keys)
 
         if records.respond_to? :in_order_of
           records.in_order_of(condition_key, hits_by_id.keys).each do |record|
