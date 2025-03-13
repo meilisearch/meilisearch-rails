@@ -5,7 +5,7 @@ module MeiliSearch
     class << self
       def multi_search(searches)
         search_parameters = searches.map do |(index_target, options)|
-          index_target = options.delete(:index_name) || index_target
+          index_target = options.delete(:index_uid) || index_target
 
           paginate(options) if pagination_enabled?
           normalize(options, index_target)
