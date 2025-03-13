@@ -44,8 +44,10 @@ describe 'multi-search' do
         Color => { q: 'bl' }
       )
 
-      expect(results).to contain_exactly(
-        steve_jobs, palm_pixi_plus, blue, black
+      expect(results.to_h).to match(
+        Book => [steve_jobs],
+        Product => [palm_pixi_plus],
+        Color => contain_exactly(blue, black)
       )
     end
   end
@@ -69,11 +71,13 @@ describe 'multi-search' do
           'colors' => { q: 'bl', index_uid: Color.index.uid }
         )
 
-        expect(results).to contain_exactly(
-          a_hash_including('author' => 'Walter Isaacson', 'name' => 'Steve Jobs'),
-          a_hash_including('name' => 'palm pixi plus'),
-          a_hash_including('name' => 'blue', 'short_name' => 'blu'),
-          a_hash_including('name' => 'black', 'short_name' => 'bla')
+        expect(results.to_h).to match(
+          'books' => [a_hash_including('author' => 'Walter Isaacson', 'name' => 'Steve Jobs')],
+          'products' => [a_hash_including('name' => 'palm pixi plus')],
+          'colors' => contain_exactly(
+            a_hash_including('name' => 'blue', 'short_name' => 'blu'),
+            a_hash_including('name' => 'black', 'short_name' => 'bla')
+          )
         )
       end
 
@@ -86,10 +90,10 @@ describe 'multi-search' do
           'nature_colors' => { q: 'green', index_uid: index_uid }
         )
 
-        expect(results).to contain_exactly(
-          a_hash_including('name' => 'blue', 'short_name' => 'blu'),
-          a_hash_including('name' => 'black', 'short_name' => 'bla'),
-          a_hash_including('name' => 'green', 'short_name' => 'gre')
+        expect(results.to_h).to match(
+          'bright_colors' => [a_hash_including('name' => 'blue', 'short_name' => 'blu')],
+          'dark_colors' => [a_hash_including('name' => 'black', 'short_name' => 'bla')],
+          'nature_colors' => [a_hash_including('name' => 'green', 'short_name' => 'gre')]
         )
       end
 
@@ -101,8 +105,10 @@ describe 'multi-search' do
             'colors' => { q: 'bl', index_uid: Color.index.uid, class_name: 'Color' }
           )
 
-          expect(results).to contain_exactly(
-            steve_jobs, palm_pixi_plus, blue, black
+          expect(results.to_h).to match(
+            'books' => [steve_jobs],
+            'products' => [palm_pixi_plus],
+            'colors' => contain_exactly(blue, black)
           )
         end
       end
@@ -117,11 +123,13 @@ describe 'multi-search' do
         Color.index.uid => { q: 'bl' }
       )
 
-      expect(results).to contain_exactly(
-        a_hash_including('author' => 'Walter Isaacson', 'name' => 'Steve Jobs'),
-        a_hash_including('name' => 'palm pixi plus'),
-        a_hash_including('name' => 'blue', 'short_name' => 'blu'),
-        a_hash_including('name' => 'black', 'short_name' => 'bla')
+      expect(results.to_h).to match(
+        Book.index.uid => [a_hash_including('author' => 'Walter Isaacson', 'name' => 'Steve Jobs')],
+        Product.index.uid.to_sym => [a_hash_including('name' => 'palm pixi plus')],
+        Color.index.uid => contain_exactly(
+          a_hash_including('name' => 'blue', 'short_name' => 'blu'),
+          a_hash_including('name' => 'black', 'short_name' => 'bla')
+        )
       )
     end
 
@@ -133,8 +141,10 @@ describe 'multi-search' do
           Color.index.uid => { q: 'bl', class_name: 'Color' }
         )
 
-        expect(results).to contain_exactly(
-          steve_jobs, palm_pixi_plus, blue, black
+        expect(results.to_h).to match(
+          Book.index.uid => [steve_jobs],
+          Product.index.uid.to_sym => [palm_pixi_plus],
+          Color.index.uid => contain_exactly(blue, black)
         )
       end
 
@@ -158,10 +168,13 @@ describe 'multi-search' do
         Color.index.uid => { q: 'bl' }
       )
 
-      expect(results).to contain_exactly(
-        steve_jobs, palm_pixi_plus,
-        a_hash_including('name' => 'blue', 'short_name' => 'blu'),
-        a_hash_including('name' => 'black', 'short_name' => 'bla')
+      expect(results.to_h).to match(
+        Book => [steve_jobs],
+        Product.index_uid => [palm_pixi_plus],
+        Color.index.uid => contain_exactly(
+          a_hash_including('name' => 'blue', 'short_name' => 'blu'),
+          a_hash_including('name' => 'black', 'short_name' => 'bla')
+        )
       )
     end
   end
@@ -176,9 +189,12 @@ describe 'multi-search' do
         Color.index.uid => { q: 'bl', page: 1, 'hitsPerPage' => '1' }
       )
 
-      expect(results).to contain_exactly(
-        steve_jobs, palm_pixi_plus,
-        a_hash_including('name' => 'black', 'short_name' => 'bla')
+      expect(results.to_h).to match(
+        Book => [steve_jobs],
+        Product => [palm_pixi_plus],
+        Color.index_uid => contain_exactly(
+          a_hash_including('name' => 'black', 'short_name' => 'bla')
+        )
       )
 
       MeiliSearch::Rails.configuration[:pagination_backend] = nil
