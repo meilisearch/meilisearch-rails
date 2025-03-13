@@ -192,5 +192,21 @@ describe 'multi-search' do
         black, palm_pixi_plus
       )
     end
+
+    it 'infers the model' do
+      results = MeiliSearch::Rails.multi_search(
+        'colors' => { q: 'bl', collection: Color.all, index_uid: Color.index.uid }
+      )
+
+      expect(results.to_h['colors']).to contain_exactly(blue, black)
+    end
+
+    it 'infers the index as well as the model' do
+      results = MeiliSearch::Rails.multi_search(
+        'colors' => { q: 'bl', collection: Color }
+      )
+
+      expect(results.to_h['colors']).to contain_exactly(blue, black)
+    end
   end
 end
