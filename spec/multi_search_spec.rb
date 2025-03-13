@@ -47,7 +47,7 @@ describe 'multi-search' do
   end
 
   context 'with arbitrary keys' do
-    context 'when index_name is not present' do
+    context 'when index_uid is not present' do
       it 'assumes key is index and errors' do
         expect do
           MeiliSearch::Rails.multi_search(
@@ -57,12 +57,12 @@ describe 'multi-search' do
       end
     end
 
-    context 'when :index_name is present' do
+    context 'when :index_uid is present' do
       it 'searches the correct index' do
         results = MeiliSearch::Rails.multi_search(
-          'books' => { q: 'Steve', index_name: Book.index.uid },
-          'products' => { q: 'palm', index_name: Product.index.uid, limit: 1 },
-          'colors' => { q: 'bl', index_name: Color.index.uid }
+          'books' => { q: 'Steve', index_uid: Book.index.uid },
+          'products' => { q: 'palm', index_uid: Product.index.uid, limit: 1 },
+          'colors' => { q: 'bl', index_uid: Color.index.uid }
         )
 
         expect(results).to contain_exactly(
@@ -74,12 +74,12 @@ describe 'multi-search' do
       end
 
       it 'allows searching the same index n times' do
-        index_name = Color.index.uid
+        index_uid = Color.index.uid
 
         results = MeiliSearch::Rails.multi_search(
-          'dark_colors' => { q: 'black', index_name: index_name },
-          'bright_colors' => { q: 'blue', index_name: index_name },
-          'nature_colors' => { q: 'green', index_name: index_name }
+          'dark_colors' => { q: 'black', index_uid: index_uid },
+          'bright_colors' => { q: 'blue', index_uid: index_uid },
+          'nature_colors' => { q: 'green', index_uid: index_uid }
         )
 
         expect(results).to contain_exactly(
@@ -92,9 +92,9 @@ describe 'multi-search' do
       context 'when :class_name is also present' do
         it 'loads results from the correct models' do
           results = MeiliSearch::Rails.multi_search(
-            'books' => { q: 'Steve', index_name: Book.index.uid, class_name: 'Book' },
-            'products' => { q: 'palm', limit: 1, index_name: Product.index.uid, class_name: 'Product' },
-            'colors' => { q: 'bl', index_name: Color.index.uid, class_name: 'Color' }
+            'books' => { q: 'Steve', index_uid: Book.index.uid, class_name: 'Book' },
+            'products' => { q: 'palm', limit: 1, index_uid: Product.index.uid, class_name: 'Product' },
+            'colors' => { q: 'bl', index_uid: Color.index.uid, class_name: 'Color' }
           )
 
           expect(results).to contain_exactly(

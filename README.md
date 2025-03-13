@@ -276,25 +276,25 @@ multi_search_results = MeiliSearch::Rails.multi_search(
 
 Otherwise, hashes are returned.
 
-The index to search is inferred from the model if the key is a model, if the key is a string the key is assumed to be the index unless the `:index_name` option is passed:
+The index to search is inferred from the model if the key is a model, if the key is a string the key is assumed to be the index unless the `:index_uid` option is passed:
 
 ```ruby
 multi_search_results = MeiliSearch::Rails.multi_search(
-  'western' => { q: 'Harry', class_name: 'Book', index_name: 'books_production' },
-  'japanese' => { q: 'Attack', class_name: 'Manga', index_name: 'mangas_production' }
+  'western' => { q: 'Harry', class_name: 'Book', index_uid: 'books_production' },
+  'japanese' => { q: 'Attack', class_name: 'Manga', index_uid: 'mangas_production' }
 )
 ```
 
 ### Multi search the same index <!-- omit in toc -->
 
-You can search the same index multiple times by specifying `:index_name`:
+You can search the same index multiple times by specifying `:index_uid`:
 
 ```ruby
 query = 'hero'
 multi_search_results = MeiliSearch::Rails.multi_search(
-  'Isekai Manga' => { q: query, class_name: 'Manga', filters: 'genre:isekai', index_name: 'mangas_production' }
-  'Shounen Manga' => { q: query, class_name: 'Manga', filters: 'genre:shounen', index_name: 'mangas_production' }
-  'Steampunk Manga' => { q: query, class_name: 'Manga', filters: 'genre:steampunk', index_name: 'mangas_production' }
+  'Isekai Manga' => { q: query, class_name: 'Manga', filters: 'genre:isekai', index_uid: 'mangas_production' }
+  'Shounen Manga' => { q: query, class_name: 'Manga', filters: 'genre:shounen', index_uid: 'mangas_production' }
+  'Steampunk Manga' => { q: query, class_name: 'Manga', filters: 'genre:steampunk', index_uid: 'mangas_production' }
 )
 ```
 
