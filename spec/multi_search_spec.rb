@@ -4,33 +4,37 @@ require 'support/models/product'
 require 'support/models/color'
 
 describe 'multi-search' do
-  def reset_indexes
+  before do
     [Book, Color, Product].each do |klass|
       klass.delete_all
-      klass.clear_index!(true)
+      klass.clear_index!
     end
-  end
 
-  before do
-    reset_indexes
-
-    Product.create! name: 'palm pixi plus', href: 'ebay', tags: ['terrible']
-    Product.create! name: 'lg vortex', href: 'ebay', tags: ['decent']
-    Product.create! name: 'palmpre', href: 'ebay', tags: ['discontinued', 'worst phone ever']
+    Product.insert_all([
+                         { name: 'palm pixi plus', href: 'ebay', tags: ['terrible'] },
+                         { name: 'lg vortex', href: 'ebay', tags: ['decent'] },
+                         { name: 'palmpre', href: 'ebay', tags: ['discontinued', 'worst phone ever'] }
+                       ])
     Product.reindex!
 
-    Color.create! name: 'blue', short_name: 'blu', hex: 0x0000FF
-    Color.create! name: 'black', short_name: 'bla', hex: 0x000000
-    Color.create! name: 'green', short_name: 'gre', hex: 0x00FF00
+    Color.insert_all([
+                       { name: 'blue', short_name: 'blu', hex: 0x0000FF },
+                       { name: 'black', short_name: 'bla', hex: 0x000000 },
+                       { name: 'green', short_name: 'gre', hex: 0x00FF00 }
+                     ])
+    Color.reindex!
 
-    Book.create! name: 'Steve Jobs', author: 'Walter Isaacson'
-    Book.create! name: 'Moby Dick', author: 'Herman Melville'
+    Book.insert_all([
+                      { name: 'Steve Jobs', author: 'Walter Isaacson' },
+                      { name: 'Moby Dick', author: 'Herman Melville' }
+                    ])
+    Book.reindex!
   end
 
-  let!(:palm_pixi_plus) { Product.find_by name: 'palm pixi plus' }
-  let!(:steve_jobs) { Book.find_by name: 'Steve Jobs' }
-  let!(:blue) { Color.find_by name: 'blue' }
-  let!(:black) { Color.find_by name: 'black' }
+  let(:palm_pixi_plus) { Product.find_by name: 'palm pixi plus' }
+  let(:steve_jobs) { Book.find_by name: 'Steve Jobs' }
+  let(:blue) { Color.find_by name: 'blue' }
+  let(:black) { Color.find_by name: 'black' }
 
   context 'with class keys' do
     it 'returns ORM records' do
