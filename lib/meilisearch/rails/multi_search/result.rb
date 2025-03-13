@@ -12,6 +12,8 @@ module Meilisearch
                             search_options[:class_name].constantize
                           elsif target.instance_of?(Class)
                             target
+                          elsif search_options[:collection]
+                            search_options[:collection]
                           end
 
           @results[target] = results_class ? load_results(results_class, result, collection: search_options[:collection]) : result['hits']
@@ -69,7 +71,9 @@ module Meilisearch
 
       private
 
-      def load_results(klass, result, collection: klass)
+      def load_results(klass, result, collection:)
+        collection ||= klass
+
         pk_method = klass.ms_primary_key_method
         pk_method = pk_method.in if Utilities.mongo_model?(klass)
 
