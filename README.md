@@ -265,12 +265,14 @@ Use `#each_result` to loop through pairs of your provided keys and the results:
 </ul>
 ```
 
-Records are loaded when the keys are models, or when `:class_name` option is passed:
+Records are loaded when the keys are models, or when `:collection` option is passed:
 
 ```ruby
 multi_search_results = Meilisearch::Rails.multi_search(
-  'books' => { q: 'Harry', class_name: 'Book' },
-  'mangas' => { q: 'Attack', class_name: 'Manga' }
+  # Collection may be a relation
+  'books' => { q: 'Harry', collection: Book.all },
+  # or a model
+  'mangas' => { q: 'Attack', collection: Manga }
 )
 ```
 
@@ -280,8 +282,8 @@ The index to search is inferred from the model if the key is a model, if the key
 
 ```ruby
 multi_search_results = Meilisearch::Rails.multi_search(
-  'western' => { q: 'Harry', class_name: 'Book', index_uid: 'books_production' },
-  'japanese' => { q: 'Attack', class_name: 'Manga', index_uid: 'mangas_production' }
+  'western' => { q: 'Harry', collection: Book, index_uid: 'books_production' },
+  'japanese' => { q: 'Attack', collection: Manga, index_uid: 'mangas_production' }
 )
 ```
 
@@ -291,10 +293,11 @@ You can search the same index multiple times by specifying `:index_uid`:
 
 ```ruby
 query = 'hero'
+
 multi_search_results = Meilisearch::Rails.multi_search(
-  'Isekai Manga' => { q: query, class_name: 'Manga', filters: 'genre:isekai', index_uid: 'mangas_production' }
-  'Shounen Manga' => { q: query, class_name: 'Manga', filters: 'genre:shounen', index_uid: 'mangas_production' }
-  'Steampunk Manga' => { q: query, class_name: 'Manga', filters: 'genre:steampunk', index_uid: 'mangas_production' }
+  'Isekai Manga' => { q: query, collection: Manga, filters: 'genre:isekai', index_uid: 'mangas_production' }
+  'Shounen Manga' => { q: query, collection: Manga, filters: 'genre:shounen', index_uid: 'mangas_production' }
+  'Steampunk Manga' => { q: query, collection: Manga, filters: 'genre:steampunk', index_uid: 'mangas_production' }
 )
 ```
 

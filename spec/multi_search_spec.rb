@@ -91,6 +91,8 @@ describe 'multi-search' do
 
       context 'when :class_name is also present' do
         it 'loads results from the correct models' do
+          allow(Meilisearch::Rails.logger).to receive(:warn).and_return(nil)
+
           results = Meilisearch::Rails.multi_search(
             'books' => { q: 'Steve', index_uid: Book.index.uid, class_name: 'Book' },
             'products' => { q: 'palm', limit: 1, index_uid: Product.index.uid, class_name: 'Product' },
@@ -122,6 +124,18 @@ describe 'multi-search' do
     end
 
     context 'when class_name is specified' do
+      let(:logger) { instance_double('Logger', warn: nil) }
+
+      before do
+        allow(Meilisearch::Rails).to receive(:logger).and_return(logger)
+      end
+
+      it 'warns about deprecation' do
+        results = Meilisearch::Rails.multi_search(Book.index.uid => { q: 'Steve', class_name: 'Book' })
+        expect(results.to_h[Book.index.uid]).to contain_exactly(steve_jobs)
+        expect(logger).to have_received(:warn).with(a_string_matching(':class_name'))
+      end
+
       it 'returns ORM records' do
         results = Meilisearch::Rails.multi_search(
           Book.index.uid => { q: 'Steve', class_name: 'Book' },
@@ -150,7 +164,7 @@ describe 'multi-search' do
     it 'returns a mixture of ORM records and hashes' do
       results = Meilisearch::Rails.multi_search(
         Book => { q: 'Steve' },
-        Product.index.uid => { q: 'palm', limit: 1, class_name: 'Product' },
+        Product.index.uid => { q: 'palm', limit: 1, collection: Product },
         Color.index.uid => { q: 'bl' }
       )
 
@@ -183,8 +197,8 @@ describe 'multi-search' do
 
   context 'with collections' do
     it 'fetches items from the given collection' do
-      results = MeiliSearch::Rails.multi_search(
-        Product.index.uid => { q: 'palm', class_name: 'Product', collection: Product.where('tags LIKE "%terrible%"') },
+      results = Meilisearch::Rails.multi_search(
+        Product => { q: 'palm', collection: Product.where('tags LIKE "%terrible%"') },
         Color => { q: 'bl', collection: Color.where(short_name: 'bla') }
       )
 
@@ -194,7 +208,7 @@ describe 'multi-search' do
     end
 
     it 'infers the model' do
-      results = MeiliSearch::Rails.multi_search(
+      results = Meilisearch::Rails.multi_search(
         'colors' => { q: 'bl', collection: Color.all, index_uid: Color.index.uid }
       )
 
@@ -202,7 +216,7 @@ describe 'multi-search' do
     end
 
     it 'infers the index as well as the model' do
-      results = MeiliSearch::Rails.multi_search(
+      results = Meilisearch::Rails.multi_search(
         'colors' => { q: 'bl', collection: Color }
       )
 

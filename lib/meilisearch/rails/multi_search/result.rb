@@ -9,6 +9,10 @@ module Meilisearch
 
         searches.zip(raw_results['results']).each do |(target, search_options), result|
           results_class = if search_options[:class_name]
+                            Meilisearch::Rails.logger.warn(
+                              '[meilisearch-rails] The :class_name option in multi search is deprecated, please use :collection instead.'
+                            )
+
                             search_options[:class_name].constantize
                           elsif target.instance_of?(Class)
                             target
