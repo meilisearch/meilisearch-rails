@@ -13,7 +13,7 @@ class Color < ActiveRecord::Base
   meilisearch synchronous: true, index_uid: safe_index_uid('Color') do
     searchable_attributes [:name]
     filterable_attributes ['short_name']
-    sortable_attributes [:name]
+    sortable_attributes %i[id name]
     ranking_rules [
       'words',
       'typo',
