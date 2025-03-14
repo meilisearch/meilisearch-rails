@@ -5,7 +5,7 @@ ar_schema.create_table :tasks do |t|
 end
 
 class Task < ActiveRecord::Base
-  include MeiliSearch::Rails
+  include Meilisearch::Rails
 
   meilisearch synchronous: true, index_uid: safe_index_uid('Task')
 end

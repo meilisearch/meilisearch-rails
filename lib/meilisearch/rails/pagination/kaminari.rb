@@ -1,11 +1,11 @@
 unless defined? Kaminari
-  raise(MeiliSearch::BadConfiguration,
+  raise(Meilisearch::BadConfiguration,
         "Meilisearch: Please add 'kaminari' to your Gemfile to use kaminari pagination backend")
 end
 
 require 'kaminari/models/array_extension'
 
-module MeiliSearch
+module Meilisearch
   module Rails
     module Pagination
       class Kaminari < ::Kaminari::PaginatableArray
@@ -18,7 +18,7 @@ module MeiliSearch
         end
 
         def self.create(results, total_hits, options = {})
-          unless MeiliSearch::Rails.active?
+          unless Meilisearch::Rails.active?
             total_hits = 0
             options[:page] = 1
             options[:per_page] = 1

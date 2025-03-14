@@ -1,4 +1,4 @@
-module MeiliSearch
+module Meilisearch
   module Rails
     class MultiSearchResult
       attr_reader :metadata
@@ -23,7 +23,7 @@ module MeiliSearch
       include Enumerable
 
       def each_hit(&block)
-        MeiliSearch::Rails.logger.warn(
+        Meilisearch::Rails.logger.warn(
           <<~DEPRECATION
             [meilisearch-rails] Flattening multi search results is deprecated.
             If you do not want the results to be grouped, please use federated search instead.
@@ -36,7 +36,7 @@ module MeiliSearch
       end
 
       def each(&block)
-        MeiliSearch::Rails.logger.info(
+        Meilisearch::Rails.logger.info(
           <<~INFO
             [meilisearch-rails] #each on a multi search now iterates through grouped results.
             If you do not want the results to be grouped, please use federated search instead.
@@ -52,7 +52,7 @@ module MeiliSearch
       end
 
       def to_a
-        MeiliSearch::Rails.logger.warn(
+        Meilisearch::Rails.logger.warn(
           <<~DEPRECATION
             [meilisearch-rails] Flattening multi search results is deprecated.
             If you do not want the results to be grouped, please use federated search instead.

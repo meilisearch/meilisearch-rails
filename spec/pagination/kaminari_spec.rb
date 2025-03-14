@@ -4,7 +4,7 @@ require 'support/models/restaurant'
 
 describe 'Pagination with kaminari' do
   before(:all) do
-    MeiliSearch::Rails.configuration[:pagination_backend] = :kaminari
+    Meilisearch::Rails.configuration[:pagination_backend] = :kaminari
     Restaurant.clear_index!
 
     3.times do
@@ -31,14 +31,14 @@ describe 'Pagination with kaminari' do
   end
 
   it "doesn't crash when meilisearch is disabled" do
-    MeiliSearch::Rails.configuration[:active] = false
+    Meilisearch::Rails.configuration[:active] = false
 
     expect do
       Restaurant.search ''
     end.not_to raise_error
 
   ensure
-    MeiliSearch::Rails.configuration[:active] = true
+    Meilisearch::Rails.configuration[:active] = true
   end
 
   it 'returns number of total results' do

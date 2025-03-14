@@ -12,7 +12,7 @@ end
 class Post < ActiveRecord::Base
   has_many :comments
 
-  include MeiliSearch::Rails
+  include Meilisearch::Rails
 
   meilisearch index_uid: safe_index_uid('Post'), synchronous: true do
     attribute :comments do
@@ -26,7 +26,7 @@ end
 class Comment < ActiveRecord::Base
   belongs_to :post
 
-  include MeiliSearch::Rails
+  include Meilisearch::Rails
 
   meilisearch
 end
