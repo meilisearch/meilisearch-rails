@@ -4,6 +4,9 @@ require 'meilisearch/rails/version'
 require 'meilisearch/rails/utilities'
 require 'meilisearch/rails/errors'
 require 'meilisearch/rails/multi_search'
+require 'meilisearch/rails/index_settings'
+require 'meilisearch/rails/safe_index'
+require 'meilisearch/rails/model_configuration'
 
 if defined? Rails
   begin
@@ -46,307 +49,12 @@ module MeiliSearch
       end
     end
 
-    class IndexSettings
-      DEFAULT_BATCH_SIZE = 1000
-
-      DEFAULT_PRIMARY_KEY = 'id'.freeze
-
-      # Meilisearch settings
-      OPTIONS = %i[
-        searchable_attributes
-        filterable_attributes
-        sortable_attributes
-        displayed_attributes
-        distinct_attribute
-        synonyms
-        stop_words
-        ranking_rules
-        attributes_to_highlight
-        attributes_to_crop
-        crop_length
-        pagination
-        faceting
-        typo_tolerance
-        proximity_precision
-      ].freeze
-
-      CAMELIZE_OPTIONS = %i[pagination faceting typo_tolerance].freeze
-
-      OPTIONS.each do |option|
-        define_method option do |value|
-          instance_variable_set("@#{option}", value)
-        end
-
-        underscored_name = option.to_s.gsub(/(.)([A-Z])/, '\1_\2').downcase
-        alias_method underscored_name, option if underscored_name != option
-      end
-
-      def initialize(options, &block)
-        @options = options
-        instance_exec(&block) if block_given?
-        warn_searchable_missing_attributes
-      end
-
-      def warn_searchable_missing_attributes
-        searchables = get_setting(:searchable_attributes)&.map { |searchable| searchable.to_s.split('.').first }
-        attrs = get_setting(:attributes)&.map { |k, _| k.to_s }
-
-        if searchables.present? && attrs.present?
-          (searchables - attrs).each do |missing_searchable|
-            warning = <<~WARNING
-              [meilisearch-rails] #{missing_searchable} declared in searchable_attributes but not in attributes. \
-              Please add it to attributes if it should be searchable.
-            WARNING
-            MeiliSearch::Rails.logger.warn(warning)
-          end
-        end
-      end
-
-      def use_serializer(serializer)
-        @serializer = serializer
-        # instance_variable_set("@serializer", serializer)
-      end
-
-      def attribute(*names, &block)
-        raise ArgumentError, 'Cannot pass multiple attribute names if block given' if block_given? && (names.length > 1)
-
-        @attributes ||= {}
-        names.flatten.each do |name|
-          @attributes[name.to_s] = block_given? ? proc { |d| d.instance_eval(&block) } : proc { |d| d.send(name) }
-        end
-      end
-      alias attributes attribute
-
-      def add_attribute(*names, &block)
-        raise ArgumentError, 'Cannot pass multiple attribute names if block given' if block_given? && (names.length > 1)
-
-        @additional_attributes ||= {}
-        names.each do |name|
-          @additional_attributes[name.to_s] = block_given? ? proc { |d| d.instance_eval(&block) } : proc { |d| d.send(name) }
-        end
-      end
-      alias add_attributes add_attribute
-
-      def mongoid?(document)
-        defined?(::Mongoid::Document) && document.class.include?(::Mongoid::Document)
-      end
-
-      def sequel?(document)
-        defined?(::Sequel::Model) && document.class < ::Sequel::Model
-      end
-
-      def active_record?(document)
-        !mongoid?(document) && !sequel?(document)
-      end
-
-      def get_default_attributes(document)
-        if mongoid?(document)
-          # work-around mongoid 2.4's unscoped method, not accepting a block
-          document.attributes
-        elsif sequel?(document)
-          document.to_hash
-        else
-          document.class.unscoped do
-            document.attributes
-          end
-        end
-      end
-
-      def get_attribute_names(document)
-        get_attributes(document).keys
-      end
-
-      def attributes_to_hash(attributes, document)
-        if attributes
-          attributes.to_h { |name, value| [name.to_s, value.call(document)] }
-        else
-          {}
-        end
-      end
-
-      def get_attributes(document)
-        # If a serializer is set, we ignore attributes
-        # everything should be done via the serializer
-        if !@serializer.nil?
-          attributes = @serializer.new(document).attributes
-        elsif @attributes.blank?
-          attributes = get_default_attributes(document)
-          # no `attribute ...` have been configured, use the default attributes of the model
-        elsif active_record?(document)
-          # at least 1 `attribute ...` has been configured, therefore use ONLY the one configured
-          document.class.unscoped do
-            attributes = attributes_to_hash(@attributes, document)
-          end
-        else
-          attributes = attributes_to_hash(@attributes, document)
-        end
-
-        attributes.merge!(attributes_to_hash(@additional_attributes, document)) if @additional_attributes
-
-        if @options[:sanitize]
-          attributes = sanitize_attributes(attributes)
-        end
-
-        attributes = encode_attributes(attributes) if @options[:force_utf8_encoding]
-
-        attributes
-      end
-
-      def sanitize_attributes(value)
-        case value
-        when String
-          ActionView::Base.full_sanitizer.sanitize(value)
-        when Hash
-          value.each { |key, val| value[key] = sanitize_attributes(val) }
-        when Array
-          value.map { |item| sanitize_attributes(item) }
-        else
-          value
-        end
-      end
-
-      def encode_attributes(value)
-        case value
-        when String
-          value.force_encoding('utf-8')
-        when Hash
-          value.each { |key, val| value[key] = encode_attributes(val) }
-        when Array
-          value.map { |x| encode_attributes(x) }
-        else
-          value
-        end
-      end
-
-      def get_setting(name)
-        instance_variable_get("@#{name}")
-      end
-
-      def camelize_keys(hash)
-        hash.transform_keys { |key| key.to_s.camelize(:lower) }
-      end
-
-      def to_settings
-        settings = {}
-        OPTIONS.each do |k|
-          v = get_setting(k)
-          next if v.nil?
-
-          settings[k] = if CAMELIZE_OPTIONS.include?(k) && v.is_a?(Hash)
-                          v = camelize_keys(v)
-
-                          # camelize keys of nested hashes
-                          v.each do |key, value|
-                            v[key] = camelize_keys(value) if value.is_a?(Hash)
-                          end
-                        else
-                          v
-                        end
-        end
-        settings
-      end
-
-      def add_index(index_uid, options = {}, &block)
-        raise ArgumentError, 'No block given' unless block_given?
-        if options[:auto_index] || options[:auto_remove]
-          raise ArgumentError, 'Options auto_index and auto_remove cannot be set on nested indexes'
-        end
-
-        @additional_indexes ||= {}
-        options[:index_uid] = index_uid
-        @additional_indexes[options] = IndexSettings.new(options, &block)
-      end
-
-      def additional_indexes
-        @additional_indexes || {}
-      end
-    end
-
     # Default queueing system
     if defined?(::ActiveJob::Base)
       # lazy load the ActiveJob class to ensure the
       # queue is initialized before using it
       autoload :MSJob, 'meilisearch/rails/ms_job'
       autoload :MSCleanUpJob, 'meilisearch/rails/ms_clean_up_job'
-    end
-
-    # this class wraps an MeiliSearch::Index document ensuring all raised exceptions
-    # are correctly logged or thrown depending on the `raise_on_failure` option
-    class SafeIndex
-      def initialize(index_uid, raise_on_failure, options)
-        client = MeiliSearch::Rails.client
-        primary_key = options[:primary_key] || MeiliSearch::Rails::IndexSettings::DEFAULT_PRIMARY_KEY
-        @raise_on_failure = raise_on_failure.nil? || raise_on_failure
-
-        SafeIndex.log_or_throw(nil, @raise_on_failure) do
-          client.create_index(index_uid, { primary_key: primary_key })
-        end
-
-        @index = client.index(index_uid)
-      end
-
-      ::MeiliSearch::Index.instance_methods(false).each do |m|
-        define_method(m) do |*args, &block|
-          if m == :update_settings
-            args[0].delete(:attributes_to_highlight) if args[0][:attributes_to_highlight]
-            args[0].delete(:attributes_to_crop) if args[0][:attributes_to_crop]
-            args[0].delete(:crop_length) if args[0][:crop_length]
-          end
-
-          SafeIndex.log_or_throw(m, @raise_on_failure) do
-            return MeiliSearch::Rails.black_hole unless MeiliSearch::Rails.active?
-
-            @index.send(m, *args, &block)
-          end
-        end
-      end
-
-      # Maually define facet_search due to complications with **opts in ruby 2.*
-      def facet_search(*args, **opts)
-        SafeIndex.log_or_throw(:facet_search, @raise_on_failure) do
-          return MeiliSearch::Rails.black_hole unless MeiliSearch::Rails.active?
-
-          @index.facet_search(*args, **opts)
-        end
-      end
-
-      # special handling of wait_for_task to handle null task_id
-      def wait_for_task(task_uid)
-        return if task_uid.nil? && !@raise_on_failure # ok
-
-        SafeIndex.log_or_throw(:wait_for_task, @raise_on_failure) do
-          @index.wait_for_task(task_uid)
-        end
-      end
-
-      # special handling of settings to avoid raising errors on 404
-      def settings(*args)
-        SafeIndex.log_or_throw(:settings, @raise_on_failure) do
-          @index.settings(*args)
-        rescue ::MeiliSearch::ApiError => e
-          return {} if e.code == 'index_not_found' # not fatal
-
-          raise e
-        end
-      end
-
-      def self.log_or_throw(method, raise_on_failure, &block)
-        yield
-      rescue ::MeiliSearch::TimeoutError, ::MeiliSearch::ApiError => e
-        raise e if raise_on_failure
-
-        # log the error
-        MeiliSearch::Rails.logger.info("[meilisearch-rails] #{e.message}")
-        # return something
-        case method.to_s
-        when 'search'
-          # some attributes are required
-          { 'hits' => [], 'hitsPerPage' => 0, 'page' => 0, 'facetDistribution' => {}, 'error' => e }
-        else
-          # empty answer
-          { 'error' => e }
-        end
-      end
     end
 
     # these are the class methods added when MeiliSearch is included
@@ -366,24 +74,21 @@ module MeiliSearch
           alias_method :must_reindex?, :ms_must_reindex? unless method_defined? :must_reindex?
         end
 
-        base.cattr_accessor :meilisearch_options, :meilisearch_settings
+        base.cattr_accessor :meilisearch_options, :ms_index_settings, :ms_config
       end
 
       def meilisearch(options = {}, &block)
-        self.meilisearch_settings = IndexSettings.new(options, &block)
+        self.ms_index_settings = IndexSettings.new(options, &block)
         self.meilisearch_options = {
-          type: model_name.to_s.constantize,
-          per_page: meilisearch_settings.get_setting(:hitsPerPage) || 20, page: 1
+          per_page: ms_index_settings.get_setting(:hitsPerPage) || 20, page: 1
         }.merge(options)
+
+        self.ms_config = ModelConfiguration.new(model_name.to_s.constantize, options)
 
         attr_accessor :formatted
 
-        if options.key?(:per_environment)
-          raise BadConfiguration, ':per_environment option should be defined globally on MeiliSearch::Rails.configuration block.'
-        end
-
         if options[:synchronous] == true
-          if defined?(::Sequel::Model) && self < Sequel::Model
+          if ms_config.sequel_model?
             class_eval do
               copy_after_validation = instance_method(:after_validation)
               define_method(:after_validation) do |*args|
@@ -397,8 +102,6 @@ module MeiliSearch
           end
         end
         if options[:enqueue]
-          raise ArgumentError, 'Cannot use a enqueue if the `synchronous` option is set' if options[:synchronous]
-
           proc = if options[:enqueue] == true
                    proc do |record, remove|
                      if remove
@@ -419,7 +122,7 @@ module MeiliSearch
           end
         end
         unless options[:auto_index] == false
-          if defined?(::Sequel::Model) && self < Sequel::Model
+          if ms_config.sequel_model?
             class_eval do
               copy_after_validation = instance_method(:after_validation)
               copy_before_save = instance_method(:before_save)
@@ -466,7 +169,7 @@ module MeiliSearch
           end
         end
         unless options[:auto_remove] == false
-          if defined?(::Sequel::Model) && self < Sequel::Model
+          if ms_config.sequel_model?
             class_eval do
               copy_after_destroy = instance_method(:after_destroy)
 
@@ -630,15 +333,15 @@ module MeiliSearch
       def ms_raw_search(q, params = {})
         index_uid = params.delete(:index) || params.delete('index')
 
-        unless meilisearch_settings.get_setting(:attributes_to_highlight).nil?
-          params[:attributes_to_highlight] = meilisearch_settings.get_setting(:attributes_to_highlight)
+        unless ms_index_settings.get_setting(:attributes_to_highlight).nil?
+          params[:attributes_to_highlight] = ms_index_settings.get_setting(:attributes_to_highlight)
         end
 
-        unless meilisearch_settings.get_setting(:attributes_to_crop).nil?
-          params[:attributes_to_crop] = meilisearch_settings.get_setting(:attributes_to_crop)
+        unless ms_index_settings.get_setting(:attributes_to_crop).nil?
+          params[:attributes_to_crop] = ms_index_settings.get_setting(:attributes_to_crop)
 
-          unless meilisearch_settings.get_setting(:crop_length).nil?
-            params[:crop_length] = meilisearch_settings.get_setting(:crop_length)
+          unless ms_index_settings.get_setting(:crop_length).nil?
+            params[:crop_length] = ms_index_settings.get_setting(:crop_length)
           end
         end
 
@@ -688,13 +391,13 @@ module MeiliSearch
         # The condition_key must be a valid column otherwise, the `.where` below will not work
         # Since we provide a way to customize the primary_key value, `ms_pk(meilisearch_options)` may not
         # respond with a valid database column. The blocks below prevent that from happening.
-        has_virtual_column_as_pk = if defined?(::Sequel::Model) && self < Sequel::Model
-                                     meilisearch_options[:type].columns.map(&:to_s).exclude?(condition_key.to_s)
+        has_virtual_column_as_pk = if ms_config.sequel_model?
+                                     columns.map(&:to_s).exclude?(condition_key.to_s)
                                    else
-                                     meilisearch_options[:type].columns.map(&:name).map(&:to_s).exclude?(condition_key.to_s)
+                                     columns.map(&:name).map(&:to_s).exclude?(condition_key.to_s)
                                    end
 
-        condition_key = meilisearch_options[:type].primary_key if has_virtual_column_as_pk
+        condition_key = primary_key if has_virtual_column_as_pk
 
         hit_ids = if has_virtual_column_as_pk
                     json['hits'].map { |hit| hit[condition_key] }
@@ -706,7 +409,7 @@ module MeiliSearch
         # results_by_id creates a hash with the primaryKey of the document (id) as the key and doc itself as the value
         # {"13"=>#<Product id: 13, name: "iphone", href: "apple", tags: nil, type: nil,
         # description: "Puts even more features at your fingertips", release_date: nil>}
-        results_by_id = meilisearch_options[:type].where(condition_key => hit_ids).index_by do |hit|
+        results_by_id = where(condition_key => hit_ids).index_by do |hit|
           ms_primary_key_of(hit)
         end
 
@@ -783,8 +486,8 @@ module MeiliSearch
 
       protected
 
-      def ms_ensure_init(options = meilisearch_options, settings = meilisearch_settings, user_configuration = settings.to_settings)
-        raise ArgumentError, 'No `meilisearch` block found in your model.' if meilisearch_settings.nil?
+      def ms_ensure_init(options = meilisearch_options, settings = ms_index_settings, user_configuration = settings.to_settings)
+        raise ArgumentError, 'No `meilisearch` block found in your model.' if ms_index_settings.nil?
 
         @ms_indexes ||= { true => {}, false => {} }
 
@@ -803,7 +506,7 @@ module MeiliSearch
 
         config = user_configuration.except(:attributes_to_highlight, :attributes_to_crop, :crop_length)
 
-        if !skip_checking_settings?(options) && meilisearch_settings_changed?(server_state, config)
+        if !skip_checking_settings?(options) && ms_index_settings_changed?(server_state, config)
           index.update_settings(user_configuration)
         end
       end
@@ -817,12 +520,12 @@ module MeiliSearch
       end
 
       def ms_configurations
-        raise ArgumentError, 'No `meilisearch` block found in your model.' if meilisearch_settings.nil?
+        raise ArgumentError, 'No `meilisearch` block found in your model.' if ms_index_settings.nil?
 
         if @configurations.nil?
           @configurations = {}
-          @configurations[meilisearch_options] = meilisearch_settings
-          meilisearch_settings.additional_indexes.each do |k, v|
+          @configurations[meilisearch_options] = ms_index_settings
+          ms_index_settings.additional_indexes.each do |k, v|
             @configurations[k] = v
 
             next unless v.additional_indexes.any?
@@ -848,7 +551,7 @@ module MeiliSearch
         options[:primary_key] || MeiliSearch::Rails::IndexSettings::DEFAULT_PRIMARY_KEY
       end
 
-      def meilisearch_settings_changed?(server_state, user_configuration)
+      def ms_index_settings_changed?(server_state, user_configuration)
         return true if server_state.nil?
 
         user_configuration.transform_keys! { |key| key.to_s.camelize(:lower) }
@@ -857,7 +560,7 @@ module MeiliSearch
           server = server_state[key]
 
           if user.is_a?(Hash) && server.is_a?(Hash)
-            meilisearch_settings_changed?(server, user)
+            ms_index_settings_changed?(server, user)
           elsif user.is_a?(Array) && server.is_a?(Array)
             user.map(&:to_s).sort! != server.map(&:to_s).sort!
           else
@@ -888,10 +591,10 @@ module MeiliSearch
       end
 
       def ms_find_in_batches(batch_size, &block)
-        if (defined?(::ActiveRecord) && ancestors.include?(::ActiveRecord::Base)) || respond_to?(:find_in_batches)
+        if ms_config.active_record_model? || respond_to?(:find_in_batches)
           scope = respond_to?(:meilisearch_import) ? meilisearch_import : all
           scope.find_in_batches(batch_size: batch_size, &block)
-        elsif defined?(::Sequel::Model) && self < Sequel::Model
+        elsif ms_config.sequel_model?
           dataset.extension(:pagination).each_page(batch_size, &block)
         else
           # don't worry, mongoid has its own underlying cursor/streaming mechanism
@@ -958,7 +661,7 @@ module MeiliSearch
       end
 
       def ms_synchronous?
-        @ms_synchronous
+        !!@ms_synchronous
       end
 
       def ms_entries(synchronous = false)
@@ -979,7 +682,7 @@ module MeiliSearch
         # ms_must_reindex flag is reset after every commit as part. If we must reindex at any point in
         # a transaction, keep flag set until it is explicitly unset
         @ms_must_reindex ||=
-          if defined?(::Sequel::Model) && is_a?(Sequel::Model)
+          if self.class.ms_config.sequel_model?
             new? || self.class.ms_must_reindex?(self)
           else
             new_record? || self.class.ms_must_reindex?(self)
@@ -988,12 +691,13 @@ module MeiliSearch
       end
 
       def ms_perform_index_tasks
-        return if !@ms_auto_indexing || @ms_must_reindex == false
+        return unless @ms_auto_indexing && @ms_must_reindex
 
         ms_enqueue_index!(ms_synchronous?)
-        remove_instance_variable(:@ms_auto_indexing) if instance_variable_defined?(:@ms_auto_indexing)
-        remove_instance_variable(:@ms_synchronous) if instance_variable_defined?(:@ms_synchronous)
-        remove_instance_variable(:@ms_must_reindex) if instance_variable_defined?(:@ms_must_reindex)
+
+        @ms_must_reindex = nil
+        @ms_auto_indexing = nil
+        @ms_synchronous = nil
       end
     end
   end
