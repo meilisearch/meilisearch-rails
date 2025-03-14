@@ -2,7 +2,7 @@
 
 module MeiliSearch
   module Rails
-    VERSION = '0.14.3'
+    VERSION = '0.15.0'
 
     def self.qualified_version
       "Meilisearch Rails (v#{VERSION})"
