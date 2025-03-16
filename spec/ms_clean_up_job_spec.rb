@@ -1,4 +1,6 @@
 require 'spec_helper'
+require 'support/models/restaurant'
+require 'support/models/book'
 
 RSpec.describe 'Meilisearch::Rails::MSCleanUpJob' do
   include ActiveJob::TestHelper
@@ -9,10 +11,6 @@ RSpec.describe 'Meilisearch::Rails::MSCleanUpJob' do
 
   def create_indexed_record
     record
-
-    indexes.each do |index|
-      index.wait_for_task(index.tasks['results'].last['uid'])
-    end
   end
 
   subject(:clean_up) { Meilisearch::Rails::MSCleanUpJob }
