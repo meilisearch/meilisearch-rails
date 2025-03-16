@@ -34,9 +34,9 @@ end
 
 module TestUtil
   def self.reset_animals!
-    Cat.clear_index!(true)
+    Cat.clear_index!
     Cat.delete_all
-    Dog.clear_index!(true)
+    Dog.clear_index!
     Dog.delete_all
   end
 end
