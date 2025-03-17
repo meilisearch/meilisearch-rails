@@ -496,7 +496,8 @@ module MeiliSearch
       end
 
       def ms_without_auto_index_scope
-        Thread.current["ms_without_auto_index_scope_for_#{model_name}"]
+        Thread.current['ms_without_auto_index_scope'] ||
+          Thread.current["ms_without_auto_index_scope_for_#{model_name}"]
       end
 
       def ms_reindex!(batch_size = MeiliSearch::Rails::IndexSettings::DEFAULT_BATCH_SIZE, synchronous = false)
