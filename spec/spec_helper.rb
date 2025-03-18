@@ -31,6 +31,7 @@ require 'rails/all'
 require 'sqlite3' unless defined?(JRUBY_VERSION)
 require 'logger'
 require 'sequel'
+require 'mongoid'
 require 'active_model_serializers'
 require 'byebug'
 
@@ -43,6 +44,8 @@ OLD_RAILS = Gem.loaded_specs['rails'].version < Gem::Version.new('4.0')
 NEW_RAILS = Gem.loaded_specs['rails'].version >= Gem::Version.new('6.0')
 
 Dir["#{File.dirname(__FILE__)}/support/*.rb"].each { |file| require file }
+
+Mongoid.load!('spec/support/mongoid.yml')
 
 RSpec.configure do |c|
   c.mock_with :rspec
@@ -67,5 +70,7 @@ RSpec.configure do |c|
     safe_index_list.each do |index|
       Meilisearch::Rails.client.delete_index(index)
     end
+
+    Mongoid.default_client.database.drop
   end
 end
