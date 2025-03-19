@@ -9,7 +9,6 @@ describe 'federated-search' do
     [Book, Color, Product].each(&:delete_all)
     [Book, Color, Product].each(&:clear_index!)
 
-    # rubocop:disable Rails::SkipsModelValidations
     Product.insert_all([
                          { name: 'palm pixi plus', href: 'ebay', tags: ['terrible'] },
                          { name: 'lg vortex', href: 'ebay', tags: ['decent'] },
@@ -26,7 +25,6 @@ describe 'federated-search' do
                       { name: 'Steve Jobs', author: 'Walter Isaacson' },
                       { name: 'Moby Dick', author: 'Herman Melville' }
                     ])
-    # rubocop:enable Rails::SkipsModelValidations
 
     [Book, Color, Product].each(&:reindex!)
     AsyncHelper.await_last_task
