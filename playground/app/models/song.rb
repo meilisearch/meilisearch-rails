@@ -1,5 +1,5 @@
 class Song < ApplicationRecord
-  include MeiliSearch::Rails
+  include Meilisearch::Rails
   extend Pagy::Meilisearch
   ActiveRecord_Relation.include Pagy::Meilisearch
 

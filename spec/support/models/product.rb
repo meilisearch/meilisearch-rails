@@ -10,7 +10,7 @@ ar_schema.create_table :products do |t|
 end
 
 class Product < ActiveRecord::Base
-  include MeiliSearch::Rails
+  include Meilisearch::Rails
 
   meilisearch auto_index: false,
               if: :published?, unless: ->(o) { o.href.blank? },

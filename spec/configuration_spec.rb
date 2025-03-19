@@ -2,8 +2,8 @@ require 'spec_helper'
 require 'support/models/book'
 require 'support/models/color'
 
-describe MeiliSearch::Rails::Configuration do
-  before { stub_const('MeiliSearch::Rails::VERSION', '0.0.1') }
+describe Meilisearch::Rails::Configuration do
+  before { stub_const('Meilisearch::Rails::VERSION', '0.0.1') }
 
   let(:configuration) do
     {
@@ -13,17 +13,17 @@ describe MeiliSearch::Rails::Configuration do
   end
 
   describe '.client' do
-    let(:client_double) { double MeiliSearch::Client }
+    let(:client_double) { double Meilisearch::Client }
 
     before do
-      allow(MeiliSearch::Rails).to receive(:configuration) { configuration }
-      allow(MeiliSearch::Client).to receive(:new) { client_double }
+      allow(Meilisearch::Rails).to receive(:configuration) { configuration }
+      allow(Meilisearch::Client).to receive(:new) { client_double }
     end
 
-    it 'initializes a MeiliSearch::Client' do
-      expect(MeiliSearch::Rails.client).to eq(client_double)
+    it 'initializes a Meilisearch::Client' do
+      expect(Meilisearch::Rails.client).to eq(client_double)
 
-      expect(MeiliSearch::Client)
+      expect(Meilisearch::Client)
         .to have_received(:new)
         .with('http://localhost:7700', 's3cr3tap1k3y', client_agents: 'Meilisearch Rails (v0.0.1)')
     end
@@ -37,9 +37,9 @@ describe MeiliSearch::Rails::Configuration do
       end
 
       it 'defines a default value for meilisearch_url' do
-        expect(MeiliSearch::Rails.client).to eq(client_double)
+        expect(Meilisearch::Rails.client).to eq(client_double)
 
-        expect(MeiliSearch::Client)
+        expect(Meilisearch::Client)
           .to have_received(:new)
           .with('http://localhost:7700', 's3cr3tap1k3y', { client_agents: 'Meilisearch Rails (v0.0.1)' })
       end
@@ -56,9 +56,9 @@ describe MeiliSearch::Rails::Configuration do
       end
 
       it 'forwards them to the client' do
-        expect(MeiliSearch::Rails.client).to eq(client_double)
+        expect(Meilisearch::Rails.client).to eq(client_double)
 
-        expect(MeiliSearch::Client)
+        expect(Meilisearch::Client)
           .to have_received(:new)
           .with('http://localhost:7700', 's3cr3tap1k3y', client_agents: 'Meilisearch Rails (v0.0.1)', timeout: 2, max_retries: 1)
       end
@@ -81,18 +81,18 @@ describe MeiliSearch::Rails::Configuration do
 
   context 'when use Meilisearch without configuration' do
     around do |example|
-      config = MeiliSearch::Rails.configuration
-      MeiliSearch::Rails.configuration = nil
+      config = Meilisearch::Rails.configuration
+      Meilisearch::Rails.configuration = nil
 
       example.run
 
-      MeiliSearch::Rails.configuration = config
+      Meilisearch::Rails.configuration = config
     end
 
     it 'raise NotConfigured error' do
       expect do
-        MeiliSearch::Rails.configuration
-      end.to raise_error(MeiliSearch::Rails::NotConfigured, /Please configure Meilisearch/)
+        Meilisearch::Rails.configuration
+      end.to raise_error(Meilisearch::Rails::NotConfigured, /Please configure Meilisearch/)
     end
   end
 end

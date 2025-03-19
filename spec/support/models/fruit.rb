@@ -5,7 +5,7 @@ ar_schema.create_table :fruits do |t|
 end
 
 class Fruit < ActiveRecord::Base
-  include MeiliSearch::Rails
+  include Meilisearch::Rails
 
   # only raise exceptions in development env
   meilisearch raise_on_failure: true, index_uid: safe_index_uid('Fruit') do

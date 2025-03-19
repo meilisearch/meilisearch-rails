@@ -8,7 +8,7 @@ ar_schema.create_table :songs do |t|
 end
 
 class Song < ActiveRecord::Base
-  include MeiliSearch::Rails
+  include Meilisearch::Rails
 
   PUBLIC_INDEX_UID  = safe_index_uid('Songs')
   SECURED_INDEX_UID = safe_index_uid('PrivateSongs')

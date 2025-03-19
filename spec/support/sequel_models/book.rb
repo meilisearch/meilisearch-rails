@@ -11,7 +11,7 @@ end
 class SequelBook < Sequel::Model(sequel_db)
   plugin :active_model
 
-  include MeiliSearch::Rails
+  include Meilisearch::Rails
 
   meilisearch synchronous: true, index_uid: safe_index_uid('SequelBook'), sanitize: true do
     add_attribute :test

@@ -1,4 +1,4 @@
-module MeiliSearch
+module Meilisearch
   module Rails
     module Configuration
       def configuration
@@ -44,11 +44,11 @@ module MeiliSearch
       def client
         return black_hole unless active?
 
-        ::MeiliSearch::Client.new(
+        ::Meilisearch::Client.new(
           configuration[:meilisearch_url] || 'http://localhost:7700',
           configuration[:meilisearch_api_key],
           configuration.slice(:timeout, :max_retries)
-                       .merge(client_agents: MeiliSearch::Rails.qualified_version)
+                       .merge(client_agents: Meilisearch::Rails.qualified_version)
         )
       end
     end

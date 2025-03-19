@@ -13,19 +13,19 @@ ar_schema.create_table :disabled_symbols do |t|
 end
 
 class DisabledBoolean < ActiveRecord::Base
-  include MeiliSearch::Rails
+  include Meilisearch::Rails
 
   meilisearch synchronous: true, disable_indexing: true, index_uid: safe_index_uid('DisabledBoolean')
 end
 
 class DisabledProc < ActiveRecord::Base
-  include MeiliSearch::Rails
+  include Meilisearch::Rails
 
   meilisearch synchronous: true, disable_indexing: proc { true }, index_uid: safe_index_uid('DisabledProc')
 end
 
 class DisabledSymbol < ActiveRecord::Base
-  include MeiliSearch::Rails
+  include Meilisearch::Rails
 
   meilisearch synchronous: true, disable_indexing: :truth, index_uid: safe_index_uid('DisabledSymbol')
 

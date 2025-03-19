@@ -27,7 +27,7 @@ module Namespaced
   end
 
   class Model < ActiveRecord::Base
-    include MeiliSearch::Rails
+    include Meilisearch::Rails
 
     meilisearch synchronous: true, index_uid: safe_index_uid(ms_index_uid({})) do
       attribute :customAttr do
@@ -44,7 +44,7 @@ end
 class NestedItem < ActiveRecord::Base
   has_many :children, class_name: 'NestedItem', foreign_key: 'parent_id'
 
-  include MeiliSearch::Rails
+  include Meilisearch::Rails
 
   meilisearch synchronous: true, index_uid: safe_index_uid('NestedItem'), unless: :hidden do
     attribute :nb_children
@@ -56,7 +56,7 @@ class NestedItem < ActiveRecord::Base
 end
 
 class MisconfiguredBlock < ActiveRecord::Base
-  include MeiliSearch::Rails
+  include Meilisearch::Rails
 end
 
 class SerializedDocumentSerializer < ActiveModel::Serializer
@@ -64,7 +64,7 @@ class SerializedDocumentSerializer < ActiveModel::Serializer
 end
 
 class SerializedDocument < ActiveRecord::Base
-  include MeiliSearch::Rails
+  include Meilisearch::Rails
 
   meilisearch index_uid: safe_index_uid('SerializedDocument') do
     use_serializer SerializedDocumentSerializer
@@ -72,7 +72,7 @@ class SerializedDocument < ActiveRecord::Base
 end
 
 class EncodedString < ActiveRecord::Base
-  include MeiliSearch::Rails
+  include Meilisearch::Rails
 
   meilisearch synchronous: true, force_utf8_encoding: true, index_uid: safe_index_uid('EncodedString') do
     attribute :value do

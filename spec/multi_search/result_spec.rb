@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe MeiliSearch::Rails::MultiSearchResult do # rubocop:todo RSpec/FilePath
+describe Meilisearch::Rails::MultiSearchResult do # rubocop:todo RSpec/FilePath
   let(:raw_results) do
     {
       'results' => [
@@ -64,7 +64,7 @@ describe MeiliSearch::Rails::MultiSearchResult do # rubocop:todo RSpec/FilePath
       let(:logger) { instance_double('Logger', info: nil) }
 
       before do
-        allow(MeiliSearch::Rails).to receive(:logger).and_return(logger)
+        allow(Meilisearch::Rails).to receive(:logger).and_return(logger)
       end
 
       it 'has the same behavior as #each_result' do
@@ -94,7 +94,7 @@ describe MeiliSearch::Rails::MultiSearchResult do # rubocop:todo RSpec/FilePath
       let(:logger) { instance_double('Logger', warn: nil) }
 
       before do
-        allow(MeiliSearch::Rails).to receive(:logger).and_return(logger)
+        allow(Meilisearch::Rails).to receive(:logger).and_return(logger)
       end
 
       it 'warns about deprecation' do
@@ -108,7 +108,7 @@ describe MeiliSearch::Rails::MultiSearchResult do # rubocop:todo RSpec/FilePath
       let(:logger) { instance_double('Logger', warn: nil) }
 
       before do
-        allow(MeiliSearch::Rails).to receive(:logger).and_return(logger)
+        allow(Meilisearch::Rails).to receive(:logger).and_return(logger)
       end
 
       it 'returns the hits' do

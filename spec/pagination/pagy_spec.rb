@@ -7,9 +7,9 @@ describe 'Pagination with pagy' do
     logger = double
 
     allow(logger).to receive(:warn)
-    allow(MeiliSearch::Rails).to receive(:logger).and_return(logger)
+    allow(Meilisearch::Rails).to receive(:logger).and_return(logger)
 
-    MeiliSearch::Rails.configuration[:pagination_backend] = :pagy
+    Meilisearch::Rails.configuration[:pagination_backend] = :pagy
 
     Movie.search('')
 

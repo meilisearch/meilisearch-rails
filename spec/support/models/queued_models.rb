@@ -14,7 +14,7 @@ ar_schema.create_table :conditionally_enqueued_documents do |t|
 end
 
 class EnqueuedDocument < ActiveRecord::Base
-  include MeiliSearch::Rails
+  include Meilisearch::Rails
 
   include GlobalID::Identification
 
@@ -33,7 +33,7 @@ class EnqueuedDocument < ActiveRecord::Base
 end
 
 class DisabledEnqueuedDocument < ActiveRecord::Base
-  include MeiliSearch::Rails
+  include Meilisearch::Rails
 
   meilisearch(enqueue: proc { |_record| raise 'enqueued' },
               index_uid: safe_index_uid('EnqueuedDocument'),
@@ -43,7 +43,7 @@ class DisabledEnqueuedDocument < ActiveRecord::Base
 end
 
 class ConditionallyEnqueuedDocument < ActiveRecord::Base
-  include MeiliSearch::Rails
+  include Meilisearch::Rails
 
   meilisearch(enqueue: true,
               index_uid: safe_index_uid('ConditionallyEnqueuedDocument'),
