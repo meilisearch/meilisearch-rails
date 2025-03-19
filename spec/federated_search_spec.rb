@@ -46,8 +46,8 @@ describe 'federated-search' do
     it 'ranks better match above worse match' do
       results = Meilisearch::Rails.federated_search(
         queries: [
-          { q: 'Steve', class_name: 'Book' },
-          { q: 'black', class_name: 'Color' }
+          { q: 'Steve', scope: Book.all },
+          { q: 'black', scope: Color.all }
         ]
       )
 
@@ -57,11 +57,11 @@ describe 'federated-search' do
 
     context 'when :index_uid is passed' do
       it 'takes precedence over other sources of index uids' do
-        Meilisearch::Rails.client.create_index('temp_books').await
+        Meilisearch::Rails.client.create_index('temp_books')
         Meilisearch::Rails.client.swap_indexes(['temp_books', Book.index.uid]).await
 
         results = Meilisearch::Rails.federated_search(
-          queries: [{ q: 'Moby', class_name: 'Book', index_uid: 'temp_books' }]
+          queries: [{ q: 'Moby', scope: Book.all, index_uid: 'temp_books' }]
         )
 
         expect(results).to contain_exactly(books['Moby Dick'])
@@ -70,23 +70,41 @@ describe 'federated-search' do
       end
     end
 
-    context 'when :class_name is passed' do
-      it 'returns ORM records with inferred index names' do
-        results = Meilisearch::Rails.federated_search(
-          queries: [
-            { q: 'Steve', class_name: 'Book' },
-            { q: 'palm', class_name: 'Product' },
-            { q: 'bl', class_name: 'Color' }
-          ]
-        )
+    context 'when :scope is passed' do
+      context 'when :scope is a model' do
+        it 'returns ORM records with inferred index names' do
+          results = Meilisearch::Rails.federated_search(
+            queries: [
+              { q: 'Steve', scope: Book },
+              { q: 'palm', scope: Product },
+              { q: 'bl', scope: Color }
+            ]
+          )
 
-        expect(results).to contain_exactly(
-          books['Steve Jobs'], products['palmpre'], products['palm pixi plus'], colors['blue'], colors['black']
-        )
+          expect(results).to contain_exactly(
+            books['Steve Jobs'], products['palmpre'], products['palm pixi plus'], colors['blue'], colors['black']
+          )
+        end
+      end
+
+      context 'when :scope is a Relation' do
+        it 'returns results within scope' do
+          results = Meilisearch::Rails.federated_search(
+            queries: [
+              { q: 'Steve', scope: Book },
+              { q: 'palm', scope: Product.where(name: 'palmpre') },
+              { q: 'bl', scope: Color }
+            ]
+          )
+
+          expect(results).to contain_exactly(
+            books['Steve Jobs'], products['palmpre'], colors['blue'], colors['black']
+          )
+        end
       end
     end
 
-    context 'without :class_name' do
+    context 'without :scope' do
       it 'returns raw hashes' do
         results = Meilisearch::Rails.federated_search(
           queries: [{ q: 'Steve', index_uid: Book.index.uid }]
@@ -99,13 +117,13 @@ describe 'federated-search' do
 
   context 'with queries passed as a hash' do
     context 'when the keys are index names' do
-      it 'loads the right models with :class_name' do
+      it 'loads the right models with :scope' do
         Meilisearch::Rails.client.create_index('temp_books').await
         Meilisearch::Rails.client.swap_indexes(['temp_books', Book.index.uid]).await
 
         results = Meilisearch::Rails.federated_search(
           queries: {
-            'temp_books' => { q: 'Steve', class_name: 'Book' }
+            'temp_books' => { q: 'Steve', scope: Book }
           }
         )
 
@@ -114,7 +132,7 @@ describe 'federated-search' do
         Meilisearch::Rails.client.delete_index('temp_books')
       end
 
-      it 'returns hashes without :class_name' do
+      it 'returns hashes without :scope' do
         results = Meilisearch::Rails.federated_search(
           queries: {
             Book.index.uid => { q: 'Steve' }
@@ -159,7 +177,7 @@ describe 'federated-search' do
 
         results = Meilisearch::Rails.federated_search(
           queries: {
-            classics: { q: 'Moby', class_name: 'Book', index_uid: 'temp_books' }
+            classics: { q: 'Moby', scope: Book, index_uid: 'temp_books' }
           }
         )
 
@@ -171,7 +189,7 @@ describe 'federated-search' do
       it 'requires :index_uid to search the correct index' do
         expect do
           Meilisearch::Rails.federated_search(
-            queries: { all_books: { q: 'Moby', class_name: 'Book' } }
+            queries: { all_books: { q: 'Moby', scope: Book } }
           )
         end.to raise_error(Meilisearch::ApiError).with_message(/Index `all_books` not found/)
       end
@@ -185,13 +203,13 @@ describe 'federated-search' do
       allow(Meilisearch::Rails).to receive(:logger).and_return(logger)
     end
 
-    it 'warns if query has pagination options' do
+    it 'warns if query has pagination options, but completes the search anyway' do
       results = Meilisearch::Rails.federated_search(
         queries: [
-          { q: 'Steve', class_name: 'Book', limit: 1 },
-          { q: 'No results please', class_name: 'Book', offset: 1 },
-          { q: 'No results please', class_name: 'Book', hits_per_page: 1 },
-          { q: 'No results please', class_name: 'Book', page: 1 }
+          { q: 'Steve', scope: Book, limit: 1 },
+          { q: 'No results please', scope: Book, offset: 1 },
+          { q: 'No results please', scope: Book, hits_per_page: 1 },
+          { q: 'No results please', scope: Book, page: 1 }
         ]
       )
 
@@ -203,19 +221,19 @@ describe 'federated-search' do
       expect(results).to contain_exactly(books['Steve Jobs'])
     end
 
-    it 'warns if :class_name argument is not a meilisearch model' do
+    it 'warns if :scope model is not a meilisearch model' do
       results = Meilisearch::Rails.federated_search(
-        queries: [{ q: 'Steve', class_name: 'String' }]
+        queries: [{ q: 'Steve', scope: String }]
       )
 
       expect(logger).to have_received('warn').with(a_string_including('does not have an #index'))
       expect(results).to be_empty
     end
 
-    it 'warns if :federation argument is nil' do
+    it 'warns if :federation argument is nil, but completes search anyway' do
       # This would disable federated search if not caught
       results = Meilisearch::Rails.federated_search(
-        queries: [{ q: 'Steve', class_name: 'Book' }],
+        queries: [{ q: 'Steve', scope: Book }],
         federation: nil
       )
 

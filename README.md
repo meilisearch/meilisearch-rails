@@ -331,8 +331,8 @@ Federated search is similar to multi search, except that results are not grouped
 ```ruby
 results = Meilisearch::Rails.federated_search(
   queries: [
-    { q: 'Harry', class_name: 'Book' },
-    { q: 'Attack on Titan', class_name: 'Manga' }
+    { q: 'Harry', scope: Book.all },
+    { q: 'Attack on Titan', scope: Manga.all }
   ]
 )
 ```
@@ -370,8 +370,8 @@ results = Meilisearch::Rails.federated_search(
 ```ruby
 results = Meilisearch::Rails.federated_search(
   queries: {
-    'books_production' => { q: 'Harry', class_name: 'Book' },
-    'mangas_production' => { q: 'Attack on Titan', class_name: 'Manga' }
+    'books_production' => { q: 'Harry', scope: Book.all },
+    'mangas_production' => { q: 'Attack on Titan', scope: Manga.all }
   }
 )
 ```
@@ -379,21 +379,22 @@ results = Meilisearch::Rails.federated_search(
 ```ruby
 results = Meilisearch::Rails.federated_search(
   queries: {
-    'potter' => { q: 'Harry', class_name: 'Book', index_uid: 'books_production' },
-    'titan' => { q: 'Attack on Titan', class_name: 'Manga', index_uid: 'mangas_production' }
+    'potter' => { q: 'Harry', scope: Book.all, index_uid: 'books_production' },
+    'titan' => { q: 'Attack on Titan', scope: Manga.all, index_uid: 'mangas_production' }
   }
 )
 ```
 
 ### Loading records <!-- omit in toc -->
 
-Records are loaded when the `:class_name` option is passed, or when a hash query is used with models as keys:
+Records are loaded when the `:scope` option is passed (may be a model or a relation), 
+or when a hash query is used with models as keys:
 
 ```ruby
 results = Meilisearch::Rails.federated_search(
   queries: [
-    { q: 'Harry', class_name: 'Book' },
-    { q: 'Attack on Titan', class_name: 'Manga' },
+    { q: 'Harry', scope: Book },
+    { q: 'Attack on Titan', scope: Manga },
   ]
 )
 ```
@@ -409,6 +410,19 @@ results = Meilisearch::Rails.federated_search(
 
 If the model is not provided, hashes are returned!
 
+### Scoping records <!-- omit in toc -->
+
+Any relation passed as `:scope` is used as the starting point when loading records:
+
+```ruby
+results = Meilisearch::Rails.federated_search(
+  queries: [
+    { q: 'Harry', scope: Book.where('year <= 2006') },
+    { q: 'Attack on Titan', scope: Manga.where(author: Author.find_by(name: 'Iseyama')) },
+  ]
+)
+```
+
 ### Specifying the search index <!-- omit in toc -->
 
 In order of precedence, to figure out which index to search, Meilisearch Rails will check:
@@ -418,7 +432,7 @@ In order of precedence, to figure out which index to search, Meilisearch Rails w
    results = Meilisearch::Rails.federated_search(
      queries: [
        # Searching the 'fantasy_books' index
-       { q: 'Harry', class_name: 'Book', index_uid: 'fantasy_books' },
+       { q: 'Harry', scope: Book, index_uid: 'fantasy_books' },
      ]
    )
    ```
@@ -428,7 +442,7 @@ In order of precedence, to figure out which index to search, Meilisearch Rails w
      queries: [
        # Searching the index associated with the Book model
        # i. e. Book.index.uid
-       { q: 'Harry', class_name: 'Book' },
+       { q: 'Harry', scope: Book },
      ]
    )
    ```
@@ -437,7 +451,7 @@ In order of precedence, to figure out which index to search, Meilisearch Rails w
    results = Meilisearch::Rails.federated_search(
      queries: {
        # Searching index 'books_production'
-       books_production: { q: 'Harry', class_name: 'Book' },
+       books_production: { q: 'Harry', scope: Book },
      }
    )
    ```
@@ -449,8 +463,8 @@ In addition to queries, federated search also accepts `:federation` parameters w
 ```ruby
 results = Meilisearch::Rails.federated_search(
   queries: [
-    { q: 'Harry', class_name: 'Book' },
-    { q: 'Attack on Titan', class_name: 'Manga' },
+    { q: 'Harry', scope: Book },
+    { q: 'Attack on Titan', scope: Manga },
   ],
   federation: { offset: 10, limit: 5 }
 )
