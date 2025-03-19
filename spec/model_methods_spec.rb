@@ -70,6 +70,26 @@ describe 'Model methods' do
     end
   end
 
+  # while this is not a model method, it's tested here since it's logically similar
+  # to the model method by the same name
+  describe 'Meilisearch::Rails.without_auto_index' do
+    it 'disables auto indexing for all models' do
+      TestUtil.reset_colors!
+      TestUtil.reset_books!
+
+      MeiliSearch::Rails.without_auto_index do
+        Color.create!(name: 'blue', short_name: 'b', hex: 0xFF0000)
+        Book.create!(
+          name: 'Frankenstein', author: 'Mary Shelley',
+          premium: false, released: true
+        )
+      end
+
+      expect(Color.search('blue')).to be_empty
+      expect(Book.search('Frankenstein')).to be_empty
+    end
+  end
+
   describe '.index_documents' do
     it 'updates existing documents' do
       TestUtil.reset_colors!

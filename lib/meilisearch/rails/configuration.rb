@@ -51,6 +51,16 @@ module Meilisearch
                        .merge(client_agents: Meilisearch::Rails.qualified_version)
         )
       end
+
+      def without_auto_index(&block)
+        Thread.current['ms_without_auto_index_scope'] = true
+
+        begin
+          yield
+        ensure
+          Thread.current['ms_without_auto_index_scope'] = false
+        end
+      end
     end
   end
 end

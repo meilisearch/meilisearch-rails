@@ -909,9 +909,17 @@ end
 You can temporarily disable auto-indexing using the without_auto_index scope:
 
 ```ruby
+# disable Book's auto-indexing
 Book.without_auto_index do
   # Inside this block, auto indexing task will not run.
   1.upto(10000) { Book.create! attributes }
+end
+
+# disable all auto-indexing
+Meilisearch::Rails.without_auto_index do
+  # Inside this block, auto indexing task will not run.
+  1.upto(10000) { Book.create! attributes }
+  1.upto(10000) { User.create! user_attributes }
 end
 ```
 
