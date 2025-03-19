@@ -482,7 +482,8 @@ module Meilisearch
                 super(*args)
               end
             end
-          elsif respond_to?(:after_destroy)
+          # Currently after_destroy_commit is broken in Mongoid
+          elsif respond_to?(:after_destroy) && !Utilities.mongo_model?(self)
             after_destroy_commit { |searchable| searchable.ms_enqueue_remove_from_index!(ms_synchronous?) }
           end
         end
@@ -696,6 +697,8 @@ module Meilisearch
         # respond with a valid database column. The blocks below prevent that from happening.
         has_virtual_column_as_pk = if defined?(::Sequel::Model) && self < Sequel::Model
                                      meilisearch_options[:type].columns.map(&:to_s).exclude?(condition_key.to_s)
+                                   elsif Utilities.mongo_model?(self)
+                                     fields.keys.exclude?(condition_key.to_s)
                                    else
                                      meilisearch_options[:type].columns.map(&:name).map(&:to_s).exclude?(condition_key.to_s)
                                    end
@@ -784,7 +787,7 @@ module Meilisearch
 
       def ms_primary_key_method(options = nil)
         options ||= meilisearch_options
-        options[:primary_key] || options[:id] || :id
+        options[:primary_key] || options[:id] || (Utilities.mongo_model?(self) ? :_id : :id)
       end
 
       protected
