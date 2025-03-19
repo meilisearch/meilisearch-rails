@@ -717,7 +717,12 @@ module Meilisearch
         end
 
         results = json['hits'].map do |hit|
-          o = results_by_id[hit[ms_pk(meilisearch_options).to_s].to_s]
+          hit_id = if MeiliSearch::Rails.configuration[:stringify_primary_keys]
+                     hit[ms_pk(meilisearch_options).to_s].to_s
+                   else
+                     hit[ms_pk(meilisearch_options).to_s]
+                   end
+          o = results_by_id[hit_id]
           if o
             o.formatted = hit['_formatted']
             o
@@ -842,7 +847,11 @@ module Meilisearch
       end
 
       def ms_primary_key_of(doc, options = nil)
-        doc.send(ms_primary_key_method(options)).to_s
+        if MeiliSearch::Rails.configuration[:stringify_primary_keys]
+          doc.send(ms_primary_key_method(options)).to_s
+        else
+          doc.send(ms_primary_key_method(options))
+        end
       end
 
       def ms_primary_key_changed?(doc, options = nil)

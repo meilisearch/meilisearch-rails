@@ -3,6 +3,7 @@ require 'support/models/color'
 
 describe 'When record is updated' do
   it 'updates the changed attributes on the index' do
+    TestUtil.reset_colors!
     purple = Color.create!(name: 'purple', short_name: 'p')
     expect(Color.search('purple')).to be_one
     expect(Color.search('pink')).to be_empty
