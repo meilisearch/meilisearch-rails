@@ -34,6 +34,6 @@ Gem::Specification.new do |s|
 
   s.required_ruby_version = '>= 3.0.0'
 
-  s.add_dependency 'meilisearch', '~> 0.30.0'
+  s.add_dependency 'meilisearch', '~> 0.31.0'
   s.add_dependency 'mutex_m', '~> 0.2'
 end
