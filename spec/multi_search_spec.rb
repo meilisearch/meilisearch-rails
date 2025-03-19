@@ -164,7 +164,7 @@ describe 'multi-search' do
     it 'returns a mixture of ORM records and hashes' do
       results = Meilisearch::Rails.multi_search(
         Book => { q: 'Steve' },
-        Product.index.uid => { q: 'palm', limit: 1, collection: Product },
+        Product.index.uid => { q: 'palm', limit: 1, scope: Product },
         Color.index.uid => { q: 'bl' }
       )
 
@@ -195,11 +195,11 @@ describe 'multi-search' do
     end
   end
 
-  context 'with collections' do
-    it 'fetches items from the given collection' do
+  context 'with scopes' do
+    it 'fetches items from the given scope' do
       results = Meilisearch::Rails.multi_search(
-        Product => { q: 'palm', collection: Product.where('tags LIKE "%terrible%"') },
-        Color => { q: 'bl', collection: Color.where(short_name: 'bla') }
+        Product => { q: 'palm', scope: Product.where('tags LIKE "%terrible%"') },
+        Color => { q: 'bl', scope: Color.where(short_name: 'bla') }
       )
 
       expect(results).to contain_exactly(
@@ -209,7 +209,7 @@ describe 'multi-search' do
 
     it 'infers the model' do
       results = Meilisearch::Rails.multi_search(
-        'colors' => { q: 'bl', collection: Color.all, index_uid: Color.index.uid }
+        'colors' => { q: 'bl', scope: Color.all, index_uid: Color.index.uid }
       )
 
       expect(results.to_h['colors']).to contain_exactly(blue, black)
@@ -217,7 +217,7 @@ describe 'multi-search' do
 
     it 'infers the index as well as the model' do
       results = Meilisearch::Rails.multi_search(
-        'colors' => { q: 'bl', collection: Color }
+        'colors' => { q: 'bl', scope: Color }
       )
 
       expect(results.to_h['colors']).to contain_exactly(blue, black)
