@@ -27,7 +27,8 @@ module Meilisearch
         queries.map! { |item| [nil, item] } if queries.is_a?(Array)
 
         cleaned_queries = queries.filter_map do |(index_target, options)|
-          index_target = options.delete(:index_uid) || index_target || options[:class_name]&.constantize
+          model_class = options[:scope].respond_to?(:model) ? options[:scope].model : options[:scope]
+          index_target = options.delete(:index_uid) || index_target || model_class
 
           strip_pagination_options(options)
           normalize(options, index_target)
@@ -46,7 +47,7 @@ module Meilisearch
         return nil if index_target.nil?
 
         options
-          .except(:class_name)
+          .except(:scope, :class_name)
           .merge!(index_uid: index_target)
       end
 

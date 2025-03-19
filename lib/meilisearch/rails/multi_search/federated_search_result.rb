@@ -23,14 +23,14 @@ module Meilisearch
         keys_and_records_by_pos = hits_by_pos.to_h do |pos, group_hits|
           search_target, search_opts = searches[pos]
 
-          klass = if search_opts[:class_name]
-                    search_opts[:class_name].constantize
+          scope = if search_opts[:scope]
+                    search_opts[:scope]
                   elsif search_target.instance_of?(Class)
                     search_target
                   end
 
-          if klass.present?
-            [pos, load_results(klass, group_hits)]
+          if scope.present?
+            [pos, load_results(scope, group_hits)]
           else
             [pos, [nil, group_hits]]
           end
@@ -49,7 +49,9 @@ module Meilisearch
         end
       end
 
-      def load_results(klass, hits)
+      def load_results(scope, hits)
+        klass = scope.respond_to?(:model) ? scope.model : scope
+
         pk_method = klass.ms_primary_key_method
         pk_method = pk_method.in if Utilities.mongo_model?(klass)
 
@@ -57,7 +59,7 @@ module Meilisearch
 
         hits_by_id = hits.index_by { |hit| hit[condition_key.to_s] }
 
-        records = klass.where(condition_key => hits_by_id.keys)
+        records = scope.where(condition_key => hits_by_id.keys)
 
         results_by_id = records.index_by do |record|
           record.send(condition_key).to_s
