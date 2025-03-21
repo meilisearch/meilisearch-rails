@@ -49,6 +49,7 @@ RSpec.configure do |c|
   c.filter_run focus: true
   c.run_all_when_everything_filtered = true
   c.formatter = 'documentation'
+  c.example_status_persistence_file_path = 'spec/tmp/examples.txt'
 
   c.around do |example|
     Timeout.timeout(120) do
