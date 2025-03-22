@@ -45,22 +45,6 @@ NEW_RAILS = Gem.loaded_specs['rails'].version >= Gem::Version.new('6.0')
 
 Dir["#{File.dirname(__FILE__)}/support/*.rb"].each { |file| require file }
 
-mongo_db_name = (ENV['MONGODB_DATABASE'] || '_ms_rails_test') + SecureRandom.hex(8)
-Mongoid.load_configuration(
-  {
-    clients: {
-      default: {
-        database: mongo_db_name,
-        hosts: [ENV['MONGODB_HOST'] || 'localhost:27017'],
-        options: {
-          read: { mode: :primary },
-          max_pool_size: 1
-        }
-      }
-    }
-  }
-)
-
 RSpec.configure do |c|
   c.mock_with :rspec
   c.filter_run focus: true
