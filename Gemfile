@@ -30,11 +30,11 @@ group :test do
   gem 'activerecord-jdbc-adapter', platform: :jruby
   gem 'activerecord-jdbcsqlite3-adapter', platform: :jruby
   gem 'jdbc-sqlite3', platform: :jruby
+  gem 'logger'
   gem 'rspec', '~> 3.0'
   gem 'simplecov', require: 'false'
   gem 'simplecov-cobertura', require: 'false'
   gem 'threads'
-  gem 'logger'
 
   gem 'byebug'
   gem 'dotenv', '~> 2.7', '>= 2.7.6'

@@ -410,6 +410,21 @@ end
 
 Check [`ddnexus/pagy`](https://ddnexus.github.io/pagy/extras/meilisearch) for more information.
 
+
+### Integer primary keys <!-- omit in toc -->
+
+By default, meilisearch-rails will stringify primary keys before sending them to MeiliSearch.
+
+If you would like primary keys to remain as integers, set the `:stringify_primary_keys` to `false` in the configuration file:
+
+```ruby
+MeiliSearch::Rails.configuration = {
+  meilisearch_url: 'YourMeilisearchUrl',
+  meilisearch_api_key: 'YourMeilisearchAPIKey',
+  stringify_primary_keys: false
+}
+```
+
 #### Deactivate Meilisearch in certain moments
 
 By default, HTTP connections to the Meilisearch URL are always active, but sometimes you want to disable the HTTP requests in a particular moment or environment.<br>
