@@ -99,6 +99,8 @@ describe 'multi-search' do
 
       context 'when :class_name is also present' do
         it 'loads results from the correct models' do
+          allow(Meilisearch::Rails.logger).to receive(:warn).and_return(nil)
+
           results = Meilisearch::Rails.multi_search(
             'books' => { q: 'Steve', index_uid: Book.index.uid, class_name: 'Book' },
             'products' => { q: 'palm', limit: 1, index_uid: Product.index.uid, class_name: 'Product' },
@@ -134,6 +136,18 @@ describe 'multi-search' do
     end
 
     context 'when class_name is specified' do
+      let(:logger) { instance_double('Logger', warn: nil) }
+
+      before do
+        allow(Meilisearch::Rails).to receive(:logger).and_return(logger)
+      end
+
+      it 'warns about deprecation' do
+        results = Meilisearch::Rails.multi_search(Book.index.uid => { q: 'Steve', class_name: 'Book' })
+        expect(results.to_h[Book.index.uid]).to contain_exactly(steve_jobs)
+        expect(logger).to have_received(:warn).with(a_string_matching(':class_name'))
+      end
+
       it 'returns ORM records' do
         results = Meilisearch::Rails.multi_search(
           Book.index.uid => { q: 'Steve', class_name: 'Book' },
@@ -164,7 +178,7 @@ describe 'multi-search' do
     it 'returns a mixture of ORM records and hashes' do
       results = Meilisearch::Rails.multi_search(
         Book => { q: 'Steve' },
-        Product.index.uid => { q: 'palm', limit: 1, class_name: 'Product' },
+        Product.index.uid => { q: 'palm', limit: 1, scope: Product },
         Color.index.uid => { q: 'bl' }
       )
 
@@ -198,6 +212,35 @@ describe 'multi-search' do
       )
 
       Meilisearch::Rails.configuration[:pagination_backend] = nil
+    end
+  end
+
+  context 'with scopes' do
+    it 'fetches items from the given scope' do
+      results = Meilisearch::Rails.multi_search(
+        Product => { q: 'palm', scope: Product.where('tags LIKE "%terrible%"') },
+        Color => { q: 'bl', scope: Color.where(short_name: 'bla') }
+      )
+
+      expect(results).to contain_exactly(
+        black, palm_pixi_plus
+      )
+    end
+
+    it 'infers the model' do
+      results = Meilisearch::Rails.multi_search(
+        'colors' => { q: 'bl', scope: Color.all, index_uid: Color.index.uid }
+      )
+
+      expect(results.to_h['colors']).to contain_exactly(blue, black)
+    end
+
+    it 'infers the index as well as the model' do
+      results = Meilisearch::Rails.multi_search(
+        'colors' => { q: 'bl', scope: Color }
+      )
+
+      expect(results.to_h['colors']).to contain_exactly(blue, black)
     end
   end
 end

@@ -9,12 +9,18 @@ module Meilisearch
 
         searches.zip(raw_results['results']).each do |(target, search_options), result|
           results_class = if search_options[:class_name]
+                            Meilisearch::Rails.logger.warn(
+                              '[meilisearch-rails] The :class_name option in multi search is deprecated, please use :scope instead.'
+                            )
+
                             search_options[:class_name].constantize
                           elsif target.instance_of?(Class)
                             target
+                          elsif search_options[:scope]
+                            search_options[:scope]
                           end
 
-          @results[target] = results_class ? load_results(results_class, result) : result['hits']
+          @results[target] = results_class ? load_results(results_class, result, scope: search_options[:scope]) : result['hits']
 
           @metadata[target] = result.except('hits')
         end
@@ -69,7 +75,9 @@ module Meilisearch
 
       private
 
-      def load_results(klass, result)
+      def load_results(klass, result, scope:)
+        scope ||= klass
+
         pk_method = klass.ms_primary_key_method
         pk_method = pk_method.in if Utilities.mongo_model?(klass)
 
@@ -78,7 +86,7 @@ module Meilisearch
         hits_by_id =
           result['hits'].index_by { |hit| hit[condition_key.to_s] }
 
-        records = klass.where(condition_key => hits_by_id.keys)
+        records = scope.where(condition_key => hits_by_id.keys)
 
         if records.respond_to? :in_order_of
           records.in_order_of(condition_key, hits_by_id.keys).each do |record|
