@@ -38,6 +38,7 @@
 - [⚙️ Settings](#️-settings)
 - [🔍 Custom search](#-custom-search)
 - [🔍🔍 Multi search](#-multi-search)
+- [🔍🔍 Federated search](#-federated-search)
 - [🪛 Options](#-options)
   - [Meilisearch configuration & environment](#meilisearch-configuration--environment)
   - [Pagination with `kaminari` or `will_paginate`](#backend-pagination-with-kaminari-or-will_paginate-)
@@ -322,6 +323,172 @@ multi_search_results = Meilisearch::Rails.multi_search(
 But this has been deprecated in favor of **federated search**.
 
 See the [official multi search documentation](https://www.meilisearch.com/docs/reference/api/multi_search).
+
+## 🔍🔍 Federated search
+
+Federated search is similar to multi search, except that results are not grouped but sorted by ranking rules.
+
+```ruby
+results = Meilisearch::Rails.federated_search(
+  queries: [
+    { q: 'Harry', scope: Book.all },
+    { q: 'Attack on Titan', scope: Manga.all }
+  ]
+)
+```
+
+An enumerable `FederatedSearchResult` is returned, which can be iterated through with `#each`:
+
+```erb
+<ul>
+  <% results.each do |record| %>
+    <li><%= record.title %></li>
+  <% end %>
+</ul>
+
+
+<ul>
+  <!-- Attack on Titan appears first even though it was specified second, 
+       it's ranked higher because it's a closer match -->
+  <li>Attack on Titan</li>
+  <li>Harry Potter and the Philosopher's Stone</li>
+  <li>Harry Potter and the Chamber of Secrets</li>
+</ul>
+```
+
+The `queries` parameter may be a multi-search style hash with keys that are either classes, index names, or neither:
+
+```ruby
+results = Meilisearch::Rails.federated_search(
+  queries: {
+    Book => { q: 'Harry' },
+    Manga => { q: 'Attack on Titan' }
+  }
+)
+```
+
+```ruby
+results = Meilisearch::Rails.federated_search(
+  queries: {
+    'books_production' => { q: 'Harry', scope: Book.all },
+    'mangas_production' => { q: 'Attack on Titan', scope: Manga.all }
+  }
+)
+```
+
+```ruby
+results = Meilisearch::Rails.federated_search(
+  queries: {
+    'potter' => { q: 'Harry', scope: Book.all, index_uid: 'books_production' },
+    'titan' => { q: 'Attack on Titan', scope: Manga.all, index_uid: 'mangas_production' }
+  }
+)
+```
+
+### Loading records <!-- omit in toc -->
+
+Records are loaded when the `:scope` option is passed (may be a model or a relation), 
+or when a hash query is used with models as keys:
+
+```ruby
+results = Meilisearch::Rails.federated_search(
+  queries: [
+    { q: 'Harry', scope: Book },
+    { q: 'Attack on Titan', scope: Manga },
+  ]
+)
+```
+
+```ruby
+results = Meilisearch::Rails.federated_search(
+  queries: {
+    Book => { q: 'Harry' },
+    Manga => { q: 'Attack on Titan' }
+  }
+)
+```
+
+If the model is not provided, hashes are returned!
+
+### Scoping records <!-- omit in toc -->
+
+Any relation passed as `:scope` is used as the starting point when loading records:
+
+```ruby
+results = Meilisearch::Rails.federated_search(
+  queries: [
+    { q: 'Harry', scope: Book.where('year <= 2006') },
+    { q: 'Attack on Titan', scope: Manga.where(author: Author.find_by(name: 'Iseyama')) },
+  ]
+)
+```
+
+### Specifying the search index <!-- omit in toc -->
+
+In order of precedence, to figure out which index to search, Meilisearch Rails will check:
+
+1. `index_uid` options
+   ```ruby
+   results = Meilisearch::Rails.federated_search(
+     queries: [
+       # Searching the 'fantasy_books' index
+       { q: 'Harry', scope: Book, index_uid: 'fantasy_books' },
+     ]
+   )
+   ```
+2. The index associated with the model
+   ```ruby
+   results = Meilisearch::Rails.federated_search(
+     queries: [
+       # Searching the index associated with the Book model
+       # i. e. Book.index.uid
+       { q: 'Harry', scope: Book },
+     ]
+   )
+   ```
+3. The key when using hash queries
+   ```ruby
+   results = Meilisearch::Rails.federated_search(
+     queries: {
+       # Searching index 'books_production'
+       books_production: { q: 'Harry', scope: Book },
+     }
+   )
+   ```
+
+### Pagination and other options <!-- omit in toc -->
+
+In addition to queries, federated search also accepts `:federation` parameters which allow for finer control of the search:
+
+```ruby
+results = Meilisearch::Rails.federated_search(
+  queries: [
+    { q: 'Harry', scope: Book },
+    { q: 'Attack on Titan', scope: Manga },
+  ],
+  federation: { offset: 10, limit: 5 }
+)
+```
+See a full list of accepted options in [the meilisearch documentation](https://www.meilisearch.com/docs/reference/api/multi_search#federation).
+
+#### Metadata <!-- omit in toc -->
+
+The returned result from a federated search includes a `.metadata` attribute you can use to access everything other than the search hits:
+
+```ruby
+result.metadata
+# {
+#   "processingTimeMs" => 0,
+#   "limit" => 20,
+#   "offset" => 0,
+#   "estimatedTotalHits" => 2,
+#   "semanticHitCount": 0
+# }
+```
+
+The metadata contains facet stats and pagination stats, among others. See the full response in [the documentation](https://www.meilisearch.com/docs/reference/api/multi_search#federated-multi-search-requests).
+
+More details on federated search (such as available `federation:` options) can be found on [the official multi search documentation](https://www.meilisearch.com/docs/reference/api/multi_search).
 
 ## 🪛 Options
 
