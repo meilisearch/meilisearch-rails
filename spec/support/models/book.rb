@@ -35,7 +35,7 @@ end
 
 module TestUtil
   def self.reset_books!
-    Book.clear_index!(true)
+    Book.clear_index!
     Book.index(safe_index_uid('BookAuthor')).delete_all_documents
     Book.index(safe_index_uid('Book')).delete_all_documents
   end
