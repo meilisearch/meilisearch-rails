@@ -15,10 +15,12 @@ end
 group :test do
   rails_version = ENV['RAILS_VERSION'] || '7.1'
   sequel_version = ENV['SEQUEL_VERSION'] ? "~> #{ENV['SEQUEL_VERSION']}" : '>= 4.0'
+  mongoid_version = ENV['MONGOID_VERSION'] || '9.0'
 
   gem 'active_model_serializers'
   gem 'rails', "~> #{rails_version}"
   gem 'sequel', sequel_version
+  gem 'mongoid', "~> #{mongoid_version}"
 
   # remove when deprecate rails 6
   if Gem::Version.new(rails_version) >= Gem::Version.new('7.0')

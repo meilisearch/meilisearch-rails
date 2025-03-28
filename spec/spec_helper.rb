@@ -31,6 +31,7 @@ require 'rails/all'
 require 'sqlite3' unless defined?(JRUBY_VERSION)
 require 'logger'
 require 'sequel'
+require 'mongoid'
 require 'active_model_serializers'
 require 'byebug'
 
@@ -67,5 +68,7 @@ RSpec.configure do |c|
     safe_index_list.each do |index|
       Meilisearch::Rails.client.delete_index(index)
     end
+
+    Mongoid.default_client.database.drop
   end
 end
