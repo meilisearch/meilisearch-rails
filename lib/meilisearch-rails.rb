@@ -482,9 +482,8 @@ module Meilisearch
                 super(*args)
               end
             end
-          # Currently after_destroy_commit is broken in Mongoid
-          elsif respond_to?(:after_destroy) && !Utilities.mongo_model?(self)
-            after_destroy_commit { |searchable| searchable.ms_enqueue_remove_from_index!(ms_synchronous?) }
+          elsif respond_to?(:after_destroy)
+            after_commit(on: :destroy) { |searchable| searchable.ms_enqueue_remove_from_index!(ms_synchronous?) }
           end
         end
       end
