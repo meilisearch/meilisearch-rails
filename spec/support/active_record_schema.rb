@@ -17,12 +17,6 @@ ActiveRecord::Base.raise_in_transactional_callbacks = true if ActiveRecord::Base
 
 FileUtils.rm('data.sqlite3') if File.exist?('data.sqlite3')
 
-unless OLD_RAILS || NEW_RAILS
-  require 'active_job/test_helper'
-
-  ActiveJob::Base.queue_adapter = :test
-end
-
 def ar_schema
   @ar_schema ||= ActiveRecord::Schema.new
 end
