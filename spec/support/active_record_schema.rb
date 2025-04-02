@@ -15,7 +15,7 @@ ActiveRecord::Base.establish_connection(
 
 ActiveRecord::Base.raise_in_transactional_callbacks = true if ActiveRecord::Base.respond_to?(:raise_in_transactional_callbacks)
 
-FileUtils.rm('data.sqlite3') if File.exist?('data.sqlite3')
+FileUtils.rm_f('data.sqlite3')
 
 def ar_schema
   @ar_schema ||= ActiveRecord::Schema.new
