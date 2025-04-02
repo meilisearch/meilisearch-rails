@@ -7,4 +7,4 @@ def sequel_db
                               end)
 end
 
-FileUtils.rm('sequel_data.sqlite3') if File.exist?('sequel_data.sqlite3')
+FileUtils.rm_f('sequel_data.sqlite3')
