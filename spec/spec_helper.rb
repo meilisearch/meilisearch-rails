@@ -22,9 +22,6 @@ require 'dotenv/load'
 require 'faker'
 require 'threads'
 
-$LOAD_PATH.unshift(File.dirname(__FILE__))
-$LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
-
 require 'meilisearch-rails'
 require 'rspec'
 require 'rails/all'
