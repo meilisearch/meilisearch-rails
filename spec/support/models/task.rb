@@ -1,11 +1,10 @@
-require 'support/active_record_schema'
-
-ar_schema.create_table :tasks do |t|
-  t.string :title
-end
-
-class Task < ActiveRecord::Base
+tasks_specification = Models::ModelSpecification.new(
+  'Task',
+  fields: [%i[title string]]
+) do
   include Meilisearch::Rails
 
   meilisearch synchronous: true, index_uid: safe_index_uid('Task')
 end
+
+Models::ActiveRecord.initialize_model(tasks_specification)

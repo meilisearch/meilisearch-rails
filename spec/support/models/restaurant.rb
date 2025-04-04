@@ -1,12 +1,11 @@
-require 'support/active_record_schema'
-
-ar_schema.create_table :restaurants do |t|
-  t.string :name
-  t.string :kind
-  t.text :description
-end
-
-class Restaurant < ActiveRecord::Base
+restaurants_specification = Models::ModelSpecification.new(
+  'Restaurant',
+  fields: [
+    %i[name string],
+    %i[kind string],
+    %i[description text]
+  ]
+) do
   include GlobalID::Identification
   include Meilisearch::Rails
 
@@ -16,3 +15,5 @@ class Restaurant < ActiveRecord::Base
     pagination max_total_hits: 2
   end
 end
+
+Models::ActiveRecord.initialize_model(restaurants_specification)

@@ -1,12 +1,11 @@
-require 'support/active_record_schema'
-
-ar_schema.create_table :people do |t|
-  t.string :first_name
-  t.string :last_name
-  t.integer :card_number
-end
-
-class People < ActiveRecord::Base
+people_specification = Models::ModelSpecification.new(
+  'People',
+  fields: [
+    %i[first_name string],
+    %i[last_name string],
+    %i[card_number integer]
+  ]
+) do
   include Meilisearch::Rails
 
   meilisearch synchronous: true, index_uid: safe_index_uid('MyCustomPeople'), primary_key: :card_number,
@@ -23,9 +22,4 @@ class People < ActiveRecord::Base
   end
 end
 
-module TestUtil
-  def self.reset_people!
-    People.clear_index!(true)
-    People.delete_all
-  end
-end
+Models::ActiveRecord.initialize_model(people_specification)

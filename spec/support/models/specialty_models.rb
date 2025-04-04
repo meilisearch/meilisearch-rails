@@ -1,25 +1,7 @@
-require 'support/active_record_schema'
-
-ar_schema.create_table :namespaced_models do |t|
+Models::ActiveRecord.schema.create_table :namespaced_models do |t|
   t.string :name
   t.integer :another_private_value
 end
-
-ar_schema.create_table :nested_items do |t|
-  t.integer :parent_id
-  t.boolean :hidden
-end
-
-ar_schema.create_table :misconfigured_blocks do |t|
-  t.string :name
-end
-
-ar_schema.create_table :serialized_documents do |t|
-  t.string :name
-  t.string :skip
-end
-
-ar_schema.create_table :encoded_strings
 
 module Namespaced
   def self.table_name_prefix
@@ -41,7 +23,13 @@ module Namespaced
   end
 end
 
-class NestedItem < ActiveRecord::Base
+nested_items_specification = Models::ModelSpecification.new(
+  'NestedItem',
+  fields: [
+    %i[parent_id integer],
+    %i[hidden boolean]
+  ]
+) do
   has_many :children, class_name: 'NestedItem', foreign_key: 'parent_id'
 
   include Meilisearch::Rails
@@ -55,23 +43,43 @@ class NestedItem < ActiveRecord::Base
   end
 end
 
-class MisconfiguredBlock < ActiveRecord::Base
+Models::ActiveRecord.initialize_model(nested_items_specification)
+
+misconfigured_blocks_specification = Models::ModelSpecification.new(
+  'MisconfiguredBlock',
+  fields: [%i[name string]]
+) do
   include Meilisearch::Rails
 end
 
-class SerializedDocumentSerializer < ActiveModel::Serializer
-  attributes :name
-end
+Models::ActiveRecord.initialize_model(misconfigured_blocks_specification)
 
-class SerializedDocument < ActiveRecord::Base
-  include Meilisearch::Rails
-
-  meilisearch index_uid: safe_index_uid('SerializedDocument') do
-    use_serializer SerializedDocumentSerializer
+module Models
+  class SerializedDocumentSerializer < ActiveModel::Serializer
+    attributes :name
   end
 end
 
-class EncodedString < ActiveRecord::Base
+serialized_documents_specification = Models::ModelSpecification.new(
+  'SerializedDocument',
+  fields: [
+    %i[name string],
+    %i[skip string]
+  ]
+) do
+  include Meilisearch::Rails
+
+  meilisearch index_uid: safe_index_uid('SerializedDocument') do
+    use_serializer Models::SerializedDocumentSerializer
+  end
+end
+
+Models::ActiveRecord.initialize_model(serialized_documents_specification)
+
+encoded_strings_specification = Models::ModelSpecification.new(
+  'EncodedString',
+  fields: []
+) do
   include Meilisearch::Rails
 
   meilisearch synchronous: true, force_utf8_encoding: true, index_uid: safe_index_uid('EncodedString') do
@@ -80,3 +88,5 @@ class EncodedString < ActiveRecord::Base
     end
   end
 end
+
+Models::ActiveRecord.initialize_model(encoded_strings_specification)

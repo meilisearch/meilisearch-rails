@@ -1,15 +1,7 @@
-require 'support/active_record_schema'
-
-ar_schema.create_table :posts do |t|
-  t.string :title
-end
-
-ar_schema.create_table :comments do |t|
-  t.integer :post_id
-  t.string :body
-end
-
-class Post < ActiveRecord::Base
+posts_specification = Models::ModelSpecification.new(
+  'Post',
+  fields: [%i[title string]]
+) do
   has_many :comments
 
   include Meilisearch::Rails
@@ -23,10 +15,20 @@ class Post < ActiveRecord::Base
   scope :meilisearch_import, -> { includes(:comments) }
 end
 
-class Comment < ActiveRecord::Base
+Models::ActiveRecord.initialize_model(posts_specification)
+
+comments_specification = Models::ModelSpecification.new(
+  'Comment',
+  fields: [
+    %i[post_id integer],
+    %i[body string]
+  ]
+) do
   belongs_to :post
 
   include Meilisearch::Rails
 
   meilisearch
 end
+
+Models::ActiveRecord.initialize_model(comments_specification)

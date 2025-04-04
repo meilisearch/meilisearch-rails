@@ -20,6 +20,7 @@ jobs:
       matrix:
         ruby-version: ["3.2", "3.3", "3.4"]
         rails-version: [6.1, 7.0]
+        mongodb-version: [8.0]
     env:
       RAILS_VERSION: ${{ matrix.rails-version }}
     name: integration-tests (Rails ${{ matrix.rails-version }} with Ruby ${{ matrix.ruby-version }})
@@ -34,6 +35,10 @@ jobs:
           bundler-cache: true
       - name: Meilisearch (latest) setup with Docker
         run: docker run -d -p 7700:7700 getmeili/meilisearch:latest meilisearch --master-key=masterKey --no-analytics
+      - name: Start MongoDB
+        uses: supercharge/mongodb-github-action@1.12.0
+        with:
+          mongodb-version: ${{ matrix.mongodb-version }}
       - name: Run tests
         run: bundle exec rspec
       - name: Upload coverage reports to Codecov
