@@ -1,10 +1,7 @@
-require 'support/active_record_schema'
-
-ar_schema.create_table :fruits do |t|
-  t.string :name
-end
-
-class Fruit < ActiveRecord::Base
+fruits_specification = Models::ModelSpecification.new(
+  'Fruit',
+  fields: [%i[name string]]
+) do
   include Meilisearch::Rails
 
   # only raise exceptions in development env
@@ -12,3 +9,5 @@ class Fruit < ActiveRecord::Base
     attribute :name
   end
 end
+
+Models::ActiveRecord.initialize_model(fruits_specification)

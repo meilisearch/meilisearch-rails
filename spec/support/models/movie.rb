@@ -1,10 +1,7 @@
-require 'support/active_record_schema'
-
-ar_schema.create_table :movies do |t|
-  t.string :title
-end
-
-class Movie < ActiveRecord::Base
+movies_specification = Models::ModelSpecification.new(
+  'Movie',
+  fields: [%i[title string]]
+) do
   include Meilisearch::Rails
 
   meilisearch index_uid: safe_index_uid('Movie') do
@@ -13,9 +10,4 @@ class Movie < ActiveRecord::Base
   end
 end
 
-module TestUtil
-  def self.reset_movies!
-    Movie.clear_index!(true)
-    Movie.delete_all
-  end
-end
+Models::ActiveRecord.initialize_model(movies_specification)

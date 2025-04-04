@@ -1,15 +1,14 @@
-require 'support/active_record_schema'
-
-ar_schema.create_table :products do |t|
-  t.string :name
-  t.string :href
-  t.string :tags
-  t.string :type
-  t.text :description
-  t.datetime :release_date
-end
-
-class Product < ActiveRecord::Base
+products_specification = Models::ModelSpecification.new(
+  'Product',
+  fields: [
+    %i[name string],
+    %i[href string],
+    %i[tags string],
+    %i[type string],
+    %i[description text],
+    %i[release_date datetime]
+  ]
+) do
   include Meilisearch::Rails
 
   meilisearch auto_index: false,
@@ -30,5 +29,11 @@ class Product < ActiveRecord::Base
   end
 end
 
-class Camera < Product
+Models::ActiveRecord.initialize_model(products_specification)
+
+module Models
+  module ActiveRecord
+    class Camera < Product
+    end
+  end
 end

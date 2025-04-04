@@ -24,12 +24,6 @@ module Models
     end
 
     def self.initialize_model(specification)
-      schema.create_table specification.name.underscore.pluralize do |t|
-        specification.fields.each do |field|
-          t.send(field.type, field.name)
-        end
-      end
-
       klass = Class.new(::ActiveRecord::Base) do
         define_singleton_method(:model_name) do
           name = "Models::ActiveRecord::#{specification.name}"
@@ -40,6 +34,12 @@ module Models
       const_set(specification.name, klass)
 
       klass.class_eval(&specification.body)
+
+      schema.create_table klass.table_name do |t|
+        specification.fields.each do |field|
+          t.send(field.type, field.name)
+        end
+      end
     end
   end
 end

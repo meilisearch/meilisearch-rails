@@ -1,30 +1,29 @@
-require 'support/active_record_schema'
-
-ar_schema.create_table :disabled_booleans do |t|
-  t.string :name
-end
-
-ar_schema.create_table :disabled_procs do |t|
-  t.string :name
-end
-
-ar_schema.create_table :disabled_symbols do |t|
-  t.string :name
-end
-
-class DisabledBoolean < ActiveRecord::Base
+disabled_booleans_specification = Models::ModelSpecification.new(
+  'DisabledBoolean',
+  fields: [%i[name string]]
+) do
   include Meilisearch::Rails
 
   meilisearch synchronous: true, disable_indexing: true, index_uid: safe_index_uid('DisabledBoolean')
 end
 
-class DisabledProc < ActiveRecord::Base
+Models::ActiveRecord.initialize_model(disabled_booleans_specification)
+
+disabled_procs_specification = Models::ModelSpecification.new(
+  'DisabledProc',
+  fields: [%i[name string]]
+) do
   include Meilisearch::Rails
 
   meilisearch synchronous: true, disable_indexing: proc { true }, index_uid: safe_index_uid('DisabledProc')
 end
 
-class DisabledSymbol < ActiveRecord::Base
+Models::ActiveRecord.initialize_model(disabled_procs_specification)
+
+disabled_symbols_specification = Models::ModelSpecification.new(
+  'DisabledSymbol',
+  fields: [%i[name string]]
+) do
   include Meilisearch::Rails
 
   meilisearch synchronous: true, disable_indexing: :truth, index_uid: safe_index_uid('DisabledSymbol')
@@ -33,3 +32,5 @@ class DisabledSymbol < ActiveRecord::Base
     true
   end
 end
+
+Models::ActiveRecord.initialize_model(disabled_symbols_specification)

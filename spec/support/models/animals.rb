@@ -1,14 +1,9 @@
 require 'support/active_record_schema'
 
-ar_schema.create_table :cats do |t|
-  t.string :name
-end
-
-ar_schema.create_table :dogs do |t|
-  t.string :name
-end
-
-class Cat < ActiveRecord::Base
+cats_specification = Models::ModelSpecification.new(
+  'Cat',
+  fields: [%i[name string]]
+) do
   include Meilisearch::Rails
 
   meilisearch index_uid: safe_index_uid('animals'), synchronous: true, primary_key: :ms_id
@@ -20,7 +15,10 @@ class Cat < ActiveRecord::Base
   end
 end
 
-class Dog < ActiveRecord::Base
+dogs_specification = Models::ModelSpecification.new(
+  'Dog',
+  fields: [%i[name string]]
+) do
   include Meilisearch::Rails
 
   meilisearch index_uid: safe_index_uid('animals'), synchronous: true, primary_key: :ms_id
@@ -32,11 +30,5 @@ class Dog < ActiveRecord::Base
   end
 end
 
-module TestUtil
-  def self.reset_animals!
-    Cat.clear_index!(true)
-    Cat.delete_all
-    Dog.clear_index!(true)
-    Dog.delete_all
-  end
-end
+Models::ActiveRecord.initialize_model(cats_specification)
+Models::ActiveRecord.initialize_model(dogs_specification)

@@ -1,19 +1,7 @@
-require 'support/active_record_schema'
-
-ar_schema.create_table :enqueued_documents do |t|
-  t.string :name
-end
-
-ar_schema.create_table :disabled_enqueued_documents do |t|
-  t.string :name
-end
-
-ar_schema.create_table :conditionally_enqueued_documents do |t|
-  t.string :name
-  t.boolean :is_public
-end
-
-class EnqueuedDocument < ActiveRecord::Base
+enqueued_documents_specification = Models::ModelSpecification.new(
+  'EnqueuedDocument',
+  fields: [%i[name string]]
+) do
   include Meilisearch::Rails
 
   include GlobalID::Identification
@@ -32,7 +20,12 @@ class EnqueuedDocument < ActiveRecord::Base
   end
 end
 
-class DisabledEnqueuedDocument < ActiveRecord::Base
+Models::ActiveRecord.initialize_model(enqueued_documents_specification)
+
+disabled_enqueued_documents_specification = Models::ModelSpecification.new(
+  'DisabledEnqueuedDocument',
+  fields: [%i[name string]]
+) do
   include Meilisearch::Rails
 
   meilisearch(enqueue: proc { |_record| raise 'enqueued' },
@@ -42,7 +35,15 @@ class DisabledEnqueuedDocument < ActiveRecord::Base
   end
 end
 
-class ConditionallyEnqueuedDocument < ActiveRecord::Base
+Models::ActiveRecord.initialize_model(disabled_enqueued_documents_specification)
+
+conditionally_enqueued_documents_specification = Models::ModelSpecification.new(
+  'ConditionallyEnqueuedDocument',
+  fields: [
+    %i[name string],
+    %i[is_public boolean]
+  ]
+) do
   include Meilisearch::Rails
 
   meilisearch(enqueue: true,
@@ -55,3 +56,5 @@ class ConditionallyEnqueuedDocument < ActiveRecord::Base
     is_public
   end
 end
+
+Models::ActiveRecord.initialize_model(conditionally_enqueued_documents_specification)
