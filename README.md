@@ -99,7 +99,7 @@ gem 'meilisearch-rails'
 Create a new file `config/initializers/meilisearch.rb` to setup your `MEILISEARCH_HOST` and `MEILISEARCH_API_KEY`
 
 ```ruby
-Meilisearch::Rails.configuration = {
+MeiliSearch::Rails.configuration = {
   meilisearch_url: ENV.fetch('MEILISEARCH_HOST', 'http://localhost:7700'),
   meilisearch_api_key: ENV.fetch('MEILISEARCH_API_KEY', 'YourMeilisearchAPIKey')
 }
@@ -121,7 +121,7 @@ The following code will create a `Book` index and add search capabilities to you
 
 ```ruby
 class Book < ActiveRecord::Base
-  include Meilisearch::Rails
+  include MeiliSearch::Rails
 
   meilisearch do
     attribute :title, :author # only the attributes 'title', and 'author' will be sent to Meilisearch
@@ -155,7 +155,7 @@ Requests made to Meilisearch may timeout and retry. To adapt the behavior to
 your needs, you can change the parameters during configuration:
 
 ```ruby
-Meilisearch::Rails.configuration = {
+MeiliSearch::Rails.configuration = {
   meilisearch_url: 'YourMeilisearchUrl',
   meilisearch_api_key: 'YourMeilisearchAPIKey',
   timeout: 2,
@@ -173,7 +173,7 @@ You can configure the index settings by adding them inside the `meilisearch` blo
 
 ```ruby
 class Book < ApplicationRecord
-  include Meilisearch::Rails
+  include MeiliSearch::Rails
 
   meilisearch do
     searchable_attributes [:title, :author, :publisher, :description]
@@ -236,7 +236,7 @@ Book.search('*', sort: ['title:asc'])
 Meilisearch supports searching multiple models at the same time (see [🔍 Custom search](#-custom-search) for search options):
 
 ```ruby
-multi_search_results = Meilisearch::Rails.multi_search(
+multi_search_results = MeiliSearch::Rails.multi_search(
   Book => { q: 'Harry' },
   Manga => { q: 'Attack' }
 )
@@ -269,7 +269,7 @@ Use `#each_result` to loop through pairs of your provided keys and the results:
 Records are loaded when the keys are models, or when `:scope` option is passed:
 
 ```ruby
-multi_search_results = Meilisearch::Rails.multi_search(
+multi_search_results = MeiliSearch::Rails.multi_search(
   # scope may be a relation
   'books' => { q: 'Harry', scope: Book.all },
   # or a model
@@ -282,7 +282,7 @@ Otherwise, hashes are returned.
 The index to search is inferred from the model if the key is a model, if the key is a string the key is assumed to be the index unless the `:index_uid` option is passed:
 
 ```ruby
-multi_search_results = Meilisearch::Rails.multi_search(
+multi_search_results = MeiliSearch::Rails.multi_search(
   'western' => { q: 'Harry', scope: Book, index_uid: 'books_production' },
   'japanese' => { q: 'Attack', scope: Manga, index_uid: 'mangas_production' }
 )
@@ -295,7 +295,7 @@ You can search the same index multiple times by specifying `:index_uid`:
 ```ruby
 query = 'hero'
 
-multi_search_results = Meilisearch::Rails.multi_search(
+multi_search_results = MeiliSearch::Rails.multi_search(
   'Isekai Manga' => { q: query, scope: Manga, filters: 'genre:isekai', index_uid: 'mangas_production' }
   'Shounen Manga' => { q: query, scope: Manga, filters: 'genre:shounen', index_uid: 'mangas_production' }
   'Steampunk Manga' => { q: query, scope: Manga, filters: 'genre:steampunk', index_uid: 'mangas_production' }
@@ -329,7 +329,7 @@ See the [official multi search documentation](https://www.meilisearch.com/docs/r
 Federated search is similar to multi search, except that results are not grouped but sorted by ranking rules.
 
 ```ruby
-results = Meilisearch::Rails.federated_search(
+results = MeiliSearch::Rails.federated_search(
   queries: [
     { q: 'Harry', scope: Book.all },
     { q: 'Attack on Titan', scope: Manga.all }
@@ -359,7 +359,7 @@ An enumerable `FederatedSearchResult` is returned, which can be iterated through
 The `queries` parameter may be a multi-search style hash with keys that are either classes, index names, or neither:
 
 ```ruby
-results = Meilisearch::Rails.federated_search(
+results = MeiliSearch::Rails.federated_search(
   queries: {
     Book => { q: 'Harry' },
     Manga => { q: 'Attack on Titan' }
@@ -368,7 +368,7 @@ results = Meilisearch::Rails.federated_search(
 ```
 
 ```ruby
-results = Meilisearch::Rails.federated_search(
+results = MeiliSearch::Rails.federated_search(
   queries: {
     'books_production' => { q: 'Harry', scope: Book.all },
     'mangas_production' => { q: 'Attack on Titan', scope: Manga.all }
@@ -377,7 +377,7 @@ results = Meilisearch::Rails.federated_search(
 ```
 
 ```ruby
-results = Meilisearch::Rails.federated_search(
+results = MeiliSearch::Rails.federated_search(
   queries: {
     'potter' => { q: 'Harry', scope: Book.all, index_uid: 'books_production' },
     'titan' => { q: 'Attack on Titan', scope: Manga.all, index_uid: 'mangas_production' }
@@ -391,7 +391,7 @@ Records are loaded when the `:scope` option is passed (may be a model or a relat
 or when a hash query is used with models as keys:
 
 ```ruby
-results = Meilisearch::Rails.federated_search(
+results = MeiliSearch::Rails.federated_search(
   queries: [
     { q: 'Harry', scope: Book },
     { q: 'Attack on Titan', scope: Manga },
@@ -400,7 +400,7 @@ results = Meilisearch::Rails.federated_search(
 ```
 
 ```ruby
-results = Meilisearch::Rails.federated_search(
+results = MeiliSearch::Rails.federated_search(
   queries: {
     Book => { q: 'Harry' },
     Manga => { q: 'Attack on Titan' }
@@ -415,7 +415,7 @@ If the model is not provided, hashes are returned!
 Any relation passed as `:scope` is used as the starting point when loading records:
 
 ```ruby
-results = Meilisearch::Rails.federated_search(
+results = MeiliSearch::Rails.federated_search(
   queries: [
     { q: 'Harry', scope: Book.where('year <= 2006') },
     { q: 'Attack on Titan', scope: Manga.where(author: Author.find_by(name: 'Iseyama')) },
@@ -429,7 +429,7 @@ In order of precedence, to figure out which index to search, Meilisearch Rails w
 
 1. `index_uid` options
    ```ruby
-   results = Meilisearch::Rails.federated_search(
+   results = MeiliSearch::Rails.federated_search(
      queries: [
        # Searching the 'fantasy_books' index
        { q: 'Harry', scope: Book, index_uid: 'fantasy_books' },
@@ -438,7 +438,7 @@ In order of precedence, to figure out which index to search, Meilisearch Rails w
    ```
 2. The index associated with the model
    ```ruby
-   results = Meilisearch::Rails.federated_search(
+   results = MeiliSearch::Rails.federated_search(
      queries: [
        # Searching the index associated with the Book model
        # i. e. Book.index.uid
@@ -448,7 +448,7 @@ In order of precedence, to figure out which index to search, Meilisearch Rails w
    ```
 3. The key when using hash queries
    ```ruby
-   results = Meilisearch::Rails.federated_search(
+   results = MeiliSearch::Rails.federated_search(
      queries: {
        # Searching index 'books_production'
        books_production: { q: 'Harry', scope: Book },
@@ -461,7 +461,7 @@ In order of precedence, to figure out which index to search, Meilisearch Rails w
 In addition to queries, federated search also accepts `:federation` parameters which allow for finer control of the search:
 
 ```ruby
-results = Meilisearch::Rails.federated_search(
+results = MeiliSearch::Rails.federated_search(
   queries: [
     { q: 'Harry', scope: Book },
     { q: 'Attack on Titan', scope: Manga },
@@ -503,7 +503,7 @@ This gem supports:
 Specify the `:pagination_backend` in the configuration file:
 
 ```ruby
-Meilisearch::Rails.configuration = {
+MeiliSearch::Rails.configuration = {
   meilisearch_url: 'YourMeilisearchUrl',
   meilisearch_api_key: 'YourMeilisearchAPIKey',
   pagination_backend: :kaminari # :will_paginate
@@ -552,7 +552,7 @@ Then in your model you must extend `Pagy::Meilisearch`:
 
 ```rb
 class Book < ApplicationRecord
-  include Meilisearch::Rails
+  include MeiliSearch::Rails
   extend Pagy::Meilisearch
 
   meilisearch # ...
@@ -573,7 +573,7 @@ end
 <%== pagy_nav(@pagy) %>
 ```
 
-:warning: There is no need to set `pagination_backend` in the configuration block `Meilisearch::Rails.configuration` for `pagy`.
+:warning: There is no need to set `pagination_backend` in the configuration block `MeiliSearch::Rails.configuration` for `pagy`.
 
 Check [`ddnexus/pagy`](https://ddnexus.github.io/pagy/extras/meilisearch) for more information.
 
@@ -585,7 +585,7 @@ you have multiple ways to achieve this.
 By adding `active: false` in the configuration initializer:
 
 ```ruby
-Meilisearch::Rails.configuration = {
+MeiliSearch::Rails.configuration = {
   meilisearch_url: 'YourMeilisearchUrl',
   meilisearch_api_key: 'YourMeilisearchAPIKey',
   active: false
@@ -595,11 +595,11 @@ Meilisearch::Rails.configuration = {
 Or you can disable programmatically:
 
 ```ruby
-Meilisearch::Rails.deactivate! # all the following HTTP calls will be dismissed.
+MeiliSearch::Rails.deactivate! # all the following HTTP calls will be dismissed.
 
 # or you can pass a block to it:
 
-Meilisearch::Rails.deactivate! do
+MeiliSearch::Rails.deactivate! do
   # every Meilisearch call here will be dismissed, no error will be raised.
   # after the block, Meilisearch state will be active. 
 end
@@ -608,7 +608,7 @@ end
 You can also activate if you deactivated earlier:
 
 ```ruby
-Meilisearch::Rails.activate!
+MeiliSearch::Rails.activate!
 ```
 
 :warning: These calls are persistent, so prefer to use the method with the block. This way, you will not forget to activate it afterward.
@@ -619,7 +619,7 @@ By default, the **index_uid** will be the class name, e.g. `Book`. You can custo
 
 ```ruby
 class Book < ActiveRecord::Base
-  include Meilisearch::Rails
+  include MeiliSearch::Rails
 
   meilisearch index_uid: 'MyCustomUID'
 end
@@ -630,7 +630,7 @@ end
 You can suffix the index UID with the current Rails environment by setting it globally:
 
 ```ruby
-Meilisearch::Rails.configuration = {
+MeiliSearch::Rails.configuration = {
   meilisearch_url: 'YourMeilisearchUrl',
   meilisearch_api_key: 'YourMeilisearchAPIKey',
   per_environment: true
@@ -649,7 +649,7 @@ You can add a custom attribute by using the `add_attribute` option or by using a
 
 ```ruby
 class Author < ApplicationRecord
-  include Meilisearch::Rails
+  include MeiliSearch::Rails
 
   meilisearch do
     attribute :first_name, :last_name
@@ -681,7 +681,7 @@ Note that the primary key must return a **unique value** otherwise your data cou
 
 ```ruby
 class Book < ActiveRecord::Base
-  include Meilisearch::Rails
+  include MeiliSearch::Rails
 
   meilisearch primary_key: :isbn # isbn is a column in your table definition.
 end
@@ -692,7 +692,7 @@ will be used as the reference to the document when Meilisearch needs it.
 
 ```rb
 class Book < ActiveRecord::Base
-  include Meilisearch::Rails
+  include MeiliSearch::Rails
 
   meilisearch primary_key: :my_custom_ms_id
 
@@ -711,7 +711,7 @@ As soon as you use those constraints, `add_documents` and `delete_documents` cal
 
 ```ruby
 class Book < ActiveRecord::Base
-  include Meilisearch::Rails
+  include MeiliSearch::Rails
 
   meilisearch if: :published?, unless: :premium?
 
@@ -734,7 +734,7 @@ You can index a record in several indexes using the `add_index` option:
 
 ```ruby
 class Book < ActiveRecord::Base
-  include Meilisearch::Rails
+  include MeiliSearch::Rails
 
   PUBLIC_INDEX_UID = 'Books'
   SECURED_INDEX_UID = 'PrivateBooks'
@@ -763,7 +763,7 @@ You may want to share an index between several models. You'll need to ensure you
 
 ```ruby
 class Cat < ActiveRecord::Base
-  include Meilisearch::Rails
+  include MeiliSearch::Rails
 
   meilisearch index_uid: 'Animals', primary_key: :ms_id
 
@@ -775,7 +775,7 @@ class Cat < ActiveRecord::Base
 end
 
 class Dog < ActiveRecord::Base
-  include Meilisearch::Rails
+  include MeiliSearch::Rails
 
   meilisearch index_uid: 'Animals', primary_key: :ms_id
 
@@ -793,7 +793,7 @@ You can configure the auto-indexing & auto-removal process to use a queue to per
 
 ```ruby
 class Book < ActiveRecord::Base
-  include Meilisearch::Rails
+  include MeiliSearch::Rails
 
   meilisearch enqueue: true # ActiveJob will be triggered using a `meilisearch` queue
 end
@@ -807,7 +807,7 @@ With **ActiveJob**:
 
 ```ruby
 class Book < ActiveRecord::Base
-  include Meilisearch::Rails
+  include MeiliSearch::Rails
 
   meilisearch enqueue: :trigger_job do
     attribute :title, :author, :description
@@ -837,7 +837,7 @@ With [**Sidekiq**](https://github.com/mperham/sidekiq):
 
 ```ruby
 class Book < ActiveRecord::Base
-  include Meilisearch::Rails
+  include MeiliSearch::Rails
 
   meilisearch enqueue: :trigger_sidekiq_job do
     attribute :title, :author, :description
@@ -867,7 +867,7 @@ With [**DelayedJob**](https://github.com/collectiveidea/delayed_job):
 
 ```ruby
 class Book < ActiveRecord::Base
-  include Meilisearch::Rails
+  include MeiliSearch::Rails
 
   meilisearch enqueue: :trigger_delayed_job do
     attribute :title, :author, :description
@@ -891,7 +891,7 @@ Extend a change to a related record.
 
 ```ruby
 class Author < ActiveRecord::Base
-  include Meilisearch::Rails
+  include MeiliSearch::Rails
 
   has_many :books
   # If your association uses belongs_to
@@ -901,7 +901,7 @@ class Author < ActiveRecord::Base
 end
 
 class Book < ActiveRecord::Base
-  include Meilisearch::Rails
+  include MeiliSearch::Rails
 
   belongs_to :author
   after_touch :index!
@@ -920,7 +920,7 @@ With **Sequel**, you can use the `touch` plugin to propagate changes.
 ```ruby
 # app/models/author.rb
 class Author < Sequel::Model
-  include Meilisearch::Rails
+  include MeiliSearch::Rails
 
   one_to_many :books
 
@@ -942,7 +942,7 @@ end
 
 # app/models/book.rb
 class Book < Sequel::Model
-  include Meilisearch::Rails
+  include MeiliSearch::Rails
 
   many_to_one :author
   after_touch :index!
@@ -965,7 +965,7 @@ You can strip all HTML tags from your attributes with the `sanitize` option.
 
 ```ruby
 class Book < ActiveRecord::Base
-  include Meilisearch::Rails
+  include MeiliSearch::Rails
 
   meilisearch sanitize: true
 end
@@ -977,7 +977,7 @@ You can force the UTF-8 encoding of all your attributes using the `force_utf8_en
 
 ```ruby
 class Book < ActiveRecord::Base
-  include Meilisearch::Rails
+  include MeiliSearch::Rails
 
   meilisearch force_utf8_encoding: true
 end
@@ -989,7 +989,7 @@ You can eager load associations using `meilisearch_import` scope.
 
 ```ruby
 class Author < ActiveRecord::Base
-  include Meilisearch::Rails
+  include MeiliSearch::Rails
 
   has_many :books
 
@@ -1042,7 +1042,7 @@ You can disable exceptions that could be raised while trying to reach Meilisearc
 
 ```ruby
 class Book < ActiveRecord::Base
-  include Meilisearch::Rails
+  include MeiliSearch::Rails
 
   # Only raise exceptions in development environment.
   meilisearch raise_on_failure: Rails.env.development?
@@ -1057,7 +1057,7 @@ You can force indexing and removing to be synchronous by setting the following o
 
 ```ruby
 class Book < ActiveRecord::Base
-  include Meilisearch::Rails
+  include MeiliSearch::Rails
 
   meilisearch synchronous: true
 end
@@ -1070,7 +1070,7 @@ You can disable auto-indexing and auto-removing setting the following options:
 
 ```ruby
 class Book < ActiveRecord::Base
-  include Meilisearch::Rails
+  include MeiliSearch::Rails
 
   meilisearch auto_index: false, auto_remove: false
 end
