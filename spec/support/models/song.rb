@@ -1,22 +1,18 @@
-require 'support/active_record_schema'
-
-ar_schema.create_table :songs do |t|
-  t.string :name
-  t.string :artist
-  t.boolean :released
-  t.boolean :premium
-end
-
-class Song < ActiveRecord::Base
+songs_specification = Models::ModelSpecification.new(
+  'Song',
+  fields: [
+    %i[name string],
+    %i[artist string],
+    %i[released boolean],
+    %i[premium boolean]
+  ]
+) do
   include Meilisearch::Rails
 
-  PUBLIC_INDEX_UID  = safe_index_uid('Songs')
-  SECURED_INDEX_UID = safe_index_uid('PrivateSongs')
-
-  meilisearch index_uid: SECURED_INDEX_UID do
+  meilisearch index_uid: safe_index_uid('PrivateSongs') do
     searchable_attributes %i[name artist]
 
-    add_index PUBLIC_INDEX_UID, if: :public? do
+    add_index safe_index_uid('Songs'), if: :public? do
       searchable_attributes %i[name artist]
     end
 
@@ -29,3 +25,5 @@ class Song < ActiveRecord::Base
     released && !premium
   end
 end
+
+Models::ActiveRecord.initialize_model(songs_specification)

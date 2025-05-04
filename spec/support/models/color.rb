@@ -1,12 +1,11 @@
-require 'support/active_record_schema'
-
-ar_schema.create_table :colors do |t|
-  t.string :name
-  t.string :short_name
-  t.integer :hex
-end
-
-class Color < ActiveRecord::Base
+colors_specification = Models::ModelSpecification.new(
+  'Color',
+  fields: [
+    %i[name string],
+    %i[short_name string],
+    %i[hex integer]
+  ]
+) do
   include Meilisearch::Rails
   attr_accessor :not_indexed
 
@@ -37,9 +36,4 @@ class Color < ActiveRecord::Base
   end
 end
 
-module TestUtil
-  def self.reset_colors!
-    Color.clear_index!(true)
-    Color.delete_all
-  end
-end
+Models::ActiveRecord.initialize_model(colors_specification)

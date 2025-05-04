@@ -44,6 +44,7 @@ OLD_RAILS = Gem.loaded_specs['rails'].version < Gem::Version.new('4.0')
 NEW_RAILS = Gem.loaded_specs['rails'].version >= Gem::Version.new('6.0')
 
 Dir["#{File.dirname(__FILE__)}/support/*.rb"].each { |file| require file }
+Dir["#{File.dirname(__FILE__)}/support/test_models/*.rb"].each { |file| require file }
 
 RSpec.configure do |c|
   c.mock_with :rspec
