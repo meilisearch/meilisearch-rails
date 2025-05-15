@@ -22,7 +22,7 @@ namespace :meilisearch do
 
   desc 'Create initializer file'
   task install: :environment do
-    puts 'Creating initializer file'
+    puts 'Writing initializer file at config/initializers/meilisearch.rb'
 
     copy_file "#{__dir__}/../templates/initializer.rb", 'config/initializers/meilisearch.rb'
   end
