@@ -15,7 +15,7 @@ end
 
 module TestUtil
   def self.reset_movies!
-    Movie.clear_index!(true)
+    Movie.clear_index!
     Movie.delete_all
   end
 end

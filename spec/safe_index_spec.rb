@@ -8,9 +8,8 @@ describe Meilisearch::Rails::SafeIndex do
       genres = %w[Legend Fiction Crime].cycle
       authors = %w[A B C].cycle
 
-      5.times do
-        Book.create! name: Faker::Book.title, author: authors.next, genre: genres.next
-      end
+      Book.insert_all(Array.new(5) { { name: Faker::Book.title, author: authors.next, genre: genres.next } }) # rubocop:disable Rails/SkipsModelValidations
+      Book.reindex!
 
       expect do
         Book.index.facet_search('genre', 'Fic', filter: 'author = A')

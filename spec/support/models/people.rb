@@ -25,7 +25,7 @@ end
 
 module TestUtil
   def self.reset_people!
-    People.clear_index!(true)
+    People.clear_index!
     People.delete_all
   end
 end
