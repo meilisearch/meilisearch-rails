@@ -22,9 +22,6 @@ require 'dotenv/load'
 require 'faker'
 require 'threads'
 
-$LOAD_PATH.unshift(File.dirname(__FILE__))
-$LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
-
 require 'meilisearch-rails'
 require 'rspec'
 require 'rails/all'
@@ -39,9 +36,6 @@ require 'byebug'
 ActiveJob::Base.queue_adapter = :test
 # Required for serializing objects similar to production environments
 GlobalID.app = 'meilisearch-test'
-
-OLD_RAILS = Gem.loaded_specs['rails'].version < Gem::Version.new('4.0')
-NEW_RAILS = Gem.loaded_specs['rails'].version >= Gem::Version.new('6.0')
 
 Dir["#{File.dirname(__FILE__)}/support/*.rb"].each { |file| require file }
 
