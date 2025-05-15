@@ -8,7 +8,7 @@ describe Meilisearch::Rails::SafeIndex do
       genres = %w[Legend Fiction Crime].cycle
       authors = %w[A B C].cycle
 
-      Book.insert_all(Array.new(5) { { name: Faker::Book.title, author: authors.next, genre: genres.next } })
+      Book.insert_all(Array.new(5) { { name: Faker::Book.title, author: authors.next, genre: genres.next } }) # rubocop:disable Rails/SkipsModelValidations
       Book.reindex!
 
       expect do

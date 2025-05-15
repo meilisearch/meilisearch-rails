@@ -8,12 +8,13 @@ describe 'Model methods' do
     it 'uses the specified scope' do
       TestUtil.reset_colors!
 
+      # rubocop:disable Rails/SkipsModelValidations
       Color.insert_all([
                          { name: 'red', short_name: 'r3', hex: 3 },
                          { name: 'red', short_name: 'r1', hex: 1 },
                          { name: 'purple', short_name: 'p', hex: 4 }
                        ])
-
+      # rubocop:enable Rails/SkipsModelValidations
       Color.where(name: 'red').reindex!(3, true)
       expect(Color.search('').size).to eq(2)
 
