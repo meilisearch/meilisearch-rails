@@ -5,7 +5,7 @@ class Citizen
   field :name, type: String
   field :age, type: Integer
 
-  include MeiliSearch::Rails
+  include Meilisearch::Rails
 
   meilisearch index_uid: safe_index_uid('Citizen')
 end

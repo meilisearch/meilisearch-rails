@@ -1,13 +1,13 @@
 landing_getting_started_1: |-
   # Create an initializer file like `config/initializers/meilisearch.rb`
-  MeiliSearch::Rails.configuration = {
+  Meilisearch::Rails.configuration = {
     meilisearch_url: 'http://127.0.0.1:7700',
     meilisearch_api_key: 'masterKey',
   }
 
   # Add Meilisearch to your ActiveRecord model
   class Movie < ActiveRecord::Base
-    include MeiliSearch::Rails
+    include Meilisearch::Rails
 
     meilisearch index_uid: 'movies' do
       attribute :title
