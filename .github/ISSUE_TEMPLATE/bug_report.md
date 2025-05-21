@@ -62,7 +62,7 @@ end
 
 require 'minitest/autorun'
 
-MeiliSearch::Rails.configuration = {
+Meilisearch::Rails.configuration = {
   meilisearch_url: ENV.fetch('MEILISEARCH_HOST', 'http://127.0.0.1:7700'),
   meilisearch_api_key: ENV.fetch('MEILISEARCH_API_KEY', 'masterKey'),
   per_environment: true
@@ -91,7 +91,7 @@ MeiliSearch::Rails.configuration = {
 # end
 #
 # class ArBook < ActiveRecord::Base
-#   include MeiliSearch::Rails
+#   include Meilisearch::Rails
 #
 #   meilisearch
 # end
@@ -119,7 +119,7 @@ MeiliSearch::Rails.configuration = {
 #
 # class SequelBook < Sequel::Model(sequel_db)
 #   plugin :active_model
-#   include MeiliSearch::Rails
+#   include Meilisearch::Rails
 #
 #   meilisearch
 # end
@@ -147,15 +147,15 @@ MeiliSearch::Rails.configuration = {
 #   field :title, type: String
 #   field :price_cents, type: Integer
 #
-#   include MeiliSearch::Rails
+#   include Meilisearch::Rails
 #
 #   meilisearch
 # end
 
 # Run this method before searching to make sure Meilisearch is up to date
 def await_last_task
-  task = MeiliSearch::Rails.client.tasks['results'].first
-  MeiliSearch::Rails.client.wait_for_task task['uid']
+  task = Meilisearch::Rails.client.tasks['results'].first
+  Meilisearch::Rails.client.wait_for_task task['uid']
 end
 
 class BugTest < Minitest::Test
