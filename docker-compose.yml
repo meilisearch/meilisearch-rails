@@ -11,11 +11,14 @@ services:
     environment:
       - MEILISEARCH_HOST=http://meilisearch:7700
       - MEILISEARCH_PORT=7700
+      - MONGODB_HOST=mongo:27017
       - BUNDLE_PATH=/vendor/bundle
     depends_on:
       - meilisearch
+      - mongo
     links:
       - meilisearch
+      - mongo
     volumes:
       - bundle:/vendor/bundle
       - ./:/home/package
@@ -26,12 +29,14 @@ services:
       context: ./playground
     environment:
       - MEILISEARCH_HOST=http://meilisearch:7700
+      - MONGODB_HOST=mongo:27017
       - BUNDLE_PATH=/vendor/bundle
     depends_on:
       - meilisearch
     working_dir: /home/app
     links:
       - meilisearch
+      - mongo
     ports:
       - "3000:3000"
     volumes:
@@ -46,3 +51,8 @@ services:
     environment:
       - MEILI_MASTER_KEY=masterKey
       - MEILI_NO_ANALYTICS=true
+
+  mongo:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
