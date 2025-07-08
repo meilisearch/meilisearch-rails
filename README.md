@@ -23,7 +23,7 @@
   <a href="https://ms-bors.herokuapp.com/repositories/68"><img src="https://bors.tech/images/badge_small.svg" alt="Bors enabled"></a>
 </p>
 
-<p align="center">⚡ The Meilisearch integration for Ruby on Rails 💎</p>
+<p align="center">⚡ The Meilisearch integration for Ruby on Rails 💎</p> test
 
 **Meilisearch Rails** is the Meilisearch integration for Ruby on Rails developers.
 
