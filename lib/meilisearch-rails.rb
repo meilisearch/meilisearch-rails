@@ -403,13 +403,7 @@ module Meilisearch
           raise ArgumentError, 'Cannot use a enqueue if the `synchronous` option is set' if options[:synchronous]
 
           proc = if options[:enqueue] == true
-                   proc do |record, remove|
-                     if remove
-                       MSCleanUpJob.perform_later(record.ms_entries)
-                     else
-                       MSJob.perform_later(record, 'ms_index!')
-                     end
-                   end
+                   proc { |record, remove| remove ? MSCleanUpJob.perform_later(record.ms_entries) : MSJob.perform_later(record, 'ms_index!') }
                  elsif options[:enqueue].respond_to?(:call)
                    options[:enqueue]
                  elsif options[:enqueue].is_a?(Symbol)
@@ -701,11 +695,7 @@ module Meilisearch
 
         condition_key = meilisearch_options[:type].primary_key if has_virtual_column_as_pk
 
-        hit_ids = if has_virtual_column_as_pk
-                    json['hits'].map { |hit| hit[condition_key] }
-                  else
-                    json['hits'].map { |hit| hit[ms_pk(meilisearch_options).to_s] }
-                  end
+        hit_ids = json['hits'].map { |hit| hit[has_virtual_column_as_pk ? condition_key : ms_pk(meilisearch_options).to_s] }
 
         # meilisearch_options[:type] refers to the Model name (e.g. Product)
         # results_by_id creates a hash with the primaryKey of the document (id) as the key and doc itself as the value
