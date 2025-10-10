@@ -5,6 +5,7 @@ require 'support/models/animals'
 require 'support/models/people'
 require 'support/models/vegetable'
 require 'support/models/fruit'
+require 'support/models/story'
 require 'support/models/disabled_models'
 require 'support/models/queued_models'
 
@@ -18,10 +19,22 @@ describe 'meilisearch_options' do
   end
 
   describe ':primary_key' do
-    it 'sets the primary key specified' do
+    it 'sets the primary key passed to #meilisearch' do
       TestUtil.reset_people!
       People.create(first_name: 'Jane', last_name: 'Doe', card_number: 75_801_887)
       expect(People.index.fetch_info.primary_key).to eq('card_number')
+    end
+
+    it 'sets the primary key defined in #primary_key' do
+      TestUtil.reset_stories!
+      Story.create(story_id: 1, title: 'A nice story')
+      expect(Story.index.fetch_info.primary_key).to eq('story_id')
+    end
+
+    it 'sets the primary key as id if not explicitly set' do
+      TestUtil.reset_books!
+      Book.create(name: 'Test Book', author: 'Test Author', premium: true, released: true, genre: 'Horror')
+      expect(Book.index.fetch_info.primary_key).to eq('id')
     end
   end
 

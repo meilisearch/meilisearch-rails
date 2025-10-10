@@ -377,10 +377,7 @@ module Meilisearch
 
       def meilisearch(options = {}, &block)
         self.meilisearch_settings = IndexSettings.new(options, &block)
-        self.meilisearch_options = {
-          type: model_name.to_s.constantize,
-          per_page: meilisearch_settings.get_setting(:hitsPerPage) || 20, page: 1
-        }.merge(options)
+        self.meilisearch_options = default_meilisearch_options(meilisearch_settings, options)
 
         attr_accessor :formatted
 
@@ -804,6 +801,16 @@ module Meilisearch
       end
 
       private
+
+      def default_meilisearch_options(meilisearch_settings, options)
+        type = model_name.to_s.constantize
+        {
+          type: type,
+          per_page: meilisearch_settings.get_setting(:hitsPerPage) || 20,
+          page: 1,
+          primary_key: type.respond_to?(:primary_key) ? type.primary_key : nil
+        }.merge(options)
+      end
 
       def update_settings_if_changed(index, options, user_configuration)
         server_state = index.settings
