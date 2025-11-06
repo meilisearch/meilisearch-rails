@@ -954,14 +954,22 @@ module Meilisearch
       end
 
       def ms_enqueue_index!(synchronous)
-        return unless Utilities.indexable?(self, meilisearch_options)
-
-        if meilisearch_options[:enqueue]
-          unless self.class.send(:ms_indexing_disabled?, meilisearch_options)
-            meilisearch_options[:enqueue].call(self, false)
+        if Utilities.indexable?(self, meilisearch_options)
+          if meilisearch_options[:enqueue]
+            unless self.class.send(:ms_indexing_disabled?, meilisearch_options)
+              meilisearch_options[:enqueue].call(self, false)
+            end
+          else
+            ms_index!(synchronous)
           end
-        else
-          ms_index!(synchronous)
+        elsif self.class.send(:ms_conditional_index?, meilisearch_options)
+          if meilisearch_options[:enqueue]
+            unless self.class.send(:ms_indexing_disabled?, meilisearch_options)
+              meilisearch_options[:enqueue].call(self, true)
+            end
+          else
+            ms_remove_from_index!(synchronous)
+          end
         end
       end
 
