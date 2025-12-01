@@ -20,7 +20,6 @@
     <img src="https://codecov.io/gh/meilisearch/meilisearch-rails/branch/main/graph/badge.svg?token=9J7LRP11IR"/>
   </a>
   <a href="https://github.com/meilisearch/meilisearch-rails/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-informational" alt="License"></a>
-  <a href="https://ms-bors.herokuapp.com/repositories/68"><img src="https://bors.tech/images/badge_small.svg" alt="Bors enabled"></a>
 </p>
 
 <p align="center">⚡ The Meilisearch integration for Ruby on Rails 💎</p>
@@ -113,7 +112,7 @@ bin/rails meilisearch:install
 
 The gem is compatible with [ActiveRecord](https://github.com/rails/rails/tree/master/activerecord), [Mongoid](https://github.com/mongoid/mongoid) and [Sequel](https://github.com/jeremyevans/sequel).
 
-⚠️ Note that even if you want to use all the default options, you must declare an empty `meilisearch` block in your model.  
+⚠️ Note that even if you want to use all the default options, you must declare an empty `meilisearch` block in your model.
 
 #### Add documents <!-- omit in toc -->
 
@@ -348,7 +347,7 @@ An enumerable `FederatedSearchResult` is returned, which can be iterated through
 
 
 <ul>
-  <!-- Attack on Titan appears first even though it was specified second, 
+  <!-- Attack on Titan appears first even though it was specified second,
        it's ranked higher because it's a closer match -->
   <li>Attack on Titan</li>
   <li>Harry Potter and the Philosopher's Stone</li>
@@ -387,7 +386,7 @@ results = Meilisearch::Rails.federated_search(
 
 ### Loading records <!-- omit in toc -->
 
-Records are loaded when the `:scope` option is passed (may be a model or a relation), 
+Records are loaded when the `:scope` option is passed (may be a model or a relation),
 or when a hash query is used with models as keys:
 
 ```ruby
@@ -601,7 +600,7 @@ Meilisearch::Rails.deactivate! # all the following HTTP calls will be dismissed.
 
 Meilisearch::Rails.deactivate! do
   # every Meilisearch call here will be dismissed, no error will be raised.
-  # after the block, Meilisearch state will be active. 
+  # after the block, Meilisearch state will be active.
 end
 ```
 
@@ -687,7 +686,7 @@ class Book < ActiveRecord::Base
 end
 ```
 
-You can also set the `primary_key` as a method, this method will be evaluated in runtime, and its return 
+You can also set the `primary_key` as a method, this method will be evaluated in runtime, and its return
 will be used as the reference to the document when Meilisearch needs it.
 
 ```rb
