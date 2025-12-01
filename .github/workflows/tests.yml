@@ -3,11 +3,9 @@ name: Tests
 on:
   pull_request:
   push:
-     # trying and staging branches are for Bors config
     branches:
-      - trying
-      - staging
       - main
+  merge_group:
 
 jobs:
   integration-tests:
