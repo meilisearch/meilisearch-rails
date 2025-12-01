@@ -11,7 +11,7 @@
   <a href="https://discord.meilisearch.com">Discord</a> |
   <a href="https://www.meilisearch.com">Website</a> |
   <a href="https://www.meilisearch.com/docs/faq">FAQ</a>
-</h4>f
+</h4>
 
 <p align="center">
   <a href="https://github.com/meilisearch/meilisearch-rails/actions"><img src="https://github.com/meilisearch/meilisearch-rails/workflows/Tests/badge.svg" alt="Test"></a>
