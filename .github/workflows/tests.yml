@@ -32,7 +32,7 @@ jobs:
           ruby-version: ${{ matrix.ruby-version }}
           bundler-cache: true
       - name: Meilisearch (latest) setup with Docker
-        run: docker run -d -p 7700:7700 getmeili/meilisearch:latest meilisearch --master-key=masterKey --no-analytics
+        run: docker run -d -p 7700:7700 getmeili/meilisearch-enterprise:latest meilisearch --master-key=masterKey --no-analytics
       - name: Start MongoDB
         uses: supercharge/mongodb-github-action@1.12.0
         with:
@@ -88,7 +88,7 @@ jobs:
           ruby-version: "3.4"
           bundler-cache: true
       - name: Meilisearch (latest) setup with Docker
-        run: docker run -d -p 7700:7700 getmeili/meilisearch:latest meilisearch --master-key=masterKey --no-analytics
+        run: docker run -d -p 7700:7700 getmeili/meilisearch-enterprise:latest meilisearch --master-key=masterKey --no-analytics
       - name: Run smoke tests
         working-directory: ./playground
         run: |
