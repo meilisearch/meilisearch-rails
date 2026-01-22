@@ -765,19 +765,6 @@ module Meilisearch
             return true if ms_attribute_changed?(document, k)
             # return true if !document.respond_to?(changed_method) || document.send(changed_method)
           end
-          [options[:if], options[:unless]].each do |condition|
-            case condition
-            when nil
-              return false
-            when String, Symbol
-              return true if ms_attribute_changed?(document, condition)
-            else
-              # if the :if, :unless condition is a anything else,
-              # we have no idea whether we should reindex or not
-              # let's always reindex then
-              return true
-            end
-          end
         end
 
         # By default, we don't reindex
