@@ -943,6 +943,10 @@ module Meilisearch
         self.class.ms_remove_from_index!(self, synchronous || ms_synchronous?)
       end
 
+      ##
+      # Enqueues removal of the record from Meilisearch when an enqueue handler is configured; otherwise performs removal immediately.
+      # If an enqueue handler is configured and indexing is not disabled, invokes the handler with the record and `true` (requesting removal). If no handler is configured, calls ms_remove_from_index! with the provided synchronous preference or the record's synchronous setting.
+      # @param [Boolean] synchronous - If `true`, prefer synchronous removal when performing the operation immediately.
       def ms_enqueue_remove_from_index!(synchronous)
         if meilisearch_options[:enqueue]
           unless self.class.send(:ms_indexing_disabled?, meilisearch_options)
@@ -953,15 +957,29 @@ module Meilisearch
         end
       end
 
+      ##
+      # Enqueues or performs indexing or removal for the current record according to the model's Meilisearch configuration.
+      # If the record is indexable, this will enqueue an index job when an enqueue handler is configured, otherwise it indexes immediately.
+      # If the record is not indexable but conditional indexing is enabled, this will enqueue a removal job when an enqueue handler is configured, otherwise it removes the record from the index.
+      # When using an enqueue handler, the method checks the model's indexing-disabled condition and skips enqueuing if indexing is disabled.
+      # @param [Boolean] synchronous - When performed immediately (no enqueue handler) controls whether the index/remove operation runs synchronously.
       def ms_enqueue_index!(synchronous)
-        return unless Utilities.indexable?(self, meilisearch_options)
-
-        if meilisearch_options[:enqueue]
-          unless self.class.send(:ms_indexing_disabled?, meilisearch_options)
-            meilisearch_options[:enqueue].call(self, false)
+        if Utilities.indexable?(self, meilisearch_options)
+          if meilisearch_options[:enqueue]
+            unless self.class.send(:ms_indexing_disabled?, meilisearch_options)
+              meilisearch_options[:enqueue].call(self, false)
+            end
+          else
+            ms_index!(synchronous)
           end
-        else
-          ms_index!(synchronous)
+        elsif self.class.send(:ms_conditional_index?, meilisearch_options)
+          if meilisearch_options[:enqueue]
+            unless self.class.send(:ms_indexing_disabled?, meilisearch_options)
+              meilisearch_options[:enqueue].call(self, true)
+            end
+          else
+            ms_remove_from_index!(synchronous)
+          end
         end
       end
 
