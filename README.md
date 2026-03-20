@@ -10,7 +10,7 @@
   <a href="https://docs.meilisearch.com">Documentation</a> |
   <a href="https://discord.meilisearch.com">Discord</a> |
   <a href="https://www.meilisearch.com">Website</a> |
-  <a href="https://www.meilisearch.com/docs/faq">FAQ</a>
+  <a href="https://www.meilisearch.com/docs/learn/resources/faq">FAQ</a>
 </h4>
 
 <p align="center">
@@ -62,7 +62,7 @@
 
 The whole usage of this gem is detailed in this README.
 
-To learn more about Meilisearch, check out our [Documentation](https://www.meilisearch.com/docs/learn/tutorials/getting_started.html) or our [API References](https://www.meilisearch.com/docs/reference/api/).
+To learn more about Meilisearch, check out our [Documentation](https://www.meilisearch.com/docs/learn/self_hosted/getting_started_with_self_hosted_meilisearch) or our [API References](https://www.meilisearch.com/docs/reference/api/).
 
 ## 🤖 Compatibility with Meilisearch
 
@@ -199,11 +199,11 @@ class Book < ApplicationRecord
 end
 ```
 
-Check the dedicated section of the documentation, for more information on the [settings](https://www.meilisearch.com/docs/reference/api/settings#settings_parameters).
+Check the dedicated section of the documentation, for more information on the [settings](https://www.meilisearch.com/docs/reference/api/settings/list-all-settings#settings_parameters).
 
 ## 🔍 Custom search
 
-All the supported options are described in the [search parameters](https://www.meilisearch.com/docs/reference/api/search#search-parameters) section of the documentation.
+All the supported options are described in the [search parameters](https://www.meilisearch.com/docs/reference/api/search/search-with-post#search-parameters) section of the documentation.
 
 ```ruby
 Book.search('Harry', attributes_to_highlight: ['*'])
@@ -320,7 +320,7 @@ multi_search_results = Meilisearch::Rails.multi_search(
 
 But this has been deprecated in favor of **federated search**.
 
-See the [official multi search documentation](https://www.meilisearch.com/docs/reference/api/multi_search).
+See the [official multi search documentation](https://www.meilisearch.com/docs/reference/api/multi-search/perform-a-multi-search).
 
 ## 🔍🔍 Federated search
 
@@ -467,7 +467,7 @@ results = Meilisearch::Rails.federated_search(
   federation: { offset: 10, limit: 5 }
 )
 ```
-See a full list of accepted options in [the meilisearch documentation](https://www.meilisearch.com/docs/reference/api/multi_search#federation).
+See a full list of accepted options in [the meilisearch documentation](https://www.meilisearch.com/docs/reference/api/multi-search/perform-a-multi-search#federation).
 
 #### Metadata <!-- omit in toc -->
 
@@ -484,9 +484,9 @@ result.metadata
 # }
 ```
 
-The metadata contains facet stats and pagination stats, among others. See the full response in [the documentation](https://www.meilisearch.com/docs/reference/api/multi_search#federated-multi-search-requests).
+The metadata contains facet stats and pagination stats, among others. See the full response in [the documentation](https://www.meilisearch.com/docs/reference/api/multi-search/perform-a-multi-search#federated-multi-search-requests).
 
-More details on federated search (such as available `federation:` options) can be found on [the official multi search documentation](https://www.meilisearch.com/docs/reference/api/multi_search).
+More details on federated search (such as available `federation:` options) can be found on [the official multi search documentation](https://www.meilisearch.com/docs/reference/api/multi-search/perform-a-multi-search).
 
 ## 🪛 Options
 
