@@ -21,6 +21,7 @@ class Song < ActiveRecord::Base
     end
 
     proximity_precision 'byAttribute'
+    separator_tokens ['&']
   end
 
   private
