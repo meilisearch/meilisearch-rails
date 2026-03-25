@@ -179,6 +179,18 @@ describe Meilisearch::Rails::IndexSettings do
     let(:public_songs_index) { safe_index_uid('Songs') }
 
     it 'targets multiple indexes' do
+      wait_for_song_index_tasks = lambda do
+        Timeout.timeout(5) do
+          loop do
+            pending = Meilisearch::Rails.client.tasks(statuses: %w[enqueued processing])['results']
+            break if pending.empty?
+
+            pending.each { |task| Meilisearch::Rails.client.wait_for_task(task['uid']) }
+            sleep 0.01
+          end
+        end
+      end
+
       Song.clear_index!(true)
       songs =
         [
@@ -189,7 +201,7 @@ describe Meilisearch::Rails::IndexSettings do
 
       public_song = songs.first
 
-      AsyncHelper.await_last_task
+      wait_for_song_index_tasks.call
 
       public_search = Song.search('', index: public_songs_index)
       expect(public_search).to contain_exactly(public_song)
