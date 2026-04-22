@@ -827,20 +827,20 @@ module Meilisearch
       def ms_configurations
         raise ArgumentError, 'No `meilisearch` block found in your model.' if meilisearch_settings.nil?
 
-        if @configurations.nil?
-          @configurations = {}
-          @configurations[meilisearch_options] = meilisearch_settings
+        if @meilisearch_configurations.nil?
+          @meilisearch_configurations = {}
+          @meilisearch_configurations[meilisearch_options] = meilisearch_settings
           meilisearch_settings.additional_indexes.each do |k, v|
-            @configurations[k] = v
+            @meilisearch_configurations[k] = v
 
             next unless v.additional_indexes.any?
 
             v.additional_indexes.each do |options, index|
-              @configurations[options] = index
+              @meilisearch_configurations[options] = index
             end
           end
         end
-        @configurations
+        @meilisearch_configurations
       end
 
       def ms_primary_key_of(doc, options = nil)
