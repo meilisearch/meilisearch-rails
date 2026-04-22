@@ -1,6 +1,33 @@
 require 'support/models/color'
 
 describe 'Configuration cache' do
+  def capture_ivars(klass, *ivars)
+    ivars.index_with do |ivar|
+      [klass.instance_variable_defined?(ivar), klass.instance_variable_get(ivar)]
+    end
+  end
+
+  def restore_ivars(klass, captured)
+    captured.each do |ivar, (defined, value)|
+      if defined
+        klass.instance_variable_set(ivar, value)
+      elsif klass.instance_variable_defined?(ivar)
+        klass.remove_instance_variable(ivar)
+      end
+    end
+  end
+
+  around do |example|
+    ivars = %i[@meilisearch_configurations @configurations]
+    captured = capture_ivars(Color, *ivars)
+
+    begin
+      example.run
+    ensure
+      restore_ivars(Color, captured)
+    end
+  end
+
   it 'does not use a generic @configurations ivar on the model' do
     # Ensure a clean slate even if other specs already touched the model.
     Color.remove_instance_variable(:@meilisearch_configurations) if Color.instance_variable_defined?(:@meilisearch_configurations)
