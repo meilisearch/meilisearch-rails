@@ -109,13 +109,13 @@ describe 'meilisearch_options' do
         TestUtil.reset_people!
 
         joanna = People.create(first_name: 'Joanna', last_name: 'Mason', card_number: 75_801_888)
-        AsyncHelper.await_last_task
+        AsyncHelper.wait_for_pending_tasks(index_uids: [People.index_uid])
 
         result = People.raw_search('Joanna')
         expect(result['hits']).to be_one
 
         joanna.destroy
-        AsyncHelper.await_last_task
+        AsyncHelper.wait_for_pending_tasks(index_uids: [People.index_uid])
 
         result = People.raw_search('Joanna')
         expect(result['hits']).to be_one
@@ -127,7 +127,7 @@ describe 'meilisearch_options' do
     it 'prevents indexing when disabled with a boolean' do
       # manually trigger index creation since indexing is disabled
       DisabledBoolean.index
-      AsyncHelper.await_last_task
+      AsyncHelper.wait_for_pending_tasks(index_uids: [DisabledBoolean.index_uid])
 
       DisabledBoolean.create name: 'foo'
       expect(DisabledBoolean.search('')).to be_empty
@@ -136,7 +136,7 @@ describe 'meilisearch_options' do
     it 'prevents indexing when disabled with a proc' do
       # manually trigger index creation since indexing is disabled
       DisabledProc.index
-      AsyncHelper.await_last_task
+      AsyncHelper.wait_for_pending_tasks(index_uids: [DisabledProc.index_uid])
 
       DisabledProc.create name: 'foo'
       expect(DisabledProc.search('')).to be_empty
@@ -145,7 +145,7 @@ describe 'meilisearch_options' do
     it 'prevents indexing when disabled with a symbol (method)' do
       # manually trigger index creation since indexing is disabled
       DisabledSymbol.index
-      AsyncHelper.await_last_task
+      AsyncHelper.wait_for_pending_tasks(index_uids: [DisabledSymbol.index_uid])
 
       DisabledSymbol.create name: 'foo'
       expect(DisabledSymbol.search('')).to be_empty

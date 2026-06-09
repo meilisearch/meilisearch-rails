@@ -114,7 +114,7 @@ describe 'Tech shop' do
       expect(results).to contain_exactly(ipad)
 
       ipad.destroy
-      AsyncHelper.await_last_task
+      AsyncHelper.wait_for_pending_tasks(index_uids: [Product.index_uid])
 
       results = Product.raw_search('ipad')['hits']
       expect(results).to be_empty

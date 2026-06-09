@@ -7,15 +7,15 @@ describe 'Pagination with kaminari' do
     Meilisearch::Rails.configuration[:pagination_backend] = :kaminari
     Restaurant.clear_index!
 
-    3.times do
-      Restaurant.create(
-        name: Faker::Restaurant.name,
-        kind: Faker::Restaurant.type,
-        description: Faker::Restaurant.description
-      )
+    AsyncHelper.await_meilisearch_tasks(index_uids: [Restaurant.index_uid]) do
+      3.times do
+        Restaurant.create(
+          name: Faker::Restaurant.name,
+          kind: Faker::Restaurant.type,
+          description: Faker::Restaurant.description
+        )
+      end
     end
-
-    AsyncHelper.await_last_task
   end
 
   it 'paginates' do

@@ -7,9 +7,9 @@ describe 'Pagination with will_paginate' do
     Meilisearch::Rails.configuration[:pagination_backend] = :will_paginate
     Movie.clear_index!
 
-    6.times { Movie.create(title: Faker::Movie.title) }
-
-    AsyncHelper.await_last_task
+    AsyncHelper.await_meilisearch_tasks(index_uids: [Movie.index_uid]) do
+      6.times { Movie.create(title: Faker::Movie.title) }
+    end
   end
 
   it 'paginates with sort' do
