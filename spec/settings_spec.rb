@@ -23,7 +23,7 @@ describe Meilisearch::Rails::IndexSettings do
         TestUtil.reset_people!
 
         People.create(first_name: 'Jane', last_name: 'Doe', card_number: 75_801_887)
-        AsyncHelper.await_last_task
+        AsyncHelper.wait_for_pending_tasks(index_uids: [People.index_uid])
 
         result = People.raw_search('Jane')
         expect(result['hits'][0]['full_name']).to eq('Jane Doe')
@@ -120,8 +120,9 @@ describe Meilisearch::Rails::IndexSettings do
     end
 
     it 'can be set to byAttribute' do
-      Song.create!(name: 'Coconut nut', artist: 'Smokey Mountain', premium: false, released: true)
-      AsyncHelper.await_last_task
+      AsyncHelper.await_meilisearch_tasks(index_uids: [Song::SECURED_INDEX_UID, Song::PUBLIC_INDEX_UID]) do
+        Song.create!(name: 'Coconut nut', artist: 'Smokey Mountain', premium: false, released: true)
+      end
       expect(Song.index.get_settings['proximityPrecision']).to eq('byAttribute')
     end
   end
@@ -180,16 +181,15 @@ describe Meilisearch::Rails::IndexSettings do
 
     it 'targets multiple indexes' do
       Song.clear_index!(true)
-      songs =
+      songs = AsyncHelper.await_meilisearch_tasks(index_uids: [private_songs_index, public_songs_index]) do
         [
           Song.create!(name: 'Coconut nut', artist: 'Smokey Mountain', premium: false, released: true),
           Song.create!(name: 'Smoking hot', artist: 'Cigarettes before lunch', premium: true, released: true),
           Song.create!(name: 'Floor is lava', artist: 'Volcano', premium: true, released: false)
         ]
+      end
 
       public_song = songs.first
-
-      AsyncHelper.await_last_task
 
       public_search = Song.search('', index: public_songs_index)
       expect(public_search).to contain_exactly(public_song)

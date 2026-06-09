@@ -27,7 +27,15 @@ describe 'federated-search' do
                     ])
 
     [Book, Color, Product].each(&:reindex!)
-    AsyncHelper.await_last_task
+    AsyncHelper.wait_for_pending_tasks(
+      index_uids: [
+        Book.index_uid,
+        safe_index_uid('BookAuthor'),
+        safe_index_uid('Book'),
+        Color.index_uid,
+        Product.index_uid
+      ]
+    )
   end
 
   let!(:products) do
