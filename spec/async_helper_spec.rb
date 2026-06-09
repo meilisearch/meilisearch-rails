@@ -9,7 +9,7 @@ describe AsyncHelper do
     it 'waits for all pending tasks on the provided indexes' do
       Song.clear_index!(true)
 
-      songs = AsyncHelper.await_meilisearch_tasks(index_uids: [private_songs_index, public_songs_index]) do
+      songs = described_class.await_meilisearch_tasks(index_uids: [private_songs_index, public_songs_index]) do
         [
           Song.create!(name: 'Coconut nut', artist: 'Smokey Mountain', premium: false, released: true),
           Song.create!(name: 'Smoking hot', artist: 'Cigarettes before lunch', premium: true, released: true),

@@ -47,5 +47,4 @@ module AsyncHelper
 
     raise ArgumentError, '`index_uids` must contain at least one non-empty index uid'
   end
-
 end
