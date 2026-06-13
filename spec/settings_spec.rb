@@ -114,6 +114,21 @@ describe Meilisearch::Rails::IndexSettings do
     end
   end
 
+  describe 'non_separator_tokens' do
+    it 'can be set' do
+      Color.create!(name: 'dark-blue', short_name: 'db', hex: 0x00008B)
+      expect(Color.index.get_settings['nonSeparatorTokens']).to eq(['-'])
+    end
+  end
+
+  describe 'separator_tokens' do
+    it 'can be set' do
+      Song.create!(name: 'Rock & Roll', artist: 'Led Zeppelin', premium: false, released: true)
+      AsyncHelper.await_last_task
+      expect(Song.index.get_settings['separatorTokens']).to eq(['&'])
+    end
+  end
+
   describe 'proximity_precision' do
     it 'can be set to byWord' do
       expect(Color.index.get_settings['proximityPrecision']).to eq('byWord')
