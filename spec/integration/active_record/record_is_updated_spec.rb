@@ -1,5 +1,7 @@
 require 'support/models/book'
 require 'support/models/color'
+require 'support/models/people'
+require 'support/models/custom_attribute_builder_models'
 
 describe 'When record is updated' do
   it 'updates the changed attributes on the index' do
@@ -41,5 +43,51 @@ describe 'When record is updated' do
         jane.update(first_name: 'Jane')
       end.not_to change(People.index.tasks['results'], :count)
     end
+  end
+
+  shared_examples 'custom search blob update behavior' do |model:, reset_method:|
+    it 'evaluates custom builders once per indexing event while still updating search' do
+      TestUtil.public_send(reset_method)
+      record = model.create!(name: 'Jane')
+
+      expect(model.search('Jane')).to be_one
+      expect(model.search('Joan')).to be_empty
+
+      evaluations_before = model.search_blob_evaluations
+
+      expect do
+        record.update!(name: 'Joan')
+      end.to change { model.index.tasks['results'].count }.by(1)
+
+      expect(model.search('Jane')).to be_empty
+      expect(model.search('Joan')).to be_one
+      expect(model.search_blob_evaluations - evaluations_before).to eq(1)
+    end
+
+    it 'does not evaluate custom builders or enqueue indexing on no-op updates' do
+      TestUtil.public_send(reset_method)
+      record = model.create!(name: 'Jane')
+
+      evaluations_before = model.search_blob_evaluations
+
+      expect do
+        record.update!(name: 'Jane')
+      end.not_to(change { model.index.tasks['results'].count })
+
+      expect(model.search_blob_evaluations).to eq(evaluations_before)
+      expect(model.search('Jane')).to be_one
+    end
+  end
+
+  context 'with explicit attribute blocks' do
+    include_examples 'custom search blob update behavior',
+                     model: SearchBlobFromAttributeModel,
+                     reset_method: :reset_search_blob_from_attribute_models!
+  end
+
+  context 'with add_attribute blocks' do
+    include_examples 'custom search blob update behavior',
+                     model: SearchBlobFromAddAttributeModel,
+                     reset_method: :reset_search_blob_from_add_attribute_models!
   end
 end

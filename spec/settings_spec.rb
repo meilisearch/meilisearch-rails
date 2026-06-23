@@ -11,7 +11,7 @@ describe Meilisearch::Rails::IndexSettings do
     context 'when passed a block' do
       it 'uses the block to determine attribute\'s value' do
         m = Namespaced::Model.new(another_private_value: 2)
-        attributes = Namespaced::Model.meilisearch_settings.get_attributes(m)
+        attributes = Namespaced::Model.meilisearch_settings.build_document_attributes(m)
         expect(attributes).to include('customAttr' => 42, 'myid' => m.id)
       end
     end
@@ -109,7 +109,7 @@ describe Meilisearch::Rails::IndexSettings do
   describe 'use_serializer' do
     it 'only uses the attributes from the serializer' do
       o = SerializedDocument.new name: 'test', skip: 'skip me'
-      attributes = SerializedDocument.meilisearch_settings.get_attributes(o)
+      attributes = SerializedDocument.meilisearch_settings.build_document_attributes(o)
       expect(attributes).to eq({ name: 'test' })
     end
   end
