@@ -22,6 +22,10 @@ describe 'Pagination with kaminari' do
     end
   end
 
+  after(:all) do
+    disable_meilisearch_legacy_search!
+  end
+
   it 'paginates' do
     first, second = Restaurant.search ''
 

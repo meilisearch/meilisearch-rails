@@ -16,6 +16,10 @@ describe 'Pagination with will_paginate' do
     end
   end
 
+  after(:all) do
+    disable_meilisearch_legacy_search!
+  end
+
   it 'paginates with sort' do
     unpaged_hits = Movie.search ''
 
