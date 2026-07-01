@@ -1,15 +1,23 @@
 require 'will_paginate'
 require 'support/async_helper'
+require 'support/legacy_search_helper'
 require 'support/models/movie'
 
 describe 'Pagination with will_paginate' do
+  include LegacySearchHelper
+
   before(:all) do
+    enable_meilisearch_legacy_search!
     Meilisearch::Rails.configuration[:pagination_backend] = :will_paginate
     Movie.clear_index!
 
     AsyncHelper.await_meilisearch_tasks(index_uids: [Movie.index_uid]) do
       6.times { Movie.create(title: Faker::Movie.title) }
     end
+  end
+
+  after(:all) do
+    disable_meilisearch_legacy_search!
   end
 
   it 'paginates with sort' do

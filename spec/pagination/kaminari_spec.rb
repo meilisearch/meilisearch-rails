@@ -1,9 +1,13 @@
 require 'kaminari'
 require 'support/async_helper'
+require 'support/legacy_search_helper'
 require 'support/models/restaurant'
 
 describe 'Pagination with kaminari' do
+  include LegacySearchHelper
+
   before(:all) do
+    enable_meilisearch_legacy_search!
     Meilisearch::Rails.configuration[:pagination_backend] = :kaminari
     Restaurant.clear_index!
 
@@ -16,6 +20,10 @@ describe 'Pagination with kaminari' do
         )
       end
     end
+  end
+
+  after(:all) do
+    disable_meilisearch_legacy_search!
   end
 
   it 'paginates' do
