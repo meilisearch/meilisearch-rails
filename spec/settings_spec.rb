@@ -109,8 +109,10 @@ describe Meilisearch::Rails::IndexSettings do
   describe 'use_serializer' do
     it 'only uses the attributes from the serializer' do
       o = SerializedDocument.new name: 'test', skip: 'skip me'
-      attributes = SerializedDocument.meilisearch_settings.build_document_attributes(o)
-      expect(attributes).to eq({ name: 'test' })
+      settings = SerializedDocument.meilisearch_settings
+
+      expect(settings.build_document_attributes(o)).to eq({ name: 'test' })
+      expect(settings.indexed_field_names(o)).to eq([:name])
     end
   end
 
