@@ -96,7 +96,6 @@ module Meilisearch
       def warn_searchable_missing_attributes
         searchables = get_setting(:searchable_attributes)&.map { |searchable| searchable.to_s.split('.').first }
         attrs = get_setting(:attributes)&.map { |k, _| k.to_s }
-
         if searchables.present? && attrs.present?
           (searchables - attrs).each do |missing_searchable|
             warning = <<~WARNING
@@ -110,7 +109,6 @@ module Meilisearch
 
       def use_serializer(serializer)
         @serializer = serializer
-        # instance_variable_set("@serializer", serializer)
       end
 
       def attribute(*names, &block)
@@ -147,7 +145,6 @@ module Meilisearch
 
       def get_default_attributes(document)
         if mongoid?(document)
-          # work-around mongoid 2.4's unscoped method, not accepting a block
           document.attributes
         elsif sequel?(document)
           document.to_hash
@@ -158,44 +155,34 @@ module Meilisearch
         end
       end
 
-      def get_attribute_names(document)
-        get_attributes(document).keys
+      def indexed_field_names(document)
+        base_field_names = if @serializer.nil?
+                             @attributes.present? ? @attributes.keys : get_default_attributes(document).keys
+                           else
+                             @serializer.new(document).attributes.keys
+                           end
+        (base_field_names + (@additional_attributes&.keys || [])).uniq
       end
 
       def attributes_to_hash(attributes, document)
-        if attributes
-          attributes.to_h { |name, value| [name.to_s, value.call(document)] }
-        else
-          {}
-        end
+        attributes ? attributes.to_h { |name, value| [name.to_s, value.call(document)] } : {}
       end
 
-      def get_attributes(document)
-        # If a serializer is set, we ignore attributes
-        # everything should be done via the serializer
-        if !@serializer.nil?
-          attributes = @serializer.new(document).attributes
-        elsif @attributes.blank?
-          attributes = get_default_attributes(document)
-          # no `attribute ...` have been configured, use the default attributes of the model
-        elsif active_record?(document)
-          # at least 1 `attribute ...` has been configured, therefore use ONLY the one configured
-          document.class.unscoped do
-            attributes = attributes_to_hash(@attributes, document)
-          end
-        else
-          attributes = attributes_to_hash(@attributes, document)
-        end
-
+      def build_document_attributes(document)
+        attributes = if !@serializer.nil?
+                       @serializer.new(document).attributes
+                     elsif @attributes.present?
+                       if active_record?(document)
+                         document.class.unscoped { attributes_to_hash(@attributes, document) }
+                       else
+                         attributes_to_hash(@attributes, document)
+                       end
+                     else
+                       get_default_attributes(document)
+                     end
         attributes.merge!(attributes_to_hash(@additional_attributes, document)) if @additional_attributes
-
-        if @options[:sanitize]
-          attributes = sanitize_attributes(attributes)
-        end
-
-        attributes = encode_attributes(attributes) if @options[:force_utf8_encoding]
-
-        attributes
+        attributes = sanitize_attributes(attributes) if @options[:sanitize]
+        @options[:force_utf8_encoding] ? encode_attributes(attributes) : attributes
       end
 
       def sanitize_attributes(value)
@@ -523,7 +510,7 @@ module Meilisearch
               group = group.select { |d| Utilities.indexable?(d, options) }
             end
             documents = group.map do |d|
-              attributes = settings.get_attributes(d)
+              attributes = settings.build_document_attributes(d)
               attributes = attributes.to_hash unless attributes.instance_of?(Hash)
               attributes.merge ms_pk(options) => ms_primary_key_of(d, options)
             end
@@ -554,7 +541,7 @@ module Meilisearch
           next if ms_indexing_disabled?(options)
 
           index = ms_ensure_init(options, settings)
-          task = index.add_documents(documents.map { |d| settings.get_attributes(d).merge ms_pk(options) => ms_primary_key_of(d, options) })
+          task = index.add_documents(documents.map { |d| settings.build_document_attributes(d).merge ms_pk(options) => ms_primary_key_of(d, options) })
           index.wait_for_task(task['taskUid']) if synchronous || options[:synchronous]
         end
       end
@@ -571,7 +558,7 @@ module Meilisearch
           if Utilities.indexable?(document, options)
             raise ArgumentError, 'Cannot index a record without a primary key' if primary_key.blank?
 
-            doc = settings.get_attributes(document)
+            doc = settings.build_document_attributes(document)
             doc = doc.merge ms_pk(options) => primary_key
 
             if synchronous || options[:synchronous]
@@ -761,7 +748,7 @@ module Meilisearch
           next if ms_indexing_disabled?(options)
           return true if ms_primary_key_changed?(document, options)
 
-          settings.get_attribute_names(document).each do |k|
+          settings.indexed_field_names(document).each do |k|
             return true if ms_attribute_changed?(document, k)
             # return true if !document.respond_to?(changed_method) || document.send(changed_method)
           end
