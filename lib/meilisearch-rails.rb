@@ -74,6 +74,8 @@ module Meilisearch
         faceting
         typo_tolerance
         proximity_precision
+        separator_tokens
+        non_separator_tokens
       ].freeze
 
       CAMELIZE_OPTIONS = %i[pagination faceting typo_tolerance].freeze
