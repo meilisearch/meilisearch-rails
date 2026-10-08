@@ -343,7 +343,7 @@ module Meilisearch
     end
 
     # these are the class methods added when Meilisearch is included
-    module ClassMethods
+    module ClassMethods # rubocop:disable Metrics/ModuleLength
       def self.extended(base)
         class << base
           alias_method :without_auto_index, :ms_without_auto_index unless method_defined? :without_auto_index

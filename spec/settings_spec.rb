@@ -207,16 +207,18 @@ describe Meilisearch::Rails::IndexSettings do
     let(:record) { Color.create name: 'dark-blue', short_name: 'blue' }
 
     context 'when initializing an index' do
-      let(:index) { double('index', settings: {}, update_settings: nil) }
+      let(:index) { instance_double(Meilisearch::Rails::SafeIndex, settings: {}, update_settings: nil) }
 
-      before do
-        @original_indexes = Color.instance_variable_get(:@ms_indexes)
+      around do |example|
+        original_indexes = Color.instance_variable_get(:@ms_indexes)
         Color.instance_variable_set(:@ms_indexes, nil)
-        allow(Meilisearch::Rails::SafeIndex).to receive(:new).and_return(index)
+        example.run
+      ensure
+        Color.instance_variable_set(:@ms_indexes, original_indexes)
       end
 
-      after do
-        Color.instance_variable_set(:@ms_indexes, @original_indexes)
+      before do
+        allow(Meilisearch::Rails::SafeIndex).to receive(:new).and_return(index)
       end
 
       it 'fetches and synchronizes settings only once for a cached index' do
