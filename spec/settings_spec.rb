@@ -1,6 +1,8 @@
 require 'support/async_helper'
 require 'support/models/book'
+require 'support/models/movie'
 require 'support/models/people'
+require 'support/models/post'
 require 'support/models/restaurant'
 require 'support/models/specialty_models'
 require 'support/models/song'
@@ -204,6 +206,39 @@ describe Meilisearch::Rails::IndexSettings do
   describe 'settings change detection' do
     let(:record) { Color.create name: 'dark-blue', short_name: 'blue' }
 
+    context 'when initializing an index' do
+      let(:index) { double('index', settings: {}, update_settings: nil) }
+
+      before do
+        @original_indexes = Color.instance_variable_get(:@ms_indexes)
+        Color.instance_variable_set(:@ms_indexes, nil)
+        allow(Meilisearch::Rails::SafeIndex).to receive(:new).and_return(index)
+      end
+
+      after do
+        Color.instance_variable_set(:@ms_indexes, @original_indexes)
+      end
+
+      it 'fetches and synchronizes settings only once for a cached index' do
+        expect(Color.send(:ms_ensure_init)).to eq(index)
+        expect(Color.send(:ms_ensure_init)).to eq(index)
+
+        expect(index).to have_received(:settings).once
+        expect(index).to have_received(:update_settings).once
+      end
+
+      it 'retries initialization if settings synchronization fails' do
+        allow(index).to receive(:settings).and_raise(StandardError, 'settings unavailable')
+
+        expect { Color.send(:ms_ensure_init) }.to raise_error(StandardError, 'settings unavailable')
+
+        allow(index).to receive(:settings).and_return({})
+
+        expect(Color.send(:ms_ensure_init)).to eq(index)
+        expect(index).to have_received(:settings).twice
+      end
+    end
+
     context 'without changing settings' do
       it 'does not call update settings' do
         allow(Color.index).to receive(:update_settings).and_call_original
@@ -214,8 +249,8 @@ describe Meilisearch::Rails::IndexSettings do
       end
     end
 
-    context 'when settings have been changed' do
-      it 'makes a request to update settings' do
+    context 'when server settings change after initialization' do
+      it 'does not synchronize settings on document updates' do
         idx = Color.index
         task = idx.update_settings(
           filterable_attributes: ['none']
@@ -226,7 +261,7 @@ describe Meilisearch::Rails::IndexSettings do
 
         record.ms_index!
 
-        expect(Color.index).to have_received(:update_settings).once
+        expect(Color.index).not_to have_received(:update_settings)
       end
     end
   end
