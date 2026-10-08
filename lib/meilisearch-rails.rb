@@ -343,7 +343,7 @@ module Meilisearch
     end
 
     # these are the class methods added when Meilisearch is included
-    module ClassMethods
+    module ClassMethods # rubocop:disable Metrics/ModuleLength
       def self.extended(base)
         class << base
           alias_method :without_auto_index, :ms_without_auto_index unless method_defined? :without_auto_index
@@ -783,11 +783,11 @@ module Meilisearch
 
         @ms_indexes ||= { true => {}, false => {} }
 
-        @ms_indexes[Meilisearch::Rails.active?][settings] ||= SafeIndex.new(ms_index_uid(options), meilisearch_options[:raise_on_failure], meilisearch_options)
-
-        update_settings_if_changed(@ms_indexes[Meilisearch::Rails.active?][settings], options, user_configuration)
-
-        @ms_indexes[Meilisearch::Rails.active?][settings]
+        @ms_indexes[Meilisearch::Rails.active?][settings] ||= begin
+          index = SafeIndex.new(ms_index_uid(options), meilisearch_options[:raise_on_failure], meilisearch_options)
+          update_settings_if_changed(index, options, user_configuration)
+          index
+        end
       end
 
       private
