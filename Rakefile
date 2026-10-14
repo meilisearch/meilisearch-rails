@@ -1,5 +1,6 @@
 require 'rubygems'
 require 'rake'
+require 'bundler/gem_tasks'
 
 require 'rdoc/task'
 
