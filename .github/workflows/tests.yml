@@ -40,7 +40,7 @@ jobs:
       - name: Run tests
         run: bundle exec rspec
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v6
         if: matrix.ruby-version == '3.4' && matrix.rails-version == '7.0'
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
