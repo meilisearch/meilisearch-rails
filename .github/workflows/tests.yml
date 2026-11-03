@@ -18,8 +18,6 @@ jobs:
       matrix:
         ruby-version: ["3.2", "3.3", "3.4"]
         rails-version: [6.1, 7.0]
-        # MongoDB 8.x exits on current GitHub-hosted kernels (SERVER-121912).
-        # 9.0.4 and later start. Quote the version so YAML does not coerce 9.0 to 9.
         mongodb-version: ["9.0"]
     env:
       RAILS_VERSION: ${{ matrix.rails-version }}
@@ -36,7 +34,7 @@ jobs:
       - name: Meilisearch (latest) setup with Docker
         run: docker run -d -p 7700:7700 getmeili/meilisearch-enterprise:latest meilisearch --master-key=masterKey --no-analytics
       - name: Start MongoDB
-        uses: supercharge/mongodb-github-action@315db7fe45ac2880b7758f1933e6e5d59afd5e94  # 1.12.1
+        uses: supercharge/mongodb-github-action@315db7fe45ac2880b7758f1933e6e5d59afd5e94
         with:
           mongodb-version: ${{ matrix.mongodb-version }}
       - name: Run tests
