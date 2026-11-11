@@ -512,7 +512,7 @@ module Meilisearch
             documents = group.map do |d|
               attributes = settings.build_document_attributes(d)
               attributes = attributes.to_hash unless attributes.instance_of?(Hash)
-              attributes.merge ms_pk(options) => ms_primary_key_of(d, options)
+              attributes.transform_keys(&:to_s).merge ms_pk(options) => ms_primary_key_of(d, options)
             end
             last_task = index.add_documents(documents)
           end
@@ -541,7 +541,7 @@ module Meilisearch
           next if ms_indexing_disabled?(options)
 
           index = ms_ensure_init(options, settings)
-          task = index.add_documents(documents.map { |d| settings.build_document_attributes(d).merge ms_pk(options) => ms_primary_key_of(d, options) })
+          task = index.add_documents(documents.map { |d| settings.build_document_attributes(d).transform_keys(&:to_s).merge ms_pk(options) => ms_primary_key_of(d, options) })
           index.wait_for_task(task['taskUid']) if synchronous || options[:synchronous]
         end
       end
@@ -559,7 +559,7 @@ module Meilisearch
             raise ArgumentError, 'Cannot index a record without a primary key' if primary_key.blank?
 
             doc = settings.build_document_attributes(document)
-            doc = doc.merge ms_pk(options) => primary_key
+            doc = doc.transform_keys(&:to_s).merge ms_pk(options) => primary_key
 
             if synchronous || options[:synchronous]
               index.add_documents(doc).await
@@ -840,7 +840,7 @@ module Meilisearch
       end
 
       def ms_pk(options = nil)
-        options[:primary_key] || Meilisearch::Rails::IndexSettings::DEFAULT_PRIMARY_KEY
+        (options[:primary_key] || Meilisearch::Rails::IndexSettings::DEFAULT_PRIMARY_KEY).to_s
       end
 
       def meilisearch_settings_changed?(server_state, user_configuration)
