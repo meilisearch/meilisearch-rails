@@ -1,55 +1,74 @@
-require 'support/models/color'
-
 describe 'Configuration cache' do
-  def capture_ivars(klass, *ivars)
-    ivars.index_with do |ivar|
-      [klass.instance_variable_defined?(ivar), klass.instance_variable_get(ivar)]
-    end
+  let(:index_uids) do
+    {
+      primary: safe_index_uid('ConfigCachePrimary'),
+      additional: safe_index_uid('ConfigCacheAdditional'),
+      nested: safe_index_uid('ConfigCacheNested')
+    }
   end
 
-  def restore_ivars(klass, captured)
-    captured.each do |ivar, (defined, value)|
-      if defined
-        klass.instance_variable_set(ivar, value)
-      elsif klass.instance_variable_defined?(ivar)
-        klass.remove_instance_variable(ivar)
+  # A fresh class per example, so the cached configurations never leak between examples.
+  let(:model) do
+    uids = index_uids
+
+    klass = Class.new do
+      include Meilisearch::Rails
+
+      def self.model_name
+        'ConfigCacheModel'
+      end
+    end
+    stub_const('ConfigCacheModel', klass)
+
+    klass.meilisearch index_uid: uids[:primary] do
+      searchable_attributes [:name]
+
+      add_index uids[:additional] do
+        searchable_attributes [:author]
+
+        add_index uids[:nested] do
+          searchable_attributes [:genre]
+        end
+      end
+    end
+
+    klass
+  end
+
+  # Keyed by the uid each index resolves to, which includes the environment suffix in this suite.
+  let(:own_settings) do
+    {
+      index_uids[:primary] => { searchable_attributes: [:name] },
+      index_uids[:additional] => { searchable_attributes: [:author] },
+      index_uids[:nested] => { searchable_attributes: [:genre] }
+    }.transform_keys { |index_uid| model.ms_index_uid(index_uid: index_uid) }
+  end
+
+  let(:sent_settings) { {} }
+
+  before do
+    allow(Meilisearch::Rails::SafeIndex).to receive(:new) do |index_uid, *|
+      instance_double(Meilisearch::Rails::SafeIndex).tap do |index|
+        allow(index).to receive(:update_settings) do |settings|
+          sent_settings[index_uid] = settings
+          { 'taskUid' => 0 }
+        end
       end
     end
   end
 
-  around do |example|
-    ivars = %i[@meilisearch_configurations @configurations]
-    captured = capture_ivars(Color, *ivars)
+  # Including the module registers the class globally, and that outlives the stubbed constant.
+  after { Meilisearch::Rails.included_in.delete(model) }
 
-    begin
-      example.run
-    ensure
-      restore_ivars(Color, captured)
-    end
-  end
+  it 'neither reads nor overwrites the configurations another gem caches in @configurations' do
+    # algoliasearch-rails stores a hash of index options => settings object in this ivar.
+    foreign_settings = Struct.new(:to_settings).new({ ranking: ['typo'], indexLanguages: ['ja'] })
+    foreign_configurations = { { index_name: 'foreign_index' } => foreign_settings }
+    model.instance_variable_set(:@configurations, foreign_configurations.dup)
 
-  it 'does not use a generic @configurations ivar on the model' do
-    # Ensure a clean slate even if other specs already touched the model.
-    Color.remove_instance_variable(:@meilisearch_configurations) if Color.instance_variable_defined?(:@meilisearch_configurations)
-    Color.remove_instance_variable(:@configurations) if Color.instance_variable_defined?(:@configurations)
+    model.ms_set_settings
 
-    # Simulate another gem using the same generic ivar name.
-    Color.instance_variable_set(:@configurations, { ranking: ['typo'], indexLanguages: ['ja'] })
-
-    captured_settings = nil
-    fake_index = instance_double(Meilisearch::Rails::SafeIndex, update_settings: { 'taskUid' => 0 }, wait_for_task: nil)
-
-    allow(Meilisearch::Rails::SafeIndex).to receive(:new).and_return(fake_index)
-    allow(fake_index).to receive(:update_settings) do |settings|
-      captured_settings = settings
-      { 'taskUid' => 0 }
-    end
-
-    expect { Color.ms_set_settings(false) }.not_to raise_error
-    expect(captured_settings).to be_a(Hash)
-
-    allowed_keys = Meilisearch::Rails::IndexSettings::OPTIONS
-    unexpected_keys = captured_settings.keys.map(&:to_sym) - allowed_keys
-    expect(unexpected_keys).to be_empty
+    expect(sent_settings).to eq(own_settings)
+    expect(model.instance_variable_get(:@configurations)).to eq(foreign_configurations)
   end
 end
