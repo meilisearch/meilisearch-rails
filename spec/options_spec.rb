@@ -23,6 +23,14 @@ describe 'meilisearch_options' do
       People.create(first_name: 'Jane', last_name: 'Doe', card_number: 75_801_887)
       expect(People.index.fetch_info.primary_key).to eq('card_number')
     end
+
+    it 'does not add a duplicate key to the document for a symbol primary key' do
+      person = People.new(first_name: 'Jane', last_name: 'Doe', card_number: 75_801_887)
+      document = People.meilisearch_settings.build_document_attributes(person)
+                       .merge(People.send(:ms_pk, People.meilisearch_options) => person.card_number)
+
+      expect(document.keys.map(&:to_s)).to eq(document.keys.map(&:to_s).uniq)
+    end
   end
 
   describe ':index_uid and :primary_key (shared index)' do
